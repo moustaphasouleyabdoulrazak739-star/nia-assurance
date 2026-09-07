@@ -73,3 +73,60 @@ class SinistreOwnershipTests(APITestCase):
         self.client.force_authenticate(user=admin)
         response = self.client.post(reverse('sinistre_create'), {**SINISTRE_PAYLOAD, 'contrat': contrat.id})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+class SinistreReviewTests(APITestCase):
+    """Tests pour le traitement d'un sinistre par la compagnie (ADMIN/AGENT) :
+    changement de statut, fixation de l'indemnite, commentaire."""
+
+    def make_sinistre(self):
+        client_profile = make_client()
+        contrat = make_contrat(client_profile)
+        return Sinistre.objects.create(
+            contrat=contrat, numero_sinistre='SIN-1', **SINISTRE_PAYLOAD,
+        )
+
+    def make_admin(self):
+        return User.objects.create_user(email='admin@nia.ne', password='Secret123!', nom='Admin', prenom='X', role='ADMIN', is_staff=True)
+
+    def test_admin_can_approve_with_montant_indemnite(self):
+        sinistre = self.make_sinistre()
+        admin = self.make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.patch(reverse('sinistre_detail', args=[sinistre.id]), {
+            'statut': 'APPROUVE', 'montant_indemnite': '20000.00', 'commentaire': 'Dossier valide',
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        sinistre.refresh_from_db()
+        self.assertEqual(sinistre.statut, 'APPROUVE')
+        self.assertEqual(str(sinistre.montant_indemnite), '20000.00')
+
+    def test_approving_without_montant_indemnite_is_rejected(self):
+        sinistre = self.make_sinistre()
+        admin = self.make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.patch(reverse('sinistre_detail', args=[sinistre.id]), {'statut': 'REGLE'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_client_cannot_review_a_sinistre(self):
+        sinistre = self.make_sinistre()
+        self.client.force_authenticate(user=sinistre.contrat.client.user)
+        response = self.client.patch(reverse('sinistre_detail', args=[sinistre.id]), {
+            'statut': 'APPROUVE', 'montant_indemnite': '20000.00',
+        })
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_review_does_not_alter_original_declaration_fields(self):
+        """Le serializer de traitement ne doit exposer que statut/indemnite/
+        commentaire : les infos declarees par le client restent en lecture seule."""
+        sinistre = self.make_sinistre()
+        admin = self.make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.patch(reverse('sinistre_detail', args=[sinistre.id]), {
+            'statut': 'APPROUVE', 'montant_indemnite': '20000.00',
+            'montant_reclame': '1.00', 'type_sinistre': 'AUTRE',
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        sinistre.refresh_from_db()
+        self.assertEqual(str(sinistre.montant_reclame), '500000.00')
+        self.assertEqual(sinistre.type_sinistre, 'VOL')

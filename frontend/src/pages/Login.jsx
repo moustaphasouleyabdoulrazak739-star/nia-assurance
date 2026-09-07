@@ -17,7 +17,7 @@ const Login = () => {
     try {
       await login(email, password);
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
       setError('Email ou mot de passe incorrect');
     } finally {
       setLoading(false);
@@ -30,8 +30,7 @@ const Login = () => {
       {/* Panneau gauche */}
       <div className="hidden lg:flex lg:w-1/2 bg-niger-orange flex-col items-center justify-center p-12">
         <div className="text-white text-center">
-          <div className="text-6xl mb-6">🛡️</div>
-          <h1 className="text-4xl font-bold mb-4">NIA ASSURANCE</h1>
+          <img src="/logo-nia.png" alt="NIA Assurance" className="w-56 h-auto mx-auto mb-6" />
           <p className="text-xl opacity-90">Votre partenaire de confiance</p>
           <div className="mt-8 flex gap-2 justify-center">
             <div className="w-12 h-2 bg-niger-orange rounded"></div>
@@ -47,8 +46,7 @@ const Login = () => {
 
           {/* Logo mobile */}
           <div className="text-center mb-8 lg:hidden">
-            <div className="text-4xl mb-2">🛡️</div>
-            <h1 className="text-2xl font-bold text-niger-orange">NIA ASSURANCE</h1>
+            <img src="/logo-nia.png" alt="NIA Assurance" className="w-32 h-auto mx-auto" />
           </div>
 
           <h2 className="text-3xl font-bold text-gray-800 mb-2">Connexion</h2>

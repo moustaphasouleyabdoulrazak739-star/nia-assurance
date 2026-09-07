@@ -1,6 +1,7 @@
-import { useContext, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import AuthContext from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
 
 // Icônes SVG inline
 const Icons = {
@@ -56,25 +57,35 @@ function StatCard({ icon: Icon, label, value, color, bg }) {
   );
 }
 
-// Module "à venir"
-function ComingSoon({ label }) {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-      <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-        <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
-        </svg>
-      </div>
-      <p className="text-gray-500 text-sm font-medium">{label} — Bientôt disponible</p>
-    </div>
-  );
-}
-
 export default function Dashboard() {
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("accueil");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [stats, setStats] = useState({ contratsActifs: '—', sinistresEnAttente: '—', paiementsValides: '—' });
+
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'AGENT';
+
+  const fetchStats = async () => {
+    try {
+      const [contratsRes, sinistresRes, paiementsRes] = await Promise.all([
+        api.get('/contrats/'),
+        api.get('/sinistres/'),
+        api.get('/paiements/'),
+      ]);
+      setStats({
+        contratsActifs: contratsRes.data.filter((c) => c.statut === 'ACTIF').length,
+        sinistresEnAttente: sinistresRes.data.filter((s) => s.statut === 'EN_ATTENTE').length,
+        paiementsValides: paiementsRes.data.filter((p) => p.statut === 'VALIDE').length,
+      });
+    } catch {
+      // Le tableau de bord reste utilisable meme si les stats ne chargent pas.
+    }
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchStats();
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -82,111 +93,18 @@ export default function Dashboard() {
   };
 
   const navItems = [
-    { id: "accueil", label: "Accueil", icon: Icons.Shield },
-    { id: "contrats", label: "Contrats", icon: Icons.FileText },
-    { id: "sinistres", label: "Sinistres", icon: Icons.AlertTriangle },
-    { id: "paiements", label: "Paiements", icon: Icons.CreditCard },
-    { id: "profil", label: "Mon profil", icon: Icons.User },
+    { id: "accueil", label: "Accueil", icon: Icons.Shield, path: "/dashboard" },
+    { id: "contrats", label: isAdmin ? "Contrats" : "Mes contrats", icon: Icons.FileText, path: "/contrats" },
+    { id: "sinistres", label: isAdmin ? "Sinistres" : "Mes sinistres", icon: Icons.AlertTriangle, path: "/sinistres" },
+    { id: "paiements", label: isAdmin ? "Paiements" : "Mes paiements", icon: Icons.CreditCard, path: "/paiements" },
+    { id: "profil", label: "Mon profil", icon: Icons.User, path: "/profil" },
   ];
 
-  const stats = [
-    { icon: Icons.FileText, label: "Contrats actifs", value: "0", color: "text-blue-600", bg: "bg-blue-50" },
-    { icon: Icons.AlertTriangle, label: "Sinistres déclarés", value: "0", color: "text-orange-500", bg: "bg-orange-50" },
-    { icon: Icons.CreditCard, label: "Paiements effectués", value: "0", color: "text-green-600", bg: "bg-green-50" },
-    { icon: Icons.Shield, label: "Couverture active", value: "—", color: "text-purple-600", bg: "bg-purple-50" },
+  const statCards = [
+    { icon: Icons.FileText, label: isAdmin ? "Contrats actifs (tous clients)" : "Mes contrats actifs", value: stats.contratsActifs, color: "text-blue-600", bg: "bg-blue-50" },
+    { icon: Icons.AlertTriangle, label: isAdmin ? "Sinistres en attente" : "Mes sinistres en attente", value: stats.sinistresEnAttente, color: "text-orange-500", bg: "bg-orange-50" },
+    { icon: Icons.CreditCard, label: isAdmin ? "Paiements valides" : "Mes paiements valides", value: stats.paiementsValides, color: "text-green-600", bg: "bg-green-50" },
   ];
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case "accueil":
-        return (
-          <div>
-            {/* Bienvenue */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 mb-6 text-white">
-              <h2 className="text-xl font-bold mb-1">
-                Bienvenue, {user?.first_name || user?.username} 👋
-              </h2>
-              <p className="text-blue-100 text-sm">
-                Gérez vos assurances facilement depuis votre espace personnel.
-              </p>
-            </div>
-
-            {/* Statistiques */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              {stats.map((s, i) => (
-                <StatCard key={i} {...s} />
-              ))}
-            </div>
-
-            {/* Actions rapides */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="font-semibold text-gray-800 mb-4">Actions rapides</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {[
-                  { label: "Nouveau devis", icon: "📋", tab: "contrats" },
-                  { label: "Déclarer un sinistre", icon: "🚨", tab: "sinistres" },
-                  { label: "Effectuer un paiement", icon: "💳", tab: "paiements" },
-                ].map((action) => (
-                  <button
-                    key={action.tab}
-                    onClick={() => setActiveTab(action.tab)}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition text-center group"
-                  >
-                    <span className="text-2xl">{action.icon}</span>
-                    <span className="text-sm text-gray-600 group-hover:text-blue-600 font-medium">
-                      {action.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-
-      case "profil":
-        return (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-            <div className="flex items-center gap-5 mb-6">
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-3xl font-bold">
-                {(user?.first_name?.[0] || user?.username?.[0] || "U").toUpperCase()}
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-800">
-                  {user?.first_name} {user?.last_name}
-                </h2>
-                <p className="text-gray-500 text-sm">{user?.email}</p>
-                <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                  @{user?.username}
-                </span>
-              </div>
-            </div>
-            <div className="border-t pt-4 space-y-3">
-              {[
-                { label: "Prénom", value: user?.first_name || "—" },
-                { label: "Nom", value: user?.last_name || "—" },
-                { label: "Nom d'utilisateur", value: user?.username || "—" },
-                { label: "Email", value: user?.email || "—" },
-              ].map((field) => (
-                <div key={field.label} className="flex justify-between py-2 border-b border-gray-50">
-                  <span className="text-sm text-gray-500">{field.label}</span>
-                  <span className="text-sm font-medium text-gray-700">{field.value}</span>
-                </div>
-              ))}
-            </div>
-            <button className="mt-6 w-full border border-blue-600 text-blue-600 hover:bg-blue-50 font-medium py-2.5 rounded-lg transition text-sm">
-              Modifier le profil
-            </button>
-          </div>
-        );
-
-      default:
-        return (
-          <ComingSoon
-            label={navItems.find((n) => n.id === activeTab)?.label || activeTab}
-          />
-        );
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -198,23 +116,21 @@ export default function Dashboard() {
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
-          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
-            <Icons.Shield />
-          </div>
+          <img src="/logo-nia.png" alt="NIA Assurance" className="w-9 h-9 object-contain" />
           <div>
             <p className="font-bold text-gray-800 text-sm">Nia Assurance</p>
-            <p className="text-xs text-gray-400">Espace client</p>
+            <p className="text-xs text-gray-400">{isAdmin ? "Espace compagnie" : "Espace client"}</p>
           </div>
         </div>
 
         {/* Navigation */}
         <nav className="p-4 space-y-1">
-          {navItems.map(({ id, label, icon: Icon }) => (
+          {navItems.map(({ id, label, icon: Icon, path }) => (
             <button
               key={id}
-              onClick={() => { setActiveTab(id); setSidebarOpen(false); }}
+              onClick={() => { navigate(path); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition ${
-                activeTab === id
+                id === "accueil"
                   ? "bg-blue-50 text-blue-700"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
               }`}
@@ -254,20 +170,58 @@ export default function Dashboard() {
           </button>
           <span className="font-semibold text-gray-800">Nia Assurance</span>
           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm">
-            {(user?.first_name?.[0] || user?.username?.[0] || "U").toUpperCase()}
+            {(user?.prenom?.[0] || "U").toUpperCase()}
           </div>
         </header>
 
         {/* Contenu */}
         <main className="flex-1 p-4 lg:p-8 overflow-auto">
           <div className="max-w-5xl mx-auto">
-            {/* Titre page */}
             <div className="mb-6 hidden lg:block">
-              <h1 className="text-2xl font-bold text-gray-800">
-                {navItems.find((n) => n.id === activeTab)?.label}
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-800">Accueil</h1>
             </div>
-            {renderContent()}
+
+            {/* Bienvenue */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 mb-6 text-white">
+              <h2 className="text-xl font-bold mb-1">
+                Bienvenue, {user?.prenom} 👋
+              </h2>
+              <p className="text-blue-100 text-sm">
+                {isAdmin
+                  ? "Gérez les contrats, sinistres et paiements de vos clients."
+                  : "Gérez vos assurances facilement depuis votre espace personnel."}
+              </p>
+            </div>
+
+            {/* Statistiques */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              {statCards.map((s, i) => (
+                <StatCard key={i} {...s} />
+              ))}
+            </div>
+
+            {/* Actions rapides */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h3 className="font-semibold text-gray-800 mb-4">Actions rapides</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { label: isAdmin ? "Gérer les contrats" : "Mes contrats", icon: "📋", path: "/contrats" },
+                  { label: isAdmin ? "Sinistres à traiter" : "Déclarer un sinistre", icon: "🚨", path: "/sinistres" },
+                  { label: isAdmin ? "Suivi paiements" : "Effectuer un paiement", icon: "💳", path: "/paiements" },
+                ].map((action) => (
+                  <button
+                    key={action.path}
+                    onClick={() => navigate(action.path)}
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition text-center group"
+                  >
+                    <span className="text-2xl">{action.icon}</span>
+                    <span className="text-sm text-gray-600 group-hover:text-blue-600 font-medium">
+                      {action.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </main>
       </div>

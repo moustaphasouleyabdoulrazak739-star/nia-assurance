@@ -30,19 +30,19 @@ const Sinistres = () => {
     montant_reclame: '',
   });
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'AGENT';
+  const [reviewTarget, setReviewTarget] = useState(null);
+  const [reviewForm, setReviewForm] = useState({ statut: '', montant_indemnite: '', commentaire: '' });
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError, setReviewError] = useState('');
 
-  useEffect(() => {
-    fetchSinistres();
-    fetchContrats();
-  }, []);
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'AGENT';
 
   const fetchSinistres = async () => {
     try {
       setLoading(true);
       const response = await api.get('/sinistres/');
       setSinistres(response.data);
-    } catch (err) {
+    } catch {
       setError('Impossible de charger les sinistres.');
     } finally {
       setLoading(false);
@@ -57,6 +57,12 @@ const Sinistres = () => {
       console.error('Erreur contrats', err);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchSinistres();
+    fetchContrats();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -82,10 +88,43 @@ const Sinistres = () => {
         setShowModal(false);
         setFormSuccess('');
       }, 2000);
-    } catch (err) {
+    } catch {
       setFormError('Erreur lors de la declaration. Verifiez les informations.');
     } finally {
       setFormLoading(false);
+    }
+  };
+
+  const openReview = (sinistre) => {
+    setReviewTarget(sinistre);
+    setReviewForm({
+      statut: sinistre.statut,
+      montant_indemnite: sinistre.montant_indemnite || '',
+      commentaire: sinistre.commentaire || '',
+    });
+    setReviewError('');
+  };
+
+  const handleReviewChange = (e) => {
+    setReviewForm({ ...reviewForm, [e.target.name]: e.target.value });
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    setReviewLoading(true);
+    setReviewError('');
+    try {
+      await api.patch(`/sinistres/${reviewTarget.id}/`, reviewForm);
+      setReviewTarget(null);
+      fetchSinistres();
+    } catch (err) {
+      const data = err.response?.data;
+      const message = data && typeof data === 'object'
+        ? Object.values(data).flat().join(' ')
+        : 'Erreur lors du traitement du dossier.';
+      setReviewError(message);
+    } finally {
+      setReviewLoading(false);
     }
   };
 
@@ -93,7 +132,7 @@ const Sinistres = () => {
     <div className="min-h-screen bg-gray-100">
 
       <nav className="bg-niger-orange text-white px-6 py-4 flex justify-between items-center shadow-lg">
-        <h1 className="text-xl font-bold">NIA ASSURANCE</h1>
+        <img src="/logo-nia.png" alt="NIA Assurance" className="h-10 w-auto" />
         <div className="flex items-center gap-4">
           <span className="text-sm">{user?.prenom} {user?.nom}</span>
           <button
@@ -165,10 +204,16 @@ const Sinistres = () => {
                     Date sinistre : {sinistre.date_sinistre}
                   </p>
                   <p className="text-gray-400 text-xs mt-1">
-                    Contrat : {sinistre.contrat}
+                    Contrat : {sinistre.contrat?.numero_contrat}
+                    {isAdmin && sinistre.contrat?.client?.user && (
+                      <> — {sinistre.contrat.client.user.prenom} {sinistre.contrat.client.user.nom}</>
+                    )}
                   </p>
                   {sinistre.description && (
                     <p className="text-gray-500 text-sm mt-2">{sinistre.description}</p>
+                  )}
+                  {sinistre.commentaire && (
+                    <p className="text-niger-vert text-sm mt-2 italic">Note compagnie : {sinistre.commentaire}</p>
                   )}
                 </div>
                 <div className="text-right">
@@ -193,6 +238,14 @@ const Sinistres = () => {
                     >
                       Telecharger PDF
                     </a>
+                  )}
+                  {isAdmin && (
+                    <button
+                      onClick={() => openReview(sinistre)}
+                      className="bg-niger-orange_light text-niger-orange px-3 py-1 rounded-lg text-xs font-medium block mt-2 ml-auto"
+                    >
+                      Traiter
+                    </button>
                   )}
                 </div>
               </div>
@@ -336,6 +389,104 @@ const Sinistres = () => {
                   className="flex-1 bg-niger-vert hover:bg-niger-vert_dark text-white py-3 rounded-xl font-medium transition"
                 >
                   {formLoading ? 'Envoi...' : 'Declarer'}
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal traitement (compagnie) */}
+      {reviewTarget && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+
+            <div className="bg-niger-orange text-white px-6 py-4 rounded-t-2xl flex justify-between items-center">
+              <h3 className="text-lg font-bold">Traiter le sinistre {reviewTarget.numero_sinistre}</h3>
+              <button
+                onClick={() => setReviewTarget(null)}
+                className="text-white hover:text-gray-200 text-xl font-bold"
+              >
+                X
+              </button>
+            </div>
+
+            <form onSubmit={handleReviewSubmit} className="p-6 space-y-4">
+
+              {reviewError && (
+                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">
+                  {reviewError}
+                </div>
+              )}
+
+              <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-600">
+                <p><strong>Type :</strong> {reviewTarget.type_sinistre}</p>
+                <p><strong>Montant reclame :</strong> {Number(reviewTarget.montant_reclame).toLocaleString()} FCFA</p>
+                {reviewTarget.description && <p><strong>Description :</strong> {reviewTarget.description}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Statut du dossier
+                </label>
+                <select
+                  name="statut"
+                  value={reviewForm.statut}
+                  onChange={handleReviewChange}
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
+                  required
+                >
+                  <option value="EN_ATTENTE">En attente</option>
+                  <option value="EN_COURS">En cours d'instruction</option>
+                  <option value="APPROUVE">Approuve</option>
+                  <option value="REJETE">Rejete</option>
+                  <option value="REGLE">Regle</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Montant de l'indemnite (FCFA)
+                </label>
+                <input
+                  type="number"
+                  name="montant_indemnite"
+                  value={reviewForm.montant_indemnite}
+                  onChange={handleReviewChange}
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
+                  placeholder="Requis si Approuve ou Regle"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Commentaire (visible par le client)
+                </label>
+                <textarea
+                  name="commentaire"
+                  value={reviewForm.commentaire}
+                  onChange={handleReviewChange}
+                  rows={3}
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
+                  placeholder="Motif de la decision, precisions..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setReviewTarget(null)}
+                  className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-200 transition"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={reviewLoading}
+                  className="flex-1 bg-niger-orange hover:bg-niger-orange_dark text-white py-3 rounded-xl font-medium transition"
+                >
+                  {reviewLoading ? 'Envoi...' : 'Enregistrer'}
                 </button>
               </div>
 

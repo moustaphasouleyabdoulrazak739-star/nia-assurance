@@ -39,7 +39,7 @@ class SinistreCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
     def validate(self, attrs):
-        contrat = attrs['contrat']
+        contrat = attrs.get('contrat') or getattr(self.instance, 'contrat', None)
         if contrat.statut != 'ACTIF':
             raise serializers.ValidationError({
                 'contrat': 'Ce contrat n\'est pas actif'
@@ -55,3 +55,23 @@ class SinistreCreateSerializer(serializers.ModelSerializer):
         if not validated_data.get('numero_sinistre'):
             validated_data['numero_sinistre'] = generate_numero(Sinistre, 'numero_sinistre', 'SIN')
         return super().create(validated_data)
+
+
+class SinistreReviewSerializer(serializers.ModelSerializer):
+    """Utilise par la compagnie (ADMIN/AGENT) pour traiter un dossier :
+    seuls le statut, l'indemnite et un commentaire sont modifiables, jamais
+    les informations declarees par le client."""
+
+    class Meta:
+        model = Sinistre
+        fields = ['id', 'statut', 'montant_indemnite', 'commentaire']
+        read_only_fields = ['id']
+
+    def validate(self, attrs):
+        statut = attrs.get('statut', getattr(self.instance, 'statut', None))
+        montant_indemnite = attrs.get('montant_indemnite', getattr(self.instance, 'montant_indemnite', None))
+        if statut in ('APPROUVE', 'REGLE') and not montant_indemnite:
+            raise serializers.ValidationError({
+                'montant_indemnite': "Le montant de l'indemnité est requis pour ce statut."
+            })
+        return attrs

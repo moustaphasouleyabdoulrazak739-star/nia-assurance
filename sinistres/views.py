@@ -2,7 +2,7 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Sinistre
-from .serializers import SinistreSerializer, SinistreCreateSerializer
+from .serializers import SinistreSerializer, SinistreCreateSerializer, SinistreReviewSerializer
 
 
 class SinistreListView(generics.ListAPIView):
@@ -35,7 +35,7 @@ class SinistreDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
-            return SinistreCreateSerializer
+            return SinistreReviewSerializer
         return SinistreSerializer
 
     def get_queryset(self):

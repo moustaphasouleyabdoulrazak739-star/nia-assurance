@@ -36,17 +36,12 @@ const Contrats = () => {
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'AGENT';
 
-  useEffect(() => {
-    fetchContrats();
-    if (isAdmin) fetchClients();
-  }, []);
-
   const fetchContrats = async () => {
     try {
       setLoading(true);
       const response = await api.get('/contrats/');
       setContrats(response.data);
-    } catch (err) {
+    } catch {
       setError('Impossible de charger les contrats.');
     } finally {
       setLoading(false);
@@ -61,6 +56,12 @@ const Contrats = () => {
       console.error('Erreur clients', err);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchContrats();
+    if (isAdmin) fetchClients();
+  }, [isAdmin]);
 
   const contratsFiltres = filtre === 'TOUS'
     ? contrats
@@ -125,7 +126,7 @@ const Contrats = () => {
     <div className="min-h-screen bg-gray-100">
 
       <nav className="bg-niger-orange text-white px-6 py-4 flex justify-between items-center shadow-lg">
-        <h1 className="text-xl font-bold">NIA ASSURANCE</h1>
+        <img src="/logo-nia.png" alt="NIA Assurance" className="h-10 w-auto" />
         <span className="text-sm">{user?.prenom} {user?.nom}</span>
       </nav>
 

@@ -21,10 +21,6 @@ const Profil = () => {
     profession: '',
   });
 
-  useEffect(() => {
-    fetchProfil();
-  }, []);
-
   const fetchProfil = async () => {
     try {
       setLoading(true);
@@ -41,12 +37,17 @@ const Profil = () => {
       if (data.photo) {
         setPhotoPreview('http://127.0.0.1:8000' + data.photo);
       }
-    } catch (err) {
+    } catch {
       setError('Impossible de charger le profil.');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchProfil();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -81,7 +82,7 @@ const Profil = () => {
       });
       setSuccess('Profil mis a jour avec succes !');
       setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
+    } catch {
       setError('Erreur lors de la mise a jour du profil.');
     } finally {
       setSaving(false);
@@ -92,7 +93,7 @@ const Profil = () => {
     <div className="min-h-screen bg-gray-100">
 
       <nav className="bg-niger-orange text-white px-6 py-4 flex justify-between items-center shadow-lg">
-        <h1 className="text-xl font-bold">NIA ASSURANCE</h1>
+        <img src="/logo-nia.png" alt="NIA Assurance" className="h-10 w-auto" />
         <div className="flex items-center gap-4">
           <span className="text-sm">{user?.prenom} {user?.nom}</span>
           <button

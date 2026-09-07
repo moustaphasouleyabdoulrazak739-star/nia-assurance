@@ -38,7 +38,7 @@ class PaiementCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
     def validate(self, attrs):
-        contrat = attrs['contrat']
+        contrat = attrs.get('contrat') or getattr(self.instance, 'contrat', None)
         if contrat.statut != 'ACTIF':
             raise serializers.ValidationError({
                 'contrat': 'Ce contrat n\'est pas actif'
@@ -57,3 +57,13 @@ class PaiementCreateSerializer(serializers.ModelSerializer):
         if not validated_data.get('numero_recu'):
             validated_data['numero_recu'] = generate_numero(Paiement, 'numero_recu', 'REC')
         return super().create(validated_data)
+
+
+class PaiementReviewSerializer(serializers.ModelSerializer):
+    """Utilise par la compagnie (ADMIN/AGENT) pour valider/rejeter un
+    paiement : seul le statut est modifiable."""
+
+    class Meta:
+        model = Paiement
+        fields = ['id', 'statut']
+        read_only_fields = ['id']

@@ -2,7 +2,7 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Paiement
-from .serializers import PaiementSerializer, PaiementCreateSerializer
+from .serializers import PaiementSerializer, PaiementCreateSerializer, PaiementReviewSerializer
 
 
 class PaiementListView(generics.ListAPIView):
@@ -30,12 +30,23 @@ class PaiementCreateView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 
-class PaiementDetailView(generics.RetrieveAPIView):
+class PaiementDetailView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = PaiementSerializer
+
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return PaiementReviewSerializer
+        return PaiementSerializer
 
     def get_queryset(self):
         user = self.request.user
         if user.role == 'ADMIN' or user.role == 'AGENT':
             return Paiement.objects.all()
         return Paiement.objects.filter(client__user=user)
+
+    def update(self, request, *args, **kwargs):
+        if request.user.role not in ['ADMIN', 'AGENT']:
+            return Response({
+                'error': 'Permission refusée'
+            }, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)

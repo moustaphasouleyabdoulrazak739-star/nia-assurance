@@ -79,3 +79,33 @@ class PaiementOwnershipTests(APITestCase):
         self.client.force_authenticate(user=client_profile.user)
         response = self.client.post(reverse('paiement_create'), {**PAIEMENT_PAYLOAD, 'contrat': contrat.id})
         self.assertTrue(response.data['paiement']['numero_recu'].startswith('REC-'))
+
+
+class PaiementReviewTests(APITestCase):
+    """Tests pour la validation d'un paiement par la compagnie (ADMIN/AGENT),
+    endpoint qui n'existait pas du tout auparavant (405)."""
+
+    def make_paiement(self):
+        client_profile = make_client()
+        contrat = make_contrat(client_profile)
+        return Paiement.objects.create(
+            client=client_profile, contrat=contrat, numero_recu='REC-1', **PAIEMENT_PAYLOAD,
+        )
+
+    def make_admin(self):
+        return User.objects.create_user(email='admin@nia.ne', password='Secret123!', nom='Admin', prenom='X', role='ADMIN', is_staff=True)
+
+    def test_admin_can_validate_paiement(self):
+        paiement = self.make_paiement()
+        admin = self.make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.patch(reverse('paiement_detail', args=[paiement.id]), {'statut': 'VALIDE'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        paiement.refresh_from_db()
+        self.assertEqual(paiement.statut, 'VALIDE')
+
+    def test_client_cannot_validate_a_paiement(self):
+        paiement = self.make_paiement()
+        self.client.force_authenticate(user=paiement.client.user)
+        response = self.client.patch(reverse('paiement_detail', args=[paiement.id]), {'statut': 'VALIDE'})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

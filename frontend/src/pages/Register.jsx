@@ -1,10 +1,27 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import AuthContext from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
+const InputField = ({ label, name, type = "text", placeholder, value, error, onChange }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+        error ? "border-red-400 bg-red-50" : "border-gray-300 bg-white"
+      }`}
+    />
+    {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+  </div>
+);
+
 export default function Register() {
-  const { login } = useContext(AuthContext);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -96,32 +113,11 @@ export default function Register() {
     }
   };
 
-  const InputField = ({ label, name, type = "text", placeholder }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <input
-        type={type}
-        name={name}
-        value={formData[name]}
-        onChange={handleChange}
-        placeholder={placeholder}
-        className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
-          errors[name] ? "border-red-400 bg-red-50" : "border-gray-300 bg-white"
-        }`}
-      />
-      {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </div>
+          <img src="/logo-nia.png" alt="NIA Assurance" className="w-24 h-auto mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-800">Nia Assurance</h1>
           <p className="text-gray-500 text-sm mt-1">Créer votre compte</p>
         </div>
@@ -135,13 +131,13 @@ export default function Register() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <InputField label="Prénom" name="prenom" placeholder="Moustapha" />
-              <InputField label="Nom" name="nom" placeholder="Diallo" />
+              <InputField label="Prénom" name="prenom" placeholder="Moustapha" value={formData.prenom} error={errors.prenom} onChange={handleChange} />
+              <InputField label="Nom" name="nom" placeholder="Diallo" value={formData.nom} error={errors.nom} onChange={handleChange} />
             </div>
-            <InputField label="Adresse email" name="email" type="email" placeholder="you@example.com" />
-            <InputField label="Téléphone" name="telephone" placeholder="+227 90 00 00 00" />
-            <InputField label="Mot de passe" name="password" type="password" placeholder="Min. 8 caractères" />
-            <InputField label="Confirmer le mot de passe" name="password2" type="password" placeholder="Répéter le mot de passe" />
+            <InputField label="Adresse email" name="email" type="email" placeholder="you@example.com" value={formData.email} error={errors.email} onChange={handleChange} />
+            <InputField label="Téléphone" name="telephone" placeholder="+227 90 00 00 00" value={formData.telephone} error={errors.telephone} onChange={handleChange} />
+            <InputField label="Mot de passe" name="password" type="password" placeholder="Min. 8 caractères" value={formData.password} error={errors.password} onChange={handleChange} />
+            <InputField label="Confirmer le mot de passe" name="password2" type="password" placeholder="Répéter le mot de passe" value={formData.password2} error={errors.password2} onChange={handleChange} />
 
             <button
               type="submit"

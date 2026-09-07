@@ -34,21 +34,17 @@ const Paiements = () => {
     methode: '',
     reference: '',
   });
+  const [updatingId, setUpdatingId] = useState(null);
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'AGENT';
   const showTelephone = form.methode === 'MYNITA' || form.methode === 'AMANATA';
-
-  useEffect(() => {
-    fetchPaiements();
-    fetchContrats();
-  }, []);
 
   const fetchPaiements = async () => {
     try {
       setLoading(true);
       const response = await api.get('/paiements/');
       setPaiements(response.data);
-    } catch (err) {
+    } catch {
       setError('Impossible de charger les paiements.');
     } finally {
       setLoading(false);
@@ -63,6 +59,12 @@ const Paiements = () => {
       console.error('Erreur contrats', err);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchPaiements();
+    fetchContrats();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -93,7 +95,7 @@ const Paiements = () => {
         setShowModal(false);
         setFormSuccess('');
       }, 2000);
-    } catch (err) {
+    } catch {
       setFormError('Erreur lors du paiement. Verifiez les informations.');
     } finally {
       setFormLoading(false);
@@ -107,11 +109,23 @@ const Paiements = () => {
     setShowModal(true);
   };
 
+  const handleStatutChange = async (paiementId, statut) => {
+    setUpdatingId(paiementId);
+    try {
+      await api.patch(`/paiements/${paiementId}/`, { statut });
+      fetchPaiements();
+    } catch {
+      setError('Impossible de mettre a jour ce paiement.');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
 
       <nav className="bg-niger-orange text-white px-6 py-4 flex justify-between items-center shadow-lg">
-        <h1 className="text-xl font-bold">NIA ASSURANCE</h1>
+        <img src="/logo-nia.png" alt="NIA Assurance" className="h-10 w-auto" />
         <div className="flex items-center gap-4">
           <span className="text-sm">{user?.prenom} {user?.nom}</span>
           <button
@@ -182,7 +196,10 @@ const Paiements = () => {
                     Methode : {METHODE_LABELS[paiement.methode]}
                   </p>
                   <p className="text-gray-400 text-xs mt-1">
-                    Contrat : {paiement.contrat}
+                    Contrat : {paiement.contrat?.numero_contrat}
+                    {isAdmin && paiement.client?.user && (
+                      <> — {paiement.client.user.prenom} {paiement.client.user.nom}</>
+                    )}
                   </p>
                   <p className="text-gray-400 text-xs mt-1">
                     Date : {new Date(paiement.date_paiement).toLocaleDateString('fr-FR')}
@@ -198,6 +215,19 @@ const Paiements = () => {
                     {Number(paiement.montant).toLocaleString()} FCFA
                   </p>
                   <p className="text-gray-400 text-xs">Montant paye</p>
+                  {isAdmin && (
+                    <select
+                      value={paiement.statut}
+                      disabled={updatingId === paiement.id}
+                      onChange={(e) => handleStatutChange(paiement.id, e.target.value)}
+                      className="mt-2 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-niger-orange bg-white"
+                    >
+                      <option value="EN_ATTENTE">En attente</option>
+                      <option value="VALIDE">Valide</option>
+                      <option value="ECHOUE">Echoue</option>
+                      <option value="REMBOURSE">Rembourse</option>
+                    </select>
+                  )}
                 </div>
               </div>
             </div>
