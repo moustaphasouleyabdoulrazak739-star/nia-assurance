@@ -4,8 +4,9 @@ Application de gestion d'assurance : back-office et espace client pour gérer
 **clients, contrats, sinistres et paiements**. Interface en français, contexte
 Niger (fuseau `Africa/Niamey`).
 
-> ⏸️ **Développement en pause.** Le projet est fonctionnel en local mais n'est
-> plus activement maintenu pour le moment.
+> ✅ **Fonctionnel de bout en bout.** Inscription, complétion du profil,
+> création/gestion de contrats, déclaration de sinistres et paiements sont
+> opérationnels et couverts par des tests automatisés.
 
 ---
 

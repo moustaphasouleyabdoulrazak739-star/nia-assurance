@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Sinistre
 from contrats.serializers import ContratSerializer
+from nia_assurance.utils import generate_numero
 
 
 class SinistreSerializer(serializers.ModelSerializer):
@@ -26,13 +27,16 @@ class SinistreSerializer(serializers.ModelSerializer):
 
 
 class SinistreCreateSerializer(serializers.ModelSerializer):
+    numero_sinistre = serializers.CharField(required=False, allow_blank=True)
+
     class Meta:
         model = Sinistre
         fields = [
-            'contrat', 'numero_sinistre', 'type_sinistre',
+            'id', 'contrat', 'numero_sinistre', 'type_sinistre',
             'date_sinistre', 'description', 'montant_reclame',
             'document'
         ]
+        read_only_fields = ['id']
 
     def validate(self, attrs):
         contrat = attrs['contrat']
@@ -40,4 +44,14 @@ class SinistreCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'contrat': 'Ce contrat n\'est pas actif'
             })
+        request = self.context.get('request')
+        if request and request.user.role == 'CLIENT' and contrat.client.user_id != request.user.id:
+            raise serializers.ValidationError({
+                'contrat': 'Ce contrat ne vous appartient pas'
+            })
         return attrs
+
+    def create(self, validated_data):
+        if not validated_data.get('numero_sinistre'):
+            validated_data['numero_sinistre'] = generate_numero(Sinistre, 'numero_sinistre', 'SIN')
+        return super().create(validated_data)

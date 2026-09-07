@@ -20,9 +20,10 @@ class ClientCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
         fields = [
-            'cin', 'date_naissance', 'sexe',
+            'id', 'cin', 'date_naissance', 'sexe',
             'adresse', 'ville', 'profession', 'photo'
         ]
+        read_only_fields = ['id']
 
     def create(self, validated_data):
         user = self.context['request'].user

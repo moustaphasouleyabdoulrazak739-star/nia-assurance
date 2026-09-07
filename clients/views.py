@@ -53,8 +53,12 @@ class ClientMeView(generics.RetrieveUpdateAPIView):
         return ClientSerializer
 
     def get_object(self):
-        client, created = Client.objects.get_or_create(user=self.request.user)
-        return client
+        try:
+            return Client.objects.get(user=self.request.user)
+        except Client.DoesNotExist:
+            # Profil pas encore complete : instance non sauvegardee, servie telle
+            # quelle en lecture (champs vides) et creee au premier PATCH.
+            return Client(user=self.request.user)
 
     def update(self, request, *args, **kwargs):
         kwargs['partial'] = True
