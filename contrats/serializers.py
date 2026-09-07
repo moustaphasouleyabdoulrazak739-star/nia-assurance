@@ -44,6 +44,14 @@ class ContratCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'date_fin': 'La date de fin doit être après la date de début'
             })
+
+        client = attrs.get('client') or getattr(self.instance, 'client', None)
+        if client and not client.profil_complet:
+            raise serializers.ValidationError({
+                'client': "Ce client n'a pas encore complete son profil (CIN, date de naissance, "
+                          "adresse, ville) : demandez-lui de le faire via \"Mon profil\" avant de "
+                          "creer un contrat."
+            })
         return attrs
 
     def create(self, validated_data):

@@ -277,10 +277,15 @@ const Contrats = () => {
                   <option value="">Choisir un client</option>
                   {clients.map(c => (
                     <option key={c.id} value={c.id}>
-                      {c.user?.prenom} {c.user?.nom} — {c.cin || 'CIN non renseigne'}
+                      {c.user?.prenom} {c.user?.nom}
+                      {c.profil_complet ? ` — ${c.cin}` : ' — profil incomplet'}
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-gray-400 mt-1">
+                  Un client au profil incomplet doit d'abord renseigner CIN, date de naissance,
+                  adresse et ville depuis "Mon profil".
+                </p>
               </div>
 
               <div>

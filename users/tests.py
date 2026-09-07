@@ -2,6 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from .models import User
+from clients.models import Client
 
 
 class RegisterLoginTests(APITestCase):
@@ -18,7 +19,21 @@ class RegisterLoginTests(APITestCase):
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
         self.assertEqual(response.data['user']['role'], 'CLIENT')
-        self.assertTrue(User.objects.filter(email='nouveau@nia.ne').exists())
+
+    def test_register_creates_an_empty_client_profile(self):
+        """Regression : sans ce profil, un client fraichement inscrit
+        n'apparaissait pas dans le selecteur "Nouveau contrat" cote compagnie."""
+        response = self.client.post(reverse('register'), {
+            'email': 'nouveau2@nia.ne',
+            'password': 'MotDePasse123!',
+            'password2': 'MotDePasse123!',
+            'nom': 'Souley',
+            'prenom': 'Aichatou',
+        })
+        user = User.objects.get(email='nouveau2@nia.ne')
+        client = Client.objects.filter(user=user).first()
+        self.assertIsNotNone(client)
+        self.assertFalse(client.profil_complet)
 
     def test_register_rejects_mismatched_passwords(self):
         response = self.client.post(reverse('register'), {

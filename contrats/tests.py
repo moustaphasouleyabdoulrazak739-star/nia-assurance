@@ -57,6 +57,18 @@ class ContratCreatePermissionTests(APITestCase):
         response = self.client.post(reverse('contrat_create'), payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_cannot_create_contrat_for_client_with_incomplete_profile(self):
+        """Regression : un client fraichement inscrit (profil KYC vide) ne
+        doit pas pouvoir se voir attribuer un contrat tant qu'il n'a pas
+        complete CIN/date de naissance/adresse/ville."""
+        user = User.objects.create_user(email='fraich@nia.ne', password='Secret123!', nom='A', prenom='B')
+        client_profile = Client.objects.create(user=user)  # profil vide, comme a l'inscription
+        admin = make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.post(reverse('contrat_create'), {**CONTRAT_PAYLOAD, 'client': client_profile.id})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('client', response.data)
+
 
 class ContratScopeTests(APITestCase):
     def test_client_only_sees_own_contrats(self):

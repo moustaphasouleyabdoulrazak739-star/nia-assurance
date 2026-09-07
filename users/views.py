@@ -6,6 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from .models import User
 from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer
+from clients.models import Client
 
 
 class RegisterView(generics.CreateAPIView):
@@ -17,6 +18,10 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        # Profil client cree immediatement (vide) pour que le compte soit
+        # visible cote compagnie des l'inscription ; les infos KYC (CIN,
+        # adresse...) sont completees ensuite via "Mon profil".
+        Client.objects.create(user=user)
         refresh = RefreshToken.for_user(user)
         return Response({
             'user': UserSerializer(user).data,
