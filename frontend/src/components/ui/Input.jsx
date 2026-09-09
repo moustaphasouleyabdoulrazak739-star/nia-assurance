@@ -25,16 +25,29 @@ function FieldShell({ label, error, hint, id, required, children }) {
   );
 }
 
-/** Champ texte standard (text, email, password, date, number, tel, file...). */
-export function Input({ label, error, hint, id, required, className = '', ...props }) {
+/** Champ texte standard (text, email, password, date, number, tel, file...).
+ * `icon` (optionnel) : composant d'icône affiché en préfixe dans le champ. */
+export function Input({ label, error, hint, id, required, icon: Icon, className = '', ...props }) {
+  const field = (
+    <input
+      id={id}
+      required={required}
+      className={`${fieldBase} ${fieldState(error)} ${Icon ? 'pl-10' : ''} ${className}`}
+      {...props}
+    />
+  );
   return (
     <FieldShell label={label} error={error} hint={hint} id={id} required={required}>
-      <input
-        id={id}
-        required={required}
-        className={`${fieldBase} ${fieldState(error)} ${className}`}
-        {...props}
-      />
+      {Icon ? (
+        <div className="relative">
+          <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-400">
+            <Icon className="h-4 w-4" />
+          </span>
+          {field}
+        </div>
+      ) : (
+        field
+      )}
     </FieldShell>
   );
 }

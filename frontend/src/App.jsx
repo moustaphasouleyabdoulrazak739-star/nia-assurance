@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import MotDePasseOublie from "./pages/MotDePasseOublie";
 import Dashboard from "./pages/Dashboard";
 import Contrats from "./pages/Contrats";
 import Demandes from "./pages/Demandes";
@@ -38,6 +39,7 @@ function AppRoutes() {
       {/* Routes publiques */}
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+      <Route path="/mot-de-passe-oublie" element={<PublicRoute><MotDePasseOublie /></PublicRoute>} />
 
       {/* Routes protegees */}
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />

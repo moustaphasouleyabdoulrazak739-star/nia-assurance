@@ -4,7 +4,9 @@ import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import BackgroundPattern from "../components/ui/BackgroundPattern";
 import { Input } from "../components/ui/Input";
+import { IconMail, IconLock, IconCheckCircle } from "../components/ui/icons";
 
 export default function Register() {
   const { login } = useAuth();
@@ -100,26 +102,33 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg">
-        <div className="text-center mb-8">
-          <img
-            src="/logo-nia.png"
-            alt="NIA Assurance"
-            className="w-16 h-16 mx-auto mb-4 object-contain"
-          />
+    <div className="relative min-h-screen overflow-hidden bg-neutral-50 flex items-center justify-center px-4 py-12">
+      <BackgroundPattern className="text-neutral-900/[0.02]" />
+
+      <div className="relative w-full max-w-lg">
+        <div className="text-center mb-10">
+          <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-2xl bg-primary-50 shadow-md">
+            <img
+              src="/logo-nia.png"
+              alt="NIA Assurance"
+              className="h-16 w-16 object-contain"
+            />
+          </div>
           <h1 className="text-2xl font-bold text-neutral-800">Nia Assurance</h1>
-          <p className="text-neutral-500 text-sm mt-1">Créer votre compte</p>
+          <div className="mt-1.5 flex items-center justify-center gap-1.5 text-sm text-neutral-500">
+            <IconCheckCircle className="h-4 w-4 text-secondary-600" />
+            Créer votre compte
+          </div>
         </div>
 
-        <Card padding="lg">
+        <Card padding="lg" className="shadow-card-hover">
           {globalError && (
             <div className="mb-5 p-3 bg-red-50 rounded-lg text-red-600 text-sm">
               {globalError}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <Input
                 id="prenom"
@@ -145,6 +154,7 @@ export default function Register() {
               label="Adresse email"
               name="email"
               type="email"
+              icon={IconMail}
               value={formData.email}
               onChange={handleChange}
               placeholder="you@example.com"
@@ -164,6 +174,7 @@ export default function Register() {
               label="Mot de passe"
               name="password"
               type="password"
+              icon={IconLock}
               value={formData.password}
               onChange={handleChange}
               placeholder="Min. 8 caractères"
@@ -174,13 +185,19 @@ export default function Register() {
               label="Confirmer le mot de passe"
               name="password2"
               type="password"
+              icon={IconLock}
               value={formData.password2}
               onChange={handleChange}
               placeholder="Répéter le mot de passe"
               error={errors.password2}
             />
 
-            <Button type="submit" fullWidth loading={loading} className="mt-2">
+            <Button
+              type="submit"
+              fullWidth
+              loading={loading}
+              className="mt-2 shadow-lg shadow-primary-600/25 hover:shadow-xl hover:shadow-primary-700/30 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md"
+            >
               {loading ? "Création du compte..." : "Créer mon compte"}
             </Button>
           </form>
