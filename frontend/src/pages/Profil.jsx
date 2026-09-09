@@ -37,7 +37,7 @@ const Profil = () => {
         profession: data.profession || '',
       });
       if (data.photo) {
-        setPhotoPreview('http://127.0.0.1:8000' + data.photo);
+        setPhotoPreview(data.photo);
       }
     } catch {
       setError('Impossible de charger le profil.');

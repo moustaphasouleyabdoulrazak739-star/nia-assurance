@@ -312,3 +312,32 @@ class DemandeRejeterTests(APITestCase):
             'motif_rejet': 'test',
         })
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class DemandeDocumentUrlTests(APITestCase):
+    """Regression : le frontend prefixait manuellement l'URL du document avec
+    l'origine de l'API, alors que le serializer la renvoie deja absolue
+    (request.build_absolute_uri) - ce qui produisait un lien casse (double
+    prefixe) et un clic silencieusement sans effet. On verifie ici que l'API
+    renvoie bien une URL absolue et directement utilisable telle quelle."""
+
+    def test_document_fichier_url_is_absolute_in_demande_detail(self):
+        client_profile = make_client()
+        self.client.force_authenticate(user=client_profile.user)
+        create_response = self.client.post(reverse('demande_create'), {
+            'type_assurance': 'SANTE',
+            'piece_identite': fichier('id.pdf'),
+        }, format='multipart')
+        demande_id = create_response.data['demande']['id']
+
+        response = self.client.get(reverse('demande_detail', args=[demande_id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        documents = response.data['documents']
+        self.assertEqual(len(documents), 1)
+        url = documents[0]['fichier']
+        self.assertTrue(url, 'le champ fichier ne doit pas etre vide')
+        self.assertTrue(
+            url.startswith('http://') or url.startswith('https://'),
+            f"l'URL du document devrait etre absolue, recu : {url}"
+        )
+        self.assertIn('/media/demandes/documents/', url)

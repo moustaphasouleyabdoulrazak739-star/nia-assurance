@@ -409,9 +409,9 @@ function VueCompagnie({ demandes, loading, error, filtre, setFiltre, onRefresh }
                     {selectedDemande.documents.map((doc) => (
                       <a
                         key={doc.id}
-                        href={'http://127.0.0.1:8000' + doc.fichier}
+                        href={doc.fichier}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="flex items-center gap-2 rounded-lg bg-secondary-50 px-3 py-2 text-sm font-medium text-secondary-700 hover:bg-secondary-100"
                       >
                         <IconDownload className="h-4 w-4" />

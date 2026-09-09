@@ -193,9 +193,9 @@ const Contrats = () => {
                 <div className="mt-2 flex flex-col items-end gap-2">
                   {contrat.document && (
                     <a
-                      href={'http://127.0.0.1:8000' + contrat.document}
+                      href={contrat.document}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100"
                     >
                       <IconDownload className="h-3.5 w-3.5" />
