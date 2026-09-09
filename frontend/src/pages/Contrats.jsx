@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import DashboardLayout from '../components/layout/DashboardLayout';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import { Select, Textarea, Input } from '../components/ui/Input';
+import { CONTRAT_STATUS_VARIANTS } from '../components/ui/statusVariants';
+import { IconClose, IconDownload, IconInbox } from '../components/ui/icons';
 
-const STATUT_COLORS = {
-  ACTIF: 'bg-niger-vert_light text-niger-vert',
-  EXPIRE: 'bg-gray-100 text-gray-500',
-  SUSPENDU: 'bg-orange-100 text-orange-600',
-  RESILIE: 'bg-red-100 text-red-600',
-};
+const FILTRES = ['TOUS', 'ACTIF', 'EXPIRE', 'SUSPENDU', 'RESILIE'];
 
 const FORM_VIDE = {
   client: '',
@@ -101,10 +103,10 @@ const Contrats = () => {
     try {
       if (editingId) {
         await api.patch(`/contrats/${editingId}/`, form);
-        setFormSuccess('Contrat modifie avec succes !');
+        setFormSuccess('Contrat modifié avec succès !');
       } else {
         await api.post('/contrats/create/', form);
-        setFormSuccess('Contrat cree avec succes !');
+        setFormSuccess('Contrat créé avec succès !');
       }
       fetchContrats();
       setTimeout(() => {
@@ -115,111 +117,95 @@ const Contrats = () => {
       const data = err.response?.data;
       const message = data && typeof data === 'object'
         ? Object.values(data).flat().join(' ')
-        : 'Erreur lors de l\'enregistrement. Verifiez les informations.';
+        : "Erreur lors de l'enregistrement. Vérifiez les informations.";
       setFormError(message);
     } finally {
       setFormLoading(false);
     }
   };
 
+  const clientHint = `Un client au profil incomplet doit d'abord renseigner CIN, date de naissance, adresse et ville depuis "Mon profil".`;
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <DashboardLayout
+      title={isAdmin ? 'Contrats' : 'Mes contrats'}
+      subtitle={isAdmin ? 'Tous les contrats clients' : 'Vos contrats en cours'}
+      actions={isAdmin && <Button onClick={openCreate}>Nouveau contrat</Button>}
+    >
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {FILTRES.map(f => (
+          <button
+            key={f}
+            onClick={() => setFiltre(f)}
+            className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
+              filtre === f
+                ? 'bg-primary-600 text-white'
+                : 'bg-white text-neutral-600 shadow-card hover:bg-neutral-50'
+            }`}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
 
-      <nav className="bg-niger-orange text-white px-6 py-4 flex justify-between items-center shadow-lg">
-        <img src="/logo-nia.png" alt="NIA Assurance" className="h-10 w-auto" />
-        <span className="text-sm">{user?.prenom} {user?.nom}</span>
-      </nav>
+      {loading && (
+        <div className="py-12 text-center text-neutral-400">Chargement...</div>
+      )}
 
-      <div className="max-w-6xl mx-auto p-6">
+      {error && (
+        <Card padding="sm" className="mb-4 border border-red-100 bg-red-50">
+          <p className="text-sm text-red-600">{error}</p>
+        </Card>
+      )}
 
-        <div className="bg-white rounded-2xl shadow p-6 mb-6 border-l-4 border-niger-orange flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold text-niger-orange">
-              {isAdmin ? 'Contrats' : 'Mes Contrats'}
-            </h2>
-            <p className="text-gray-500 mt-1">
-              {isAdmin ? 'Tous les contrats clients' : 'Vos contrats en cours'}
-            </p>
-          </div>
-          {isAdmin && (
-            <button
-              onClick={openCreate}
-              className="bg-niger-orange text-white px-5 py-2 rounded-xl font-medium hover:bg-niger-orange_dark transition"
-            >
-              Nouveau contrat
-            </button>
-          )}
-        </div>
+      {!loading && !error && contratsFiltres.length === 0 && (
+        <Card padding="lg" className="text-center text-neutral-400">
+          <IconInbox className="mx-auto mb-3 h-10 w-10 text-neutral-300" />
+          <p>Aucun contrat trouvé.</p>
+        </Card>
+      )}
 
-        <div className="flex gap-2 mb-6 flex-wrap">
-          {['TOUS', 'ACTIF', 'EXPIRE', 'SUSPENDU', 'RESILIE'].map(f => (
-            <button
-              key={f}
-              onClick={() => setFiltre(f)}
-              className={filtre === f ? 'px-4 py-2 rounded-xl text-sm font-medium bg-niger-orange text-white' : 'px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-600'}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-
-        {loading && (
-          <div className="text-center py-12 text-gray-400">
-            Chargement...
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 mb-4">
-            {error}
-          </div>
-        )}
-
-        {!loading && !error && contratsFiltres.length === 0 && (
-          <div className="bg-white rounded-2xl shadow p-12 text-center text-gray-400">
-            <p>Aucun contrat trouve.</p>
-          </div>
-        )}
-
-        <div className="grid gap-4">
-          {contratsFiltres.map(contrat => (
-            <div key={contrat.id} className="bg-white rounded-2xl shadow p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-gray-800 text-lg">
-                    {contrat.numero_contrat}
-                  </h3>
-                  {isAdmin && (
-                    <p className="text-gray-400 text-xs mt-1">
-                      {contrat.client?.user?.prenom} {contrat.client?.user?.nom}
-                    </p>
-                  )}
-                  <p className="text-gray-500 text-sm">{contrat.type_assurance_display || contrat.type_assurance}</p>
-                  <p className="text-gray-400 text-xs mt-1">
-                    Du {contrat.date_debut} au {contrat.date_fin}
+      <div className="grid gap-4">
+        {contratsFiltres.map(contrat => (
+          <Card key={contrat.id} hoverable>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h3 className="font-bold text-neutral-800 text-lg">
+                  {contrat.numero_contrat}
+                </h3>
+                {isAdmin && (
+                  <p className="text-neutral-400 text-xs mt-1">
+                    {contrat.client?.user?.prenom} {contrat.client?.user?.nom}
                   </p>
-                  <span className={STATUT_COLORS[contrat.statut] + ' text-xs px-3 py-1 rounded-full font-medium inline-block mt-2'}>
-                    {contrat.statut}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-niger-orange">
-                    {Number(contrat.montant_prime).toLocaleString()} FCFA
-                  </p>
+                )}
+                <p className="text-neutral-500 text-sm">{contrat.type_assurance_display || contrat.type_assurance}</p>
+                <p className="text-neutral-400 text-xs mt-1">
+                  Du {contrat.date_debut} au {contrat.date_fin}
+                </p>
+                <Badge variant={CONTRAT_STATUS_VARIANTS[contrat.statut] || 'neutral'} className="mt-2">
+                  {contrat.statut}
+                </Badge>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-primary-600">
+                  {Number(contrat.montant_prime).toLocaleString()} FCFA
+                </p>
+                <div className="mt-2 flex flex-col items-end gap-2">
                   {contrat.document && (
                     <a
                       href={'http://127.0.0.1:8000' + contrat.document}
                       target="_blank"
                       rel="noreferrer"
-                      className="bg-niger-vert_light text-niger-vert px-3 py-1 rounded-lg text-xs font-medium inline-block mt-2"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100"
                     >
-                      Telecharger PDF
+                      <IconDownload className="h-3.5 w-3.5" />
+                      Télécharger PDF
                     </a>
                   )}
                   {isAdmin && (
                     <button
                       onClick={() => openEdit(contrat)}
-                      className="bg-niger-orange_light text-niger-orange px-3 py-1 rounded-lg text-xs font-medium block mt-2 ml-auto"
+                      className="rounded-lg bg-primary-50 px-3 py-1.5 text-xs font-medium text-primary-700 hover:bg-primary-100"
                     >
                       Modifier
                     </button>
@@ -227,184 +213,150 @@ const Contrats = () => {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-
+          </Card>
+        ))}
       </div>
 
-      {/* Modal creation / edition */}
+      {/* Modal création / édition */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 p-4">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-card-hover">
 
-            <div className="bg-niger-orange text-white px-6 py-4 rounded-t-2xl flex justify-between items-center">
-              <h3 className="text-lg font-bold">
+            <div className="flex items-center justify-between rounded-t-2xl bg-primary-600 px-6 py-4">
+              <h3 className="text-lg font-bold text-white">
                 {editingId ? 'Modifier le contrat' : 'Nouveau contrat'}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-white hover:text-gray-200 text-xl font-bold"
+                className="rounded-lg p-1 text-white/80 hover:bg-white/10 hover:text-white"
+                aria-label="Fermer"
               >
-                X
+                <IconClose className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 p-6">
 
               {formError && (
-                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">
+                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
                   {formError}
                 </div>
               )}
 
               {formSuccess && (
-                <div className="bg-niger-vert_light text-niger-vert p-3 rounded-lg text-sm border border-green-200">
+                <div className="rounded-lg bg-secondary-50 p-3 text-sm text-secondary-700">
                   {formSuccess}
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Client
-                </label>
-                <select
-                  name="client"
-                  value={form.client}
-                  onChange={handleChange}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
-                  required
-                >
-                  <option value="">Choisir un client</option>
-                  {clients.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.user?.prenom} {c.user?.nom}
-                      {c.profil_complet ? ` — ${c.cin}` : ' — profil incomplet'}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-400 mt-1">
-                  Un client au profil incomplet doit d'abord renseigner CIN, date de naissance,
-                  adresse et ville depuis "Mon profil".
-                </p>
-              </div>
+              <Select
+                id="client"
+                label="Client"
+                name="client"
+                value={form.client}
+                onChange={handleChange}
+                hint={clientHint}
+                required
+              >
+                <option value="">Choisir un client</option>
+                {clients.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.user?.prenom} {c.user?.nom}
+                    {c.profil_complet ? ` — ${c.cin}` : ' — profil incomplet'}
+                  </option>
+                ))}
+              </Select>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Type d'assurance
-                </label>
-                <select
-                  name="type_assurance"
-                  value={form.type_assurance}
-                  onChange={handleChange}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
-                  required
-                >
-                  <option value="">Choisir le type</option>
-                  <option value="AUTO">Assurance Auto</option>
-                  <option value="SANTE">Assurance Sante</option>
-                  <option value="HABITATION">Assurance Habitation</option>
-                  <option value="VIE">Assurance Vie</option>
-                </select>
-              </div>
+              <Select
+                id="type_assurance"
+                label="Type d'assurance"
+                name="type_assurance"
+                value={form.type_assurance}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Choisir le type</option>
+                <option value="AUTO">Assurance Auto</option>
+                <option value="SANTE">Assurance Santé</option>
+                <option value="HABITATION">Assurance Habitation</option>
+                <option value="VIE">Assurance Vie</option>
+              </Select>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date de debut
-                  </label>
-                  <input
-                    type="date"
-                    name="date_debut"
-                    value={form.date_debut}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date de fin
-                  </label>
-                  <input
-                    type="date"
-                    name="date_fin"
-                    value={form.date_fin}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Montant de la prime (FCFA)
-                </label>
-                <input
-                  type="number"
-                  name="montant_prime"
-                  value={form.montant_prime}
+                <Input
+                  id="date_debut"
+                  label="Date de début"
+                  type="date"
+                  name="date_debut"
+                  value={form.date_debut}
                   onChange={handleChange}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
-                  placeholder="Ex: 150000"
+                  required
+                />
+                <Input
+                  id="date_fin"
+                  label="Date de fin"
+                  type="date"
+                  name="date_fin"
+                  value={form.date_fin}
+                  onChange={handleChange}
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Statut
-                </label>
-                <select
-                  name="statut"
-                  value={form.statut}
-                  onChange={handleChange}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
-                >
-                  <option value="ACTIF">Actif</option>
-                  <option value="EXPIRE">Expire</option>
-                  <option value="SUSPENDU">Suspendu</option>
-                  <option value="RESILIE">Resilie</option>
-                </select>
-              </div>
+              <Input
+                id="montant_prime"
+                label="Montant de la prime (FCFA)"
+                type="number"
+                name="montant_prime"
+                value={form.montant_prime}
+                onChange={handleChange}
+                placeholder="Ex: 150000"
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  rows={2}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
-                  placeholder="Notes internes (optionnel)"
-                />
-              </div>
+              <Select
+                id="statut"
+                label="Statut"
+                name="statut"
+                value={form.statut}
+                onChange={handleChange}
+              >
+                <option value="ACTIF">Actif</option>
+                <option value="EXPIRE">Expiré</option>
+                <option value="SUSPENDU">Suspendu</option>
+                <option value="RESILIE">Résilié</option>
+              </Select>
+
+              <Textarea
+                id="description"
+                label="Description"
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                rows={2}
+                placeholder="Notes internes (optionnel)"
+              />
 
               <div className="flex gap-3 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  fullWidth
                   onClick={() => setShowModal(false)}
-                  className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-200 transition"
+                  className="bg-neutral-100"
                 >
                   Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={formLoading}
-                  className="flex-1 bg-niger-orange hover:bg-niger-orange_dark text-white py-3 rounded-xl font-medium transition"
-                >
-                  {formLoading ? 'Envoi...' : editingId ? 'Enregistrer' : 'Creer'}
-                </button>
+                </Button>
+                <Button type="submit" fullWidth loading={formLoading}>
+                  {formLoading ? 'Envoi...' : editingId ? 'Enregistrer' : 'Créer'}
+                </Button>
               </div>
 
             </form>
           </div>
         </div>
       )}
-
-    </div>
+    </DashboardLayout>
   );
 };
 

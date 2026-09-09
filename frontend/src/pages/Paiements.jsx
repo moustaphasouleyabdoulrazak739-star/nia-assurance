@@ -1,25 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-
-const STATUT_COLORS = {
-  EN_ATTENTE: 'bg-orange-100 text-orange-600',
-  VALIDE: 'bg-niger-vert_light text-niger-vert',
-  ECHOUE: 'bg-red-100 text-red-600',
-  REMBOURSE: 'bg-gray-100 text-gray-500',
-};
+import DashboardLayout from '../components/layout/DashboardLayout';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import { Select, Input } from '../components/ui/Input';
+import { PAIEMENT_STATUS_VARIANTS } from '../components/ui/statusVariants';
+import { IconClose, IconInbox } from '../components/ui/icons';
 
 const METHODE_LABELS = {
   MYNITA: 'MyNITA',
   AMANATA: 'AmanaTa',
-  ESPECES: 'Especes',
+  ESPECES: 'Espèces',
   VIREMENT: 'Virement bancaire',
 };
 
 const Paiements = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [paiements, setPaiements] = useState([]);
   const [contrats, setContrats] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +86,7 @@ const Paiements = () => {
     setFormSuccess('');
     try {
       await api.post('/paiements/create/', form);
-      setFormSuccess('Paiement effectue avec succes !');
+      setFormSuccess('Paiement effectué avec succès !');
       setForm({ contrat: '', montant: '', methode: '', reference: '' });
       fetchPaiements();
       setTimeout(() => {
@@ -96,7 +94,7 @@ const Paiements = () => {
         setFormSuccess('');
       }, 2000);
     } catch {
-      setFormError('Erreur lors du paiement. Verifiez les informations.');
+      setFormError('Erreur lors du paiement. Vérifiez les informations.');
     } finally {
       setFormLoading(false);
     }
@@ -115,275 +113,210 @@ const Paiements = () => {
       await api.patch(`/paiements/${paiementId}/`, { statut });
       fetchPaiements();
     } catch {
-      setError('Impossible de mettre a jour ce paiement.');
+      setError('Impossible de mettre à jour ce paiement.');
     } finally {
       setUpdatingId(null);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <DashboardLayout
+      title={isAdmin ? 'Paiements' : 'Mes paiements'}
+      subtitle={isAdmin ? 'Liste de tous les paiements' : 'Historique de vos paiements'}
+      actions={<Button onClick={openModal}>Effectuer un paiement</Button>}
+    >
+      {loading && (
+        <div className="py-12 text-center text-neutral-400">Chargement...</div>
+      )}
 
-      <nav className="bg-niger-orange text-white px-6 py-4 flex justify-between items-center shadow-lg">
-        <img src="/logo-nia.png" alt="NIA Assurance" className="h-10 w-auto" />
-        <div className="flex items-center gap-4">
-          <span className="text-sm">{user?.prenom} {user?.nom}</span>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-white text-niger-orange px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition"
-          >
-            Tableau de bord
-          </button>
-        </div>
-      </nav>
+      {error && (
+        <Card padding="sm" className="mb-4 border border-red-100 bg-red-50">
+          <p className="text-sm text-red-600">{error}</p>
+        </Card>
+      )}
 
-      <div className="max-w-6xl mx-auto p-6">
+      {!loading && !error && paiements.length === 0 && (
+        <Card padding="lg" className="text-center text-neutral-400">
+          <IconInbox className="mx-auto mb-3 h-10 w-10 text-neutral-300" />
+          <p className="mb-4">Aucun paiement effectué.</p>
+          <Button onClick={openModal}>Effectuer mon premier paiement</Button>
+        </Card>
+      )}
 
-        <div className="bg-white rounded-2xl shadow p-6 mb-6 border-l-4 border-niger-orange flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold text-niger-orange">Mes Paiements</h2>
-            <p className="text-gray-500 mt-1">
-              {isAdmin ? 'Liste de tous les paiements' : 'Historique de vos paiements'}
-            </p>
-          </div>
-          <button
-            onClick={openModal}
-            className="bg-niger-orange hover:bg-niger-orange_dark text-white px-5 py-2 rounded-xl font-medium transition"
-          >
-            Effectuer un paiement
-          </button>
-        </div>
-
-        {loading && (
-          <div className="text-center py-12 text-gray-400">
-            Chargement...
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 mb-4">
-            {error}
-          </div>
-        )}
-
-        {!loading && !error && paiements.length === 0 && (
-          <div className="bg-white rounded-2xl shadow p-12 text-center text-gray-400">
-            <p className="text-4xl mb-4">💳</p>
-            <p>Aucun paiement effectue.</p>
-            <button
-              onClick={openModal}
-              className="mt-4 bg-niger-orange text-white px-5 py-2 rounded-xl font-medium"
-            >
-              Effectuer mon premier paiement
-            </button>
-          </div>
-        )}
-
-        <div className="grid gap-4">
-          {paiements.map(paiement => (
-            <div key={paiement.id} className="bg-white rounded-2xl shadow p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-bold text-gray-800 text-lg">
-                      {paiement.numero_recu}
-                    </h3>
-                    <span className={STATUT_COLORS[paiement.statut] + ' text-xs px-3 py-1 rounded-full font-medium'}>
-                      {paiement.statut}
-                    </span>
-                  </div>
-                  <p className="text-gray-500 text-sm">
-                    Methode : {METHODE_LABELS[paiement.methode]}
-                  </p>
-                  <p className="text-gray-400 text-xs mt-1">
-                    Contrat : {paiement.contrat?.numero_contrat}
-                    {isAdmin && paiement.client?.user && (
-                      <> — {paiement.client.user.prenom} {paiement.client.user.nom}</>
-                    )}
-                  </p>
-                  <p className="text-gray-400 text-xs mt-1">
-                    Date : {new Date(paiement.date_paiement).toLocaleDateString('fr-FR')}
-                  </p>
-                  {paiement.reference && (
-                    <p className="text-gray-400 text-xs mt-1">
-                      Reference : {paiement.reference}
-                    </p>
-                  )}
+      <div className="grid gap-4">
+        {paiements.map(paiement => (
+          <Card key={paiement.id} hoverable>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                  <h3 className="font-bold text-neutral-800 text-lg">
+                    {paiement.numero_recu}
+                  </h3>
+                  <Badge variant={PAIEMENT_STATUS_VARIANTS[paiement.statut] || 'neutral'}>
+                    {paiement.statut}
+                  </Badge>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-niger-orange">
-                    {Number(paiement.montant).toLocaleString()} FCFA
-                  </p>
-                  <p className="text-gray-400 text-xs">Montant paye</p>
-                  {isAdmin && (
-                    <select
-                      value={paiement.statut}
-                      disabled={updatingId === paiement.id}
-                      onChange={(e) => handleStatutChange(paiement.id, e.target.value)}
-                      className="mt-2 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-niger-orange bg-white"
-                    >
-                      <option value="EN_ATTENTE">En attente</option>
-                      <option value="VALIDE">Valide</option>
-                      <option value="ECHOUE">Echoue</option>
-                      <option value="REMBOURSE">Rembourse</option>
-                    </select>
+                <p className="text-neutral-500 text-sm">
+                  Méthode : {METHODE_LABELS[paiement.methode]}
+                </p>
+                <p className="text-neutral-400 text-xs mt-1">
+                  Contrat : {paiement.contrat?.numero_contrat}
+                  {isAdmin && paiement.client?.user && (
+                    <> — {paiement.client.user.prenom} {paiement.client.user.nom}</>
                   )}
-                </div>
+                </p>
+                <p className="text-neutral-400 text-xs mt-1">
+                  Date : {new Date(paiement.date_paiement).toLocaleDateString('fr-FR')}
+                </p>
+                {paiement.reference && (
+                  <p className="text-neutral-400 text-xs mt-1">
+                    Référence : {paiement.reference}
+                  </p>
+                )}
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-primary-600">
+                  {Number(paiement.montant).toLocaleString()} FCFA
+                </p>
+                <p className="text-neutral-400 text-xs">Montant payé</p>
+                {isAdmin && (
+                  <select
+                    value={paiement.statut}
+                    disabled={updatingId === paiement.id}
+                    onChange={(e) => handleStatutChange(paiement.id, e.target.value)}
+                    className="mt-2 rounded-lg border border-neutral-200 bg-white px-2 py-1.5 text-xs focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+                  >
+                    <option value="EN_ATTENTE">En attente</option>
+                    <option value="VALIDE">Validé</option>
+                    <option value="ECHOUE">Échoué</option>
+                    <option value="REMBOURSE">Remboursé</option>
+                  </select>
+                )}
               </div>
             </div>
-          ))}
-        </div>
-
-        <div className="mt-6 flex gap-1 justify-center">
-          <div className="w-8 h-2 bg-niger-orange rounded"></div>
-          <div className="w-8 h-2 bg-white border border-gray-200 rounded"></div>
-          <div className="w-8 h-2 bg-niger-vert rounded"></div>
-        </div>
-
+          </Card>
+        ))}
       </div>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white shadow-card-hover">
 
-            <div className="bg-niger-orange text-white px-6 py-4 rounded-t-2xl flex justify-between items-center">
-              <h3 className="text-lg font-bold">Effectuer un paiement</h3>
+            <div className="flex items-center justify-between rounded-t-2xl bg-primary-600 px-6 py-4">
+              <h3 className="text-lg font-bold text-white">Effectuer un paiement</h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-white hover:text-gray-200 text-xl font-bold"
+                className="rounded-lg p-1 text-white/80 hover:bg-white/10 hover:text-white"
+                aria-label="Fermer"
               >
-                X
+                <IconClose className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 p-6">
 
               {formError && (
-                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">
+                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
                   {formError}
                 </div>
               )}
 
               {formSuccess && (
-                <div className="bg-niger-vert_light text-niger-vert p-3 rounded-lg text-sm border border-green-200">
+                <div className="rounded-lg bg-secondary-50 p-3 text-sm text-secondary-700">
                   {formSuccess}
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contrat a payer
-                </label>
-                <select
-                  name="contrat"
-                  value={form.contrat}
-                  onChange={handleChange}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
-                  required
-                >
-                  <option value="">Choisir un contrat</option>
-                  {contrats.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.numero_contrat} - {c.type_assurance}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                id="contrat"
+                label="Contrat à payer"
+                name="contrat"
+                value={form.contrat}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Choisir un contrat</option>
+                {contrats.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.numero_contrat} - {c.type_assurance}
+                  </option>
+                ))}
+              </Select>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Montant (FCFA)
-                </label>
-                <input
-                  type="number"
-                  name="montant"
-                  value={form.montant}
-                  onChange={handleChange}
-                  className="w-full border-2 border-niger-orange_light rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange bg-niger-orange_light"
-                  placeholder="Selectionner un contrat"
-                  readOnly
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  Montant automatiquement rempli depuis la prime du contrat
-                </p>
-              </div>
+              <Input
+                id="montant"
+                label="Montant (FCFA)"
+                type="number"
+                name="montant"
+                value={form.montant}
+                onChange={handleChange}
+                placeholder="Sélectionner un contrat"
+                hint="Montant automatiquement rempli depuis la prime du contrat"
+                className="bg-primary-50"
+                readOnly
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Methode de paiement
-                </label>
-                <select
-                  name="methode"
-                  value={form.methode}
-                  onChange={handleChange}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
-                  required
-                >
-                  <option value="">Choisir la methode</option>
-                  <option value="MYNITA">MyNITA</option>
-                  <option value="AMANATA">AmanaTa</option>
-                  <option value="ESPECES">Especes</option>
-                  <option value="VIREMENT">Virement bancaire</option>
-                </select>
-              </div>
+              <Select
+                id="methode"
+                label="Méthode de paiement"
+                name="methode"
+                value={form.methode}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Choisir la méthode</option>
+                <option value="MYNITA">MyNITA</option>
+                <option value="AMANATA">AmanaTa</option>
+                <option value="ESPECES">Espèces</option>
+                <option value="VIREMENT">Virement bancaire</option>
+              </Select>
 
               {showTelephone && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Numero de telephone {form.methode === 'MYNITA' ? 'MyNITA' : 'AmanaTa'}
-                  </label>
-                  <input
-                    type="tel"
-                    name="reference"
-                    value={form.reference}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
-                    placeholder="Ex: 96000000"
-                    required
-                  />
-                </div>
+                <Input
+                  id="reference"
+                  label={`Numéro de téléphone ${form.methode === 'MYNITA' ? 'MyNITA' : 'AmanaTa'}`}
+                  type="tel"
+                  name="reference"
+                  value={form.reference}
+                  onChange={handleChange}
+                  placeholder="Ex: 96000000"
+                  required
+                />
               )}
 
               {!showTelephone && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Reference (optionnel)
-                  </label>
-                  <input
-                    type="text"
-                    name="reference"
-                    value={form.reference}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-orange"
-                    placeholder="Reference du virement ou recu"
-                  />
-                </div>
+                <Input
+                  id="reference"
+                  label="Référence (optionnel)"
+                  type="text"
+                  name="reference"
+                  value={form.reference}
+                  onChange={handleChange}
+                  placeholder="Référence du virement ou reçu"
+                />
               )}
 
               <div className="flex gap-3 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  fullWidth
                   onClick={() => setShowModal(false)}
-                  className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-200 transition"
+                  className="bg-neutral-100"
                 >
                   Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={formLoading || !form.montant}
-                  className="flex-1 bg-niger-orange hover:bg-niger-orange_dark text-white py-3 rounded-xl font-medium transition"
-                >
+                </Button>
+                <Button type="submit" fullWidth loading={formLoading} disabled={!form.montant}>
                   {formLoading ? 'Envoi...' : 'Payer'}
-                </button>
+                </Button>
               </div>
 
             </form>
           </div>
         </div>
       )}
-
-    </div>
+    </DashboardLayout>
   );
 };
 

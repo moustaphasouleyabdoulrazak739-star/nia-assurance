@@ -12,10 +12,10 @@ function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-500 text-sm">Chargement...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-neutral-500 text-sm">Chargement...</p>
         </div>
       </div>
     );
@@ -47,11 +47,11 @@ function AppRoutes() {
 
       {/* 404 */}
       <Route path="*" element={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="min-h-screen flex items-center justify-center bg-neutral-50">
           <div className="text-center">
-            <h1 className="text-6xl font-bold text-blue-600 mb-4">404</h1>
-            <p className="text-gray-600 mb-6">Page introuvable</p>
-            <a href="/dashboard" className="text-blue-600 hover:underline">Retour a l'accueil</a>
+            <h1 className="text-6xl font-bold text-primary-600 mb-4">404</h1>
+            <p className="text-neutral-600 mb-6">Page introuvable</p>
+            <a href="/dashboard" className="text-primary-600 hover:underline">Retour a l'accueil</a>
           </div>
         </div>
       } />

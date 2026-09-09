@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import DashboardLayout from '../components/layout/DashboardLayout';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import { Input, Select, Textarea } from '../components/ui/Input';
 
 const Profil = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -80,246 +82,153 @@ const Profil = () => {
       await api.patch('/clients/me/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setSuccess('Profil mis a jour avec succes !');
+      setSuccess('Profil mis à jour avec succès !');
       setTimeout(() => setSuccess(''), 3000);
     } catch {
-      setError('Erreur lors de la mise a jour du profil.');
+      setError('Erreur lors de la mise à jour du profil.');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <DashboardLayout title="Mon profil" subtitle="Gérez vos informations personnelles">
+      {loading && (
+        <div className="py-12 text-center text-neutral-400">Chargement...</div>
+      )}
 
-      <nav className="bg-niger-orange text-white px-6 py-4 flex justify-between items-center shadow-lg">
-        <img src="/logo-nia.png" alt="NIA Assurance" className="h-10 w-auto" />
-        <div className="flex items-center gap-4">
-          <span className="text-sm">{user?.prenom} {user?.nom}</span>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-white text-niger-orange px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition"
-          >
-            Tableau de bord
-          </button>
-        </div>
-      </nav>
+      {!loading && (
+        <form onSubmit={handleSubmit} className="space-y-6">
 
-      <div className="max-w-3xl mx-auto p-6">
+          {error && (
+            <Card padding="sm" className="border border-red-100 bg-red-50">
+              <p className="text-sm text-red-600">{error}</p>
+            </Card>
+          )}
 
-        <div className="bg-white rounded-2xl shadow p-6 mb-6 border-l-4 border-niger-vert">
-          <h2 className="text-2xl font-bold text-niger-vert">Mon Profil</h2>
-          <p className="text-gray-500 mt-1">Gerez vos informations personnelles</p>
-        </div>
+          {success && (
+            <Card padding="sm" className="border border-secondary-100 bg-secondary-50">
+              <p className="text-sm text-secondary-700">{success}</p>
+            </Card>
+          )}
 
-        {loading && (
-          <div className="text-center py-12 text-gray-400">
-            Chargement...
-          </div>
-        )}
-
-        {!loading && (
-          <form onSubmit={handleSubmit} className="space-y-6">
-
-            {error && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200">
-                {error}
+          {/* Photo de profil */}
+          <Card>
+            <h3 className="text-lg font-bold text-neutral-700 mb-4">Photo de profil</h3>
+            <div className="flex items-center gap-6">
+              <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-primary-100 bg-primary-50">
+                {photoPreview ? (
+                  <img
+                    src={photoPreview}
+                    alt="Photo de profil"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-3xl text-primary-600">
+                    {user?.prenom?.charAt(0)}{user?.nom?.charAt(0)}
+                  </span>
+                )}
               </div>
-            )}
-
-            {success && (
-              <div className="bg-niger-vert_light text-niger-vert p-4 rounded-xl border border-green-200">
-                {success}
-              </div>
-            )}
-
-            {/* Photo de profil */}
-            <div className="bg-white rounded-2xl shadow p-6">
-              <h3 className="text-lg font-bold text-gray-700 mb-4">Photo de profil</h3>
-              <div className="flex items-center gap-6">
-                <div className="w-24 h-24 rounded-full overflow-hidden bg-niger-orange_light flex items-center justify-center border-4 border-niger-orange">
-                  {photoPreview ? (
-                    <img
-                      src={photoPreview}
-                      alt="Photo de profil"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-3xl text-niger-orange">
-                      {user?.prenom?.charAt(0)}{user?.nom?.charAt(0)}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <label className="bg-niger-orange text-white px-4 py-2 rounded-xl font-medium cursor-pointer hover:bg-niger-orange_dark transition">
-                    Changer la photo
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhoto}
-                      className="hidden"
-                    />
-                  </label>
-                  <p className="text-gray-400 text-xs mt-2">JPG, PNG — Max 2MB</p>
-                </div>
+              <div>
+                <label className="inline-block cursor-pointer rounded-xl bg-primary-600 px-4 py-2.5 font-medium text-white transition hover:bg-primary-700">
+                  Changer la photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhoto}
+                    className="hidden"
+                  />
+                </label>
+                <p className="text-neutral-400 text-xs mt-2">JPG, PNG — Max 2MB</p>
               </div>
             </div>
+          </Card>
 
-            {/* Informations personnelles */}
-            <div className="bg-white rounded-2xl shadow p-6">
-              <h3 className="text-lg font-bold text-gray-700 mb-4">Informations personnelles</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Informations personnelles */}
+          <Card>
+            <h3 className="text-lg font-bold text-neutral-700 mb-4">Informations personnelles</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Prenom
-                  </label>
-                  <input
-                    type="text"
-                    value={user?.prenom || ''}
-                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 bg-gray-50 text-gray-400"
-                    readOnly
-                  />
-                </div>
+              <Input id="prenom" label="Prénom" value={user?.prenom || ''} readOnly className="bg-neutral-50 text-neutral-400" />
+              <Input id="nom" label="Nom" value={user?.nom || ''} readOnly className="bg-neutral-50 text-neutral-400" />
+              <Input id="userEmail" label="Email" type="email" value={user?.email || ''} readOnly className="bg-neutral-50 text-neutral-400" />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nom
-                  </label>
-                  <input
-                    type="text"
-                    value={user?.nom || ''}
-                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 bg-gray-50 text-gray-400"
-                    readOnly
-                  />
-                </div>
+              <Input
+                id="cin"
+                label="CIN"
+                name="cin"
+                value={form.cin}
+                onChange={handleChange}
+                placeholder="Votre numéro CIN"
+                required
+              />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={user?.email || ''}
-                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 bg-gray-50 text-gray-400"
-                    readOnly
-                  />
-                </div>
+              <Input
+                id="date_naissance"
+                label="Date de naissance"
+                type="date"
+                name="date_naissance"
+                value={form.date_naissance}
+                onChange={handleChange}
+                required
+              />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    CIN
-                  </label>
-                  <input
-                    type="text"
-                    name="cin"
-                    value={form.cin}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-vert"
-                    placeholder="Votre numero CIN"
-                    required
-                  />
-                </div>
+              <Select
+                id="sexe"
+                label="Sexe"
+                name="sexe"
+                value={form.sexe}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Choisir</option>
+                <option value="M">Masculin</option>
+                <option value="F">Féminin</option>
+              </Select>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date de naissance
-                  </label>
-                  <input
-                    type="date"
-                    name="date_naissance"
-                    value={form.date_naissance}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-vert"
-                    required
-                  />
-                </div>
+              <Input
+                id="ville"
+                label="Ville"
+                name="ville"
+                value={form.ville}
+                onChange={handleChange}
+                placeholder="Ex: Niamey"
+                required
+              />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sexe
-                  </label>
-                  <select
-                    name="sexe"
-                    value={form.sexe}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-vert"
-                    required
-                  >
-                    <option value="">Choisir</option>
-                    <option value="M">Masculin</option>
-                    <option value="F">Feminin</option>
-                  </select>
-                </div>
+              <Input
+                id="profession"
+                label="Profession"
+                name="profession"
+                value={form.profession}
+                onChange={handleChange}
+                placeholder="Ex: Enseignant"
+              />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ville
-                  </label>
-                  <input
-                    type="text"
-                    name="ville"
-                    value={form.ville}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-vert"
-                    placeholder="Ex: Niamey"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Profession
-                  </label>
-                  <input
-                    type="text"
-                    name="profession"
-                    value={form.profession}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-vert"
-                    placeholder="Ex: Enseignant"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Adresse
-                  </label>
-                  <textarea
-                    name="adresse"
-                    value={form.adresse}
-                    onChange={handleChange}
-                    rows={3}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-vert"
-                    placeholder="Votre adresse complete"
-                    required
-                  />
-                </div>
-
+              <div className="md:col-span-2">
+                <Textarea
+                  id="adresse"
+                  label="Adresse"
+                  name="adresse"
+                  value={form.adresse}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder="Votre adresse complète"
+                  required
+                />
               </div>
+
             </div>
+          </Card>
 
-            {/* Bouton sauvegarder */}
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full bg-niger-vert hover:bg-niger-vert_dark text-white py-4 rounded-xl font-bold text-lg transition"
-            >
-              {saving ? 'Sauvegarde en cours...' : 'Sauvegarder les modifications'}
-            </button>
+          {/* Bouton sauvegarder */}
+          <Button type="submit" size="lg" fullWidth loading={saving} className="text-lg">
+            {saving ? 'Sauvegarde en cours...' : 'Sauvegarder les modifications'}
+          </Button>
 
-            {/* Drapeau */}
-            <div className="flex gap-1 justify-center pb-4">
-              <div className="w-8 h-2 bg-niger-orange rounded"></div>
-              <div className="w-8 h-2 bg-white border border-gray-200 rounded"></div>
-              <div className="w-8 h-2 bg-niger-vert rounded"></div>
-            </div>
-
-          </form>
-        )}
-
-      </div>
-    </div>
+        </form>
+      )}
+    </DashboardLayout>
   );
 };
 

@@ -2,68 +2,39 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import DashboardLayout from "../components/layout/DashboardLayout";
+import Card from "../components/ui/Card";
+import {
+  IconFileText,
+  IconAlertTriangle,
+  IconCreditCard,
+} from "../components/ui/icons";
 
-// Icônes SVG inline
-const Icons = {
-  Shield: () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-    </svg>
-  ),
-  FileText: () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-    </svg>
-  ),
-  AlertTriangle: () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-  ),
-  CreditCard: () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-    </svg>
-  ),
-  User: () => (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
-  ),
-  Logout: () => (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-    </svg>
-  ),
-  Menu: () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-  ),
-};
-
-// Carte statistique
-function StatCard({ icon: Icon, label, value, color, bg }) {
+function StatCard({ icon: Icon, label, value, tone }) {
+  const TONES = {
+    primary: "bg-primary-50 text-primary-600",
+    secondary: "bg-secondary-50 text-secondary-700",
+    amber: "bg-amber-50 text-amber-600",
+  };
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
-      <div className={`flex-shrink-0 w-12 h-12 ${bg} rounded-xl flex items-center justify-center ${color}`}>
-        <Icon />
+    <Card hoverable className="flex items-center gap-4">
+      <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${TONES[tone]}`}>
+        <Icon className="h-6 w-6" />
       </div>
       <div>
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className="text-2xl font-bold text-gray-800">{value}</p>
+        <p className="text-sm text-neutral-500">{label}</p>
+        <p className="text-2xl font-bold text-neutral-800">{value}</p>
       </div>
-    </div>
+    </Card>
   );
 }
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [stats, setStats] = useState({ contratsActifs: '—', sinistresEnAttente: '—', paiementsValides: '—' });
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'AGENT';
+  const isAdmin = user?.role === "ADMIN" || user?.role === "AGENT";
 
   const fetchStats = async () => {
     try {
@@ -87,144 +58,75 @@ export default function Dashboard() {
     fetchStats();
   }, []);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
-
-  const navItems = [
-    { id: "accueil", label: "Accueil", icon: Icons.Shield, path: "/dashboard" },
-    { id: "contrats", label: isAdmin ? "Contrats" : "Mes contrats", icon: Icons.FileText, path: "/contrats" },
-    { id: "sinistres", label: isAdmin ? "Sinistres" : "Mes sinistres", icon: Icons.AlertTriangle, path: "/sinistres" },
-    { id: "paiements", label: isAdmin ? "Paiements" : "Mes paiements", icon: Icons.CreditCard, path: "/paiements" },
-    { id: "profil", label: "Mon profil", icon: Icons.User, path: "/profil" },
+  const statCards = [
+    {
+      icon: IconFileText,
+      label: isAdmin ? "Contrats actifs (tous clients)" : "Mes contrats actifs",
+      value: stats.contratsActifs,
+      tone: "primary",
+    },
+    {
+      icon: IconAlertTriangle,
+      label: isAdmin ? "Sinistres en attente" : "Mes sinistres en attente",
+      value: stats.sinistresEnAttente,
+      tone: "amber",
+    },
+    {
+      icon: IconCreditCard,
+      label: isAdmin ? "Paiements validés" : "Mes paiements validés",
+      value: stats.paiementsValides,
+      tone: "secondary",
+    },
   ];
 
-  const statCards = [
-    { icon: Icons.FileText, label: isAdmin ? "Contrats actifs (tous clients)" : "Mes contrats actifs", value: stats.contratsActifs, color: "text-blue-600", bg: "bg-blue-50" },
-    { icon: Icons.AlertTriangle, label: isAdmin ? "Sinistres en attente" : "Mes sinistres en attente", value: stats.sinistresEnAttente, color: "text-orange-500", bg: "bg-orange-50" },
-    { icon: Icons.CreditCard, label: isAdmin ? "Paiements valides" : "Mes paiements valides", value: stats.paiementsValides, color: "text-green-600", bg: "bg-green-50" },
+  const quickActions = [
+    { label: isAdmin ? "Gérer les contrats" : "Mes contrats", icon: IconFileText, to: "/contrats" },
+    { label: isAdmin ? "Sinistres à traiter" : "Déclarer un sinistre", icon: IconAlertTriangle, to: "/sinistres" },
+    { label: isAdmin ? "Suivi paiements" : "Effectuer un paiement", icon: IconCreditCard, to: "/paiements" },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-xl transform transition-transform duration-300 lg:translate-x-0 lg:static lg:shadow-none lg:border-r border-gray-100 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
-          <img src="/logo-nia.png" alt="NIA Assurance" className="w-9 h-9 object-contain" />
-          <div>
-            <p className="font-bold text-gray-800 text-sm">Nia Assurance</p>
-            <p className="text-xs text-gray-400">{isAdmin ? "Espace compagnie" : "Espace client"}</p>
-          </div>
-        </div>
+    <DashboardLayout
+      title="Accueil"
+      subtitle={isAdmin ? "Vue d'ensemble — espace compagnie" : "Vue d'ensemble de votre espace"}
+    >
+      {/* Bienvenue */}
+      <div className="rounded-2xl bg-primary-600 p-6 mb-6 text-white">
+        <h2 className="text-xl font-bold mb-1">
+          Bienvenue, {user?.prenom} 👋
+        </h2>
+        <p className="text-white/85 text-sm">
+          {isAdmin
+            ? "Gérez les contrats, sinistres et paiements de vos clients."
+            : "Gérez vos assurances facilement depuis votre espace personnel."}
+        </p>
+      </div>
 
-        {/* Navigation */}
-        <nav className="p-4 space-y-1">
-          {navItems.map(({ id, label, icon: Icon, path }) => (
+      {/* Statistiques */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        {statCards.map((s) => (
+          <StatCard key={s.label} {...s} />
+        ))}
+      </div>
+
+      {/* Actions rapides */}
+      <Card>
+        <h3 className="font-semibold text-neutral-800 mb-4">Actions rapides</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {quickActions.map(({ label, icon: Icon, to }) => (
             <button
-              key={id}
-              onClick={() => { navigate(path); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition ${
-                id === "accueil"
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
-              }`}
+              key={to}
+              onClick={() => navigate(to)}
+              className="group flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-neutral-200 p-4 text-center transition hover:border-primary-300 hover:bg-primary-50"
             >
-              <Icon />
-              {label}
+              <Icon className="h-6 w-6 text-neutral-400 group-hover:text-primary-600" />
+              <span className="text-sm font-medium text-neutral-600 group-hover:text-primary-700">
+                {label}
+              </span>
             </button>
           ))}
-        </nav>
-
-        {/* Déconnexion */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition"
-          >
-            <Icons.Logout />
-            Déconnexion
-          </button>
         </div>
-      </aside>
-
-      {/* Overlay mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Contenu principal */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Header mobile */}
-        <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between lg:hidden">
-          <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100">
-            <Icons.Menu />
-          </button>
-          <span className="font-semibold text-gray-800">Nia Assurance</span>
-          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm">
-            {(user?.prenom?.[0] || "U").toUpperCase()}
-          </div>
-        </header>
-
-        {/* Contenu */}
-        <main className="flex-1 p-4 lg:p-8 overflow-auto">
-          <div className="max-w-5xl mx-auto">
-            <div className="mb-6 hidden lg:block">
-              <h1 className="text-2xl font-bold text-gray-800">Accueil</h1>
-            </div>
-
-            {/* Bienvenue */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 mb-6 text-white">
-              <h2 className="text-xl font-bold mb-1">
-                Bienvenue, {user?.prenom} 👋
-              </h2>
-              <p className="text-blue-100 text-sm">
-                {isAdmin
-                  ? "Gérez les contrats, sinistres et paiements de vos clients."
-                  : "Gérez vos assurances facilement depuis votre espace personnel."}
-              </p>
-            </div>
-
-            {/* Statistiques */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              {statCards.map((s, i) => (
-                <StatCard key={i} {...s} />
-              ))}
-            </div>
-
-            {/* Actions rapides */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="font-semibold text-gray-800 mb-4">Actions rapides</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {[
-                  { label: isAdmin ? "Gérer les contrats" : "Mes contrats", icon: "📋", path: "/contrats" },
-                  { label: isAdmin ? "Sinistres à traiter" : "Déclarer un sinistre", icon: "🚨", path: "/sinistres" },
-                  { label: isAdmin ? "Suivi paiements" : "Effectuer un paiement", icon: "💳", path: "/paiements" },
-                ].map((action) => (
-                  <button
-                    key={action.path}
-                    onClick={() => navigate(action.path)}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition text-center group"
-                  >
-                    <span className="text-2xl">{action.icon}</span>
-                    <span className="text-sm text-gray-600 group-hover:text-blue-600 font-medium">
-                      {action.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
+      </Card>
+    </DashboardLayout>
   );
 }
