@@ -1,9 +1,12 @@
+import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import api from '../../services/api';
 import {
   IconHome,
   IconFileText,
   IconAlertTriangle,
   IconCreditCard,
+  IconClipboardList,
   IconUser,
   IconLogout,
 } from './icons';
@@ -11,10 +14,15 @@ import {
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Accueil', icon: IconHome },
   { to: '/contrats', label: 'Contrats', icon: IconFileText },
+  { to: '/demandes', label: 'Demandes de contrat', icon: IconClipboardList, badgeKey: 'demandes' },
   { to: '/sinistres', label: 'Sinistres', icon: IconAlertTriangle },
   { to: '/paiements', label: 'Paiements', icon: IconCreditCard },
   { to: '/profil', label: 'Mon profil', icon: IconUser },
 ];
+
+// Rafraichissement simple par polling (pas de websocket) : suffisant pour un
+// compteur de demandes en attente, pas besoin de temps reel.
+const POLL_INTERVAL_MS = 30000;
 
 /**
  * Navigation latérale du dashboard — commune à l'espace client et à l'espace
@@ -22,6 +30,30 @@ const NAV_ITEMS = [
  */
 export default function Sidebar({ open, onClose, user, onLogout }) {
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'AGENT';
+  const [demandesEnAttente, setDemandesEnAttente] = useState(0);
+
+  useEffect(() => {
+    if (!isAdmin) return undefined;
+
+    let annule = false;
+    const fetchCount = async () => {
+      try {
+        const response = await api.get('/demandes/', { params: { statut: 'EN_ATTENTE' } });
+        if (!annule) setDemandesEnAttente(response.data.length);
+      } catch {
+        // Le compteur n'est qu'indicatif : on l'ignore silencieusement en cas d'echec.
+      }
+    };
+
+    fetchCount();
+    const interval = setInterval(fetchCount, POLL_INTERVAL_MS);
+    return () => {
+      annule = true;
+      clearInterval(interval);
+    };
+  }, [isAdmin]);
+
+  const badgeCounts = { demandes: demandesEnAttente };
 
   return (
     <>
@@ -39,23 +71,31 @@ export default function Sidebar({ open, onClose, user, onLogout }) {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              onClick={onClose}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition ${
-                  isActive
-                    ? 'bg-primary-50 text-primary-700'
-                    : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800'
-                }`
-              }
-            >
-              <Icon className="h-5 w-5 flex-shrink-0" />
-              {label}
-            </NavLink>
-          ))}
+          {NAV_ITEMS.map(({ to, label, icon: Icon, badgeKey }) => {
+            const count = badgeKey && isAdmin ? badgeCounts[badgeKey] : 0;
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition ${
+                    isActive
+                      ? 'bg-primary-50 text-primary-700'
+                      : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800'
+                  }`
+                }
+              >
+                <Icon className="h-5 w-5 flex-shrink-0" />
+                <span className="flex-1">{label}</span>
+                {count > 0 && (
+                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary-600 px-1.5 text-xs font-semibold text-white">
+                    {count}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div className="border-t border-neutral-100 p-4">

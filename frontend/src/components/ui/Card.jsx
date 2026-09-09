@@ -1,3 +1,5 @@
+import { forwardRef } from 'react';
+
 const PADDINGS = {
   none: '',
   sm: 'p-4',
@@ -15,17 +17,13 @@ const ACCENTS = {
  * Carte de contenu — fond blanc, ombre douce, pas de bordure dure.
  * accent: applique un liseré de couleur de marque à gauche (à utiliser avec parcimonie).
  */
-export default function Card({
-  as: Tag = 'div',
-  padding = 'md',
-  accent = 'none',
-  hoverable = false,
-  className = '',
-  children,
-  ...props
-}) {
+const Card = forwardRef(function Card(
+  { as: Tag = 'div', padding = 'md', accent = 'none', hoverable = false, className = '', children, ...props },
+  ref
+) {
   return (
     <Tag
+      ref={ref}
       className={[
         'bg-white rounded-2xl shadow-card',
         hoverable ? 'transition-shadow duration-200 hover:shadow-card-hover' : '',
@@ -38,4 +36,6 @@ export default function Card({
       {children}
     </Tag>
   );
-}
+});
+
+export default Card;

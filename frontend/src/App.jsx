@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Contrats from "./pages/Contrats";
+import Demandes from "./pages/Demandes";
 import Sinistres from "./pages/Sinistres";
 import Paiements from "./pages/Paiements";
 import Profil from "./pages/Profil";
@@ -41,6 +42,7 @@ function AppRoutes() {
       {/* Routes protegees */}
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/contrats" element={<PrivateRoute><Contrats /></PrivateRoute>} />
+      <Route path="/demandes" element={<PrivateRoute><Demandes /></PrivateRoute>} />
       <Route path="/sinistres" element={<PrivateRoute><Sinistres /></PrivateRoute>} />
       <Route path="/paiements" element={<PrivateRoute><Paiements /></PrivateRoute>} />
       <Route path="/profil" element={<PrivateRoute><Profil /></PrivateRoute>} />
