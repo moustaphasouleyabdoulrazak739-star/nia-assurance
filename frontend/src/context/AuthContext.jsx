@@ -5,28 +5,25 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      fetchProfile();
-    } else {
-      setLoading(false);
-    }
-  }, []);
+  const [loading, setLoading] = useState(() => !!localStorage.getItem('access_token'));
 
   const fetchProfile = async () => {
     try {
       const response = await api.get('/auth/profile/');
       setUser(response.data);
-    } catch (error) {
+    } catch {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (localStorage.getItem('access_token')) {
+      fetchProfile();
+    }
+  }, []);
 
   const login = async (email, password) => {
     const response = await api.post('/auth/login/', { email, password });

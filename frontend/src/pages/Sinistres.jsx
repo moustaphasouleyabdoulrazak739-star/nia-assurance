@@ -1,19 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-
-const STATUT_COLORS = {
-  EN_ATTENTE: 'bg-orange-100 text-orange-600',
-  EN_COURS: 'bg-blue-100 text-blue-600',
-  APPROUVE: 'bg-niger-vert_light text-niger-vert',
-  REJETE: 'bg-red-100 text-red-600',
-  REGLE: 'bg-gray-100 text-gray-500',
-};
+import DashboardLayout from '../components/layout/DashboardLayout';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import { Select, Textarea, Input } from '../components/ui/Input';
+import { SINISTRE_STATUS_VARIANTS } from '../components/ui/statusVariants';
+import { IconClose, IconDownload, IconInbox } from '../components/ui/icons';
 
 const Sinistres = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [sinistres, setSinistres] = useState([]);
   const [contrats, setContrats] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,17 +29,12 @@ const Sinistres = () => {
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'AGENT';
 
-  useEffect(() => {
-    fetchSinistres();
-    fetchContrats();
-  }, []);
-
   const fetchSinistres = async () => {
     try {
       setLoading(true);
       const response = await api.get('/sinistres/');
       setSinistres(response.data);
-    } catch (err) {
+    } catch {
       setError('Impossible de charger les sinistres.');
     } finally {
       setLoading(false);
@@ -58,6 +50,11 @@ const Sinistres = () => {
     }
   };
 
+  useEffect(() => {
+    fetchSinistres();
+    fetchContrats();
+  }, []);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -69,7 +66,7 @@ const Sinistres = () => {
     setFormSuccess('');
     try {
       await api.post('/sinistres/create/', form);
-      setFormSuccess('Sinistre declare avec succes !');
+      setFormSuccess('Sinistre déclaré avec succès !');
       setForm({
         contrat: '',
         type_sinistre: '',
@@ -82,269 +79,208 @@ const Sinistres = () => {
         setShowModal(false);
         setFormSuccess('');
       }, 2000);
-    } catch (err) {
-      setFormError('Erreur lors de la declaration. Verifiez les informations.');
+    } catch {
+      setFormError('Erreur lors de la déclaration. Vérifiez les informations.');
     } finally {
       setFormLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <DashboardLayout
+      title="Mes sinistres"
+      subtitle={isAdmin ? 'Liste de tous les sinistres' : 'Vos déclarations de sinistres'}
+      actions={<Button variant="secondary" onClick={() => setShowModal(true)}>Déclarer un sinistre</Button>}
+    >
+      {loading && (
+        <div className="py-12 text-center text-neutral-400">Chargement...</div>
+      )}
 
-      <nav className="bg-niger-orange text-white px-6 py-4 flex justify-between items-center shadow-lg">
-        <h1 className="text-xl font-bold">NIA ASSURANCE</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm">{user?.prenom} {user?.nom}</span>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-white text-niger-orange px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition"
-          >
-            Tableau de bord
-          </button>
-        </div>
-      </nav>
+      {error && (
+        <Card padding="sm" className="mb-4 border border-red-100 bg-red-50">
+          <p className="text-sm text-red-600">{error}</p>
+        </Card>
+      )}
 
-      <div className="max-w-6xl mx-auto p-6">
+      {!loading && !error && sinistres.length === 0 && (
+        <Card padding="lg" className="text-center text-neutral-400">
+          <IconInbox className="mx-auto mb-3 h-10 w-10 text-neutral-300" />
+          <p className="mb-4">Aucun sinistre déclaré.</p>
+          <Button variant="secondary" onClick={() => setShowModal(true)}>
+            Déclarer mon premier sinistre
+          </Button>
+        </Card>
+      )}
 
-        <div className="bg-white rounded-2xl shadow p-6 mb-6 border-l-4 border-niger-vert flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold text-niger-vert">Mes Sinistres</h2>
-            <p className="text-gray-500 mt-1">
-              {isAdmin ? 'Liste de tous les sinistres' : 'Vos declarations de sinistres'}
-            </p>
-          </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="bg-niger-vert hover:bg-niger-vert_dark text-white px-5 py-2 rounded-xl font-medium transition"
-          >
-            Declarer un sinistre
-          </button>
-        </div>
-
-        {loading && (
-          <div className="text-center py-12 text-gray-400">
-            Chargement...
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 mb-4">
-            {error}
-          </div>
-        )}
-
-        {!loading && !error && sinistres.length === 0 && (
-          <div className="bg-white rounded-2xl shadow p-12 text-center text-gray-400">
-            <p className="text-4xl mb-4">📭</p>
-            <p>Aucun sinistre declare.</p>
-            <button
-              onClick={() => setShowModal(true)}
-              className="mt-4 bg-niger-vert text-white px-5 py-2 rounded-xl font-medium"
-            >
-              Declarer mon premier sinistre
-            </button>
-          </div>
-        )}
-
-        <div className="grid gap-4">
-          {sinistres.map(sinistre => (
-            <div key={sinistre.id} className="bg-white rounded-2xl shadow p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-bold text-gray-800 text-lg">
-                      {sinistre.numero_sinistre}
-                    </h3>
-                    <span className={STATUT_COLORS[sinistre.statut] + ' text-xs px-3 py-1 rounded-full font-medium'}>
-                      {sinistre.statut}
-                    </span>
+      <div className="grid gap-4">
+        {sinistres.map(sinistre => (
+          <Card key={sinistre.id} hoverable>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                  <h3 className="font-bold text-neutral-800 text-lg">
+                    {sinistre.numero_sinistre}
+                  </h3>
+                  <Badge variant={SINISTRE_STATUS_VARIANTS[sinistre.statut] || 'neutral'}>
+                    {sinistre.statut}
+                  </Badge>
+                </div>
+                <p className="text-neutral-500 text-sm">{sinistre.type_sinistre}</p>
+                <p className="text-neutral-400 text-xs mt-1">
+                  Date sinistre : {sinistre.date_sinistre}
+                </p>
+                <p className="text-neutral-400 text-xs mt-1">
+                  Contrat : {sinistre.contrat}
+                </p>
+                {sinistre.description && (
+                  <p className="text-neutral-500 text-sm mt-2">{sinistre.description}</p>
+                )}
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-bold text-primary-600">
+                  {Number(sinistre.montant_reclame).toLocaleString()} FCFA
+                </p>
+                <p className="text-neutral-400 text-xs">Montant réclamé</p>
+                {sinistre.montant_indemnite && (
+                  <div className="mt-1">
+                    <p className="text-lg font-bold text-secondary-700">
+                      {Number(sinistre.montant_indemnite).toLocaleString()} FCFA
+                    </p>
+                    <p className="text-neutral-400 text-xs">Indemnité</p>
                   </div>
-                  <p className="text-gray-500 text-sm">{sinistre.type_sinistre}</p>
-                  <p className="text-gray-400 text-xs mt-1">
-                    Date sinistre : {sinistre.date_sinistre}
-                  </p>
-                  <p className="text-gray-400 text-xs mt-1">
-                    Contrat : {sinistre.contrat}
-                  </p>
-                  {sinistre.description && (
-                    <p className="text-gray-500 text-sm mt-2">{sinistre.description}</p>
-                  )}
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-niger-orange">
-                    {Number(sinistre.montant_reclame).toLocaleString()} FCFA
-                  </p>
-                  <p className="text-gray-400 text-xs">Montant reclame</p>
-                  {sinistre.montant_indemnite && (
-                    <div className="mt-1">
-                      <p className="text-lg font-bold text-niger-vert">
-                        {Number(sinistre.montant_indemnite).toLocaleString()} FCFA
-                      </p>
-                      <p className="text-gray-400 text-xs">Indemnite</p>
-                    </div>
-                  )}
-                  {sinistre.document && (
-                    <a
-                      href={'http://127.0.0.1:8000' + sinistre.document}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="bg-niger-vert_light text-niger-vert px-3 py-1 rounded-lg text-xs font-medium inline-block mt-2"
-                    >
-                      Telecharger PDF
-                    </a>
-                  )}
-                </div>
+                )}
+                {sinistre.document && (
+                  <a
+                    href={'http://127.0.0.1:8000' + sinistre.document}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100"
+                  >
+                    <IconDownload className="h-3.5 w-3.5" />
+                    Télécharger PDF
+                  </a>
+                )}
               </div>
             </div>
-          ))}
-        </div>
-
-        <div className="mt-6 flex gap-1 justify-center">
-          <div className="w-8 h-2 bg-niger-orange rounded"></div>
-          <div className="w-8 h-2 bg-white border border-gray-200 rounded"></div>
-          <div className="w-8 h-2 bg-niger-vert rounded"></div>
-        </div>
-
+          </Card>
+        ))}
       </div>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white shadow-card-hover">
 
-            <div className="bg-niger-vert text-white px-6 py-4 rounded-t-2xl flex justify-between items-center">
-              <h3 className="text-lg font-bold">Declarer un sinistre</h3>
+            <div className="flex items-center justify-between rounded-t-2xl bg-secondary-700 px-6 py-4">
+              <h3 className="text-lg font-bold text-white">Déclarer un sinistre</h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-white hover:text-gray-200 text-xl font-bold"
+                className="rounded-lg p-1 text-white/80 hover:bg-white/10 hover:text-white"
+                aria-label="Fermer"
               >
-                X
+                <IconClose className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 p-6">
 
               {formError && (
-                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">
+                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
                   {formError}
                 </div>
               )}
 
               {formSuccess && (
-                <div className="bg-niger-vert_light text-niger-vert p-3 rounded-lg text-sm border border-green-200">
+                <div className="rounded-lg bg-secondary-50 p-3 text-sm text-secondary-700">
                   {formSuccess}
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contrat concerne
-                </label>
-                <select
-                  name="contrat"
-                  value={form.contrat}
-                  onChange={handleChange}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-vert"
-                  required
-                >
-                  <option value="">Choisir un contrat</option>
-                  {contrats.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.numero_contrat} - {c.type_assurance}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                id="contrat"
+                label="Contrat concerné"
+                name="contrat"
+                value={form.contrat}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Choisir un contrat</option>
+                {contrats.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.numero_contrat} - {c.type_assurance}
+                  </option>
+                ))}
+              </Select>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Type de sinistre
-                </label>
-                <select
-                  name="type_sinistre"
-                  value={form.type_sinistre}
-                  onChange={handleChange}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-vert"
-                  required
-                >
-                  <option value="">Choisir le type</option>
-                  <option value="ACCIDENT">Accident</option>
-                  <option value="VOL">Vol</option>
-                  <option value="INCENDIE">Incendie</option>
-                  <option value="MALADIE">Maladie</option>
-                  <option value="DECES">Deces</option>
-                  <option value="AUTRE">Autre</option>
-                </select>
-              </div>
+              <Select
+                id="type_sinistre"
+                label="Type de sinistre"
+                name="type_sinistre"
+                value={form.type_sinistre}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Choisir le type</option>
+                <option value="ACCIDENT">Accident</option>
+                <option value="VOL">Vol</option>
+                <option value="INCENDIE">Incendie</option>
+                <option value="MALADIE">Maladie</option>
+                <option value="DECES">Décès</option>
+                <option value="AUTRE">Autre</option>
+              </Select>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date du sinistre
-                </label>
-                <input
-                  type="date"
-                  name="date_sinistre"
-                  value={form.date_sinistre}
-                  onChange={handleChange}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-vert"
-                  required
-                />
-              </div>
+              <Input
+                id="date_sinistre"
+                label="Date du sinistre"
+                type="date"
+                name="date_sinistre"
+                value={form.date_sinistre}
+                onChange={handleChange}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-vert"
-                  placeholder="Decrivez le sinistre..."
-                  required
-                />
-              </div>
+              <Textarea
+                id="description"
+                label="Description"
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Décrivez le sinistre..."
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Montant reclame (FCFA)
-                </label>
-                <input
-                  type="number"
-                  name="montant_reclame"
-                  value={form.montant_reclame}
-                  onChange={handleChange}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-niger-vert"
-                  placeholder="Ex: 150000"
-                  required
-                />
-              </div>
+              <Input
+                id="montant_reclame"
+                label="Montant réclamé (FCFA)"
+                type="number"
+                name="montant_reclame"
+                value={form.montant_reclame}
+                onChange={handleChange}
+                placeholder="Ex: 150000"
+                required
+              />
 
               <div className="flex gap-3 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  fullWidth
                   onClick={() => setShowModal(false)}
-                  className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-200 transition"
+                  className="bg-neutral-100"
                 >
                   Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={formLoading}
-                  className="flex-1 bg-niger-vert hover:bg-niger-vert_dark text-white py-3 rounded-xl font-medium transition"
-                >
-                  {formLoading ? 'Envoi...' : 'Declarer'}
-                </button>
+                </Button>
+                <Button type="submit" variant="secondary" fullWidth loading={formLoading}>
+                  {formLoading ? 'Envoi...' : 'Déclarer'}
+                </Button>
               </div>
 
             </form>
           </div>
         </div>
       )}
-
-    </div>
+    </DashboardLayout>
   );
 };
 

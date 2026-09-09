@@ -2,6 +2,10 @@ import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import api from "../services/api";
+import logo from "../assets/logo-nia.png";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import { Input } from "../components/ui/Input";
 
 export default function Register() {
   const { login } = useContext(AuthContext);
@@ -96,78 +100,101 @@ export default function Register() {
     }
   };
 
-  const InputField = ({ label, name, type = "text", placeholder }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <input
-        type={type}
-        name={name}
-        value={formData[name]}
-        onChange={handleChange}
-        placeholder={placeholder}
-        className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
-          errors[name] ? "border-red-400 bg-red-50" : "border-gray-300 bg-white"
-        }`}
-      />
-      {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
-    </div>
-  );
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800">Nia Assurance</h1>
-          <p className="text-gray-500 text-sm mt-1">Créer votre compte</p>
+          <img
+            src={logo}
+            alt="NIA Assurance"
+            className="w-16 h-16 mx-auto mb-4 object-contain"
+          />
+          <h1 className="text-2xl font-bold text-neutral-800">Nia Assurance</h1>
+          <p className="text-neutral-500 text-sm mt-1">Créer votre compte</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <Card padding="lg">
           {globalError && (
-            <div className="mb-5 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+            <div className="mb-5 p-3 bg-red-50 rounded-lg text-red-600 text-sm">
               {globalError}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <InputField label="Prénom" name="prenom" placeholder="Moustapha" />
-              <InputField label="Nom" name="nom" placeholder="Diallo" />
+              <Input
+                id="prenom"
+                label="Prénom"
+                name="prenom"
+                value={formData.prenom}
+                onChange={handleChange}
+                placeholder="Moustapha"
+                error={errors.prenom}
+              />
+              <Input
+                id="nom"
+                label="Nom"
+                name="nom"
+                value={formData.nom}
+                onChange={handleChange}
+                placeholder="Diallo"
+                error={errors.nom}
+              />
             </div>
-            <InputField label="Adresse email" name="email" type="email" placeholder="you@example.com" />
-            <InputField label="Téléphone" name="telephone" placeholder="+227 90 00 00 00" />
-            <InputField label="Mot de passe" name="password" type="password" placeholder="Min. 8 caractères" />
-            <InputField label="Confirmer le mot de passe" name="password2" type="password" placeholder="Répéter le mot de passe" />
+            <Input
+              id="email"
+              label="Adresse email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="you@example.com"
+              error={errors.email}
+            />
+            <Input
+              id="telephone"
+              label="Téléphone"
+              name="telephone"
+              value={formData.telephone}
+              onChange={handleChange}
+              placeholder="+227 90 00 00 00"
+              error={errors.telephone}
+            />
+            <Input
+              id="password"
+              label="Mot de passe"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Min. 8 caractères"
+              error={errors.password}
+            />
+            <Input
+              id="password2"
+              label="Confirmer le mot de passe"
+              name="password2"
+              type="password"
+              value={formData.password2}
+              onChange={handleChange}
+              placeholder="Répéter le mot de passe"
+              error={errors.password2}
+            />
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2 mt-2"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Création du compte...
-                </>
-              ) : (
-                "Créer mon compte"
-              )}
-            </button>
+            <Button type="submit" fullWidth loading={loading} className="mt-2">
+              {loading ? "Création du compte..." : "Créer mon compte"}
+            </Button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-sm text-neutral-500 mt-6">
             Déjà un compte ?{" "}
-            <Link to="/login" className="text-blue-600 font-medium hover:underline">
+            <Link to="/login" className="text-primary-600 font-medium hover:underline">
               Se connecter
             </Link>
           </p>
-        </div>
+        </Card>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-neutral-400 mt-6">
           © {new Date().getFullYear()} Nia Assurance — Tous droits réservés
         </p>
       </div>
