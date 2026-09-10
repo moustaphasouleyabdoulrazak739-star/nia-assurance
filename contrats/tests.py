@@ -82,3 +82,51 @@ class ContratScopeTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['numero_contrat'], 'CTR-1')
+
+
+class ContratAttestationTests(APITestCase):
+    def test_client_can_download_attestation_for_own_active_contrat(self):
+        client_profile = make_client()
+        contrat = Contrat.objects.create(client=client_profile, numero_contrat='CTR-1', **CONTRAT_PAYLOAD)
+        self.client.force_authenticate(user=client_profile.user)
+        response = self.client.get(reverse('contrat_attestation', args=[contrat.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn('attachment', response['Content-Disposition'])
+        self.assertIn('CTR-1', response['Content-Disposition'])
+        self.assertTrue(response.content.startswith(b'%PDF'))
+
+    def test_client_cannot_download_attestation_for_others_contrat(self):
+        """Regression IDOR : un client ne doit jamais pouvoir telecharger
+        l'attestation du contrat d'un autre client."""
+        victime = make_client('victime@nia.ne')
+        attaquant = make_client('attaquant@nia.ne')
+        contrat_victime = Contrat.objects.create(client=victime, numero_contrat='CTR-V', **CONTRAT_PAYLOAD)
+
+        self.client.force_authenticate(user=attaquant.user)
+        response = self.client.get(reverse('contrat_attestation', args=[contrat_victime.id]))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_cannot_download_attestation_for_inactive_contrat(self):
+        client_profile = make_client()
+        contrat = Contrat.objects.create(
+            client=client_profile, numero_contrat='CTR-1',
+            **{**CONTRAT_PAYLOAD, 'statut': 'EXPIRE'},
+        )
+        self.client.force_authenticate(user=client_profile.user)
+        response = self.client.get(reverse('contrat_attestation', args=[contrat.id]))
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_admin_can_download_any_contrat_attestation(self):
+        client_profile = make_client()
+        contrat = Contrat.objects.create(client=client_profile, numero_contrat='CTR-1', **CONTRAT_PAYLOAD)
+        admin = make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.get(reverse('contrat_attestation', args=[contrat.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_unauthenticated_cannot_download_attestation(self):
+        client_profile = make_client()
+        contrat = Contrat.objects.create(client=client_profile, numero_contrat='CTR-1', **CONTRAT_PAYLOAD)
+        response = self.client.get(reverse('contrat_attestation', args=[contrat.id]))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

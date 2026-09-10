@@ -109,3 +109,48 @@ class PaiementReviewTests(APITestCase):
         self.client.force_authenticate(user=paiement.client.user)
         response = self.client.patch(reverse('paiement_detail', args=[paiement.id]), {'statut': 'VALIDE'})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class PaiementRecuTests(APITestCase):
+    def make_paiement(self, client_profile, statut='VALIDE', numero='REC-1'):
+        contrat = make_contrat(client_profile, numero=f'CTR-{numero}')
+        return Paiement.objects.create(
+            client=client_profile, contrat=contrat, numero_recu=numero,
+            montant='150000.00', methode='MYNITA', statut=statut,
+        )
+
+    def test_client_can_download_recu_for_own_valide_paiement(self):
+        client_profile = make_client()
+        paiement = self.make_paiement(client_profile)
+        self.client.force_authenticate(user=client_profile.user)
+        response = self.client.get(reverse('paiement_recu', args=[paiement.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn('REC-1', response['Content-Disposition'])
+        self.assertTrue(response.content.startswith(b'%PDF'))
+
+    def test_client_cannot_download_recu_for_others_paiement(self):
+        """Regression IDOR : un client ne doit jamais pouvoir telecharger le
+        recu du paiement d'un autre client."""
+        victime = make_client('victime@nia.ne')
+        attaquant = make_client('attaquant@nia.ne')
+        paiement_victime = self.make_paiement(victime, numero='REC-V')
+
+        self.client.force_authenticate(user=attaquant.user)
+        response = self.client.get(reverse('paiement_recu', args=[paiement_victime.id]))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_cannot_download_recu_for_non_valide_paiement(self):
+        client_profile = make_client()
+        paiement = self.make_paiement(client_profile, statut='EN_ATTENTE')
+        self.client.force_authenticate(user=client_profile.user)
+        response = self.client.get(reverse('paiement_recu', args=[paiement.id]))
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_admin_can_download_any_paiement_recu(self):
+        client_profile = make_client()
+        paiement = self.make_paiement(client_profile)
+        admin = User.objects.create_user(email='admin2@nia.ne', password='Secret123!', nom='Admin', prenom='X', role='ADMIN', is_staff=True)
+        self.client.force_authenticate(user=admin)
+        response = self.client.get(reverse('paiement_recu', args=[paiement.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

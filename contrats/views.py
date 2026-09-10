@@ -1,8 +1,12 @@
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import Contrat
 from .serializers import ContratSerializer, ContratCreateSerializer
+from nia_assurance.pdf_utils import generer_attestation_contrat
 
 
 class ContratListView(generics.ListAPIView):
@@ -55,3 +59,28 @@ class ContratDetailView(generics.RetrieveUpdateDestroyAPIView):
                 'error': 'Permission refusée'
             }, status=status.HTTP_403_FORBIDDEN)
         return super().destroy(request, *args, **kwargs)
+
+
+class ContratAttestationView(APIView):
+    """GET /api/contrats/<id>/attestation/ - PDF telechargeable, uniquement
+    pour un contrat ACTIF. Meme regle de portee IDOR que les autres vues :
+    un client ne peut recuperer que ses propres contrats."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        user = request.user
+        if user.role in ('ADMIN', 'AGENT'):
+            contrat = get_object_or_404(Contrat, pk=pk)
+        else:
+            contrat = get_object_or_404(Contrat, pk=pk, client__user=user)
+
+        if contrat.statut != 'ACTIF':
+            return Response({
+                'error': "L'attestation n'est disponible que pour un contrat actif."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        pdf = generer_attestation_contrat(contrat)
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="attestation_{contrat.numero_contrat}.pdf"'
+        return response

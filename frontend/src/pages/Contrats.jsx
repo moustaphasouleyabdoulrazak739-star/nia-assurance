@@ -8,6 +8,7 @@ import Badge from '../components/ui/Badge';
 import { Select, Textarea, Input } from '../components/ui/Input';
 import { CONTRAT_STATUS_VARIANTS } from '../components/ui/statusVariants';
 import { estEcheanceProche } from '../utils/dates';
+import { telechargerPdf, extraireErreurTelechargement } from '../utils/downloadPdf';
 import { IconClose, IconDownload, IconInbox, IconClock } from '../components/ui/icons';
 
 const FILTRES = ['TOUS', 'ACTIF', 'EXPIRE', 'SUSPENDU', 'RESILIE'];
@@ -37,6 +38,8 @@ const Contrats = () => {
   const [error, setError] = useState('');
   const [filtre, setFiltre] = useState('TOUS');
   const [filtreType, setFiltreType] = useState('TOUS');
+  const [attestationEnCoursId, setAttestationEnCoursId] = useState(null);
+  const [attestationError, setAttestationError] = useState('');
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -136,6 +139,18 @@ const Contrats = () => {
 
   const clientHint = `Un client au profil incomplet doit d'abord renseigner CIN, date de naissance, adresse et ville depuis "Mon profil".`;
 
+  const handleDownloadAttestation = async (contrat) => {
+    setAttestationEnCoursId(contrat.id);
+    setAttestationError('');
+    try {
+      await telechargerPdf(api, `/contrats/${contrat.id}/attestation/`, `attestation_${contrat.numero_contrat}.pdf`);
+    } catch (err) {
+      setAttestationError(await extraireErreurTelechargement(err, "Impossible de télécharger l'attestation."));
+    } finally {
+      setAttestationEnCoursId(null);
+    }
+  };
+
   return (
     <DashboardLayout
       title={isAdmin ? 'Contrats' : 'Mes contrats'}
@@ -174,6 +189,12 @@ const Contrats = () => {
       {error && (
         <Card padding="sm" className="mb-4 border border-red-100 bg-red-50">
           <p className="text-sm text-red-600">{error}</p>
+        </Card>
+      )}
+
+      {attestationError && (
+        <Card padding="sm" className="mb-4 border border-red-100 bg-red-50">
+          <p className="text-sm text-red-600">{attestationError}</p>
         </Card>
       )}
 
@@ -218,6 +239,16 @@ const Contrats = () => {
                   {Number(contrat.montant_prime).toLocaleString()} FCFA
                 </p>
                 <div className="mt-2 flex flex-col items-end gap-2">
+                  {contrat.statut === 'ACTIF' && (
+                    <button
+                      onClick={() => handleDownloadAttestation(contrat)}
+                      disabled={attestationEnCoursId === contrat.id}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100 disabled:opacity-50"
+                    >
+                      <IconDownload className="h-3.5 w-3.5" />
+                      {attestationEnCoursId === contrat.id ? 'Génération...' : "Télécharger l'attestation"}
+                    </button>
+                  )}
                   {contrat.document && (
                     <a
                       href={contrat.document}

@@ -7,7 +7,8 @@ import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { Select, Input } from '../components/ui/Input';
 import { PAIEMENT_STATUS_VARIANTS } from '../components/ui/statusVariants';
-import { IconClose, IconInbox, IconCreditCard } from '../components/ui/icons';
+import { telechargerPdf, extraireErreurTelechargement } from '../utils/downloadPdf';
+import { IconClose, IconInbox, IconCreditCard, IconDownload } from '../components/ui/icons';
 
 const METHODE_LABELS = {
   MYNITA: 'MyNITA',
@@ -33,6 +34,8 @@ const Paiements = () => {
     reference: '',
   });
   const [updatingId, setUpdatingId] = useState(null);
+  const [recuEnCoursId, setRecuEnCoursId] = useState(null);
+  const [recuError, setRecuError] = useState('');
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'AGENT';
   const showTelephone = form.methode === 'MYNITA' || form.methode === 'AMANATA';
@@ -119,6 +122,18 @@ const Paiements = () => {
     }
   };
 
+  const handleDownloadRecu = async (paiement) => {
+    setRecuEnCoursId(paiement.id);
+    setRecuError('');
+    try {
+      await telechargerPdf(api, `/paiements/${paiement.id}/recu/`, `recu_${paiement.numero_recu}.pdf`);
+    } catch (err) {
+      setRecuError(await extraireErreurTelechargement(err, 'Impossible de télécharger le reçu.'));
+    } finally {
+      setRecuEnCoursId(null);
+    }
+  };
+
   const totalPaye = paiements
     .filter((p) => p.statut === 'VALIDE')
     .reduce((somme, p) => somme + Number(p.montant), 0);
@@ -150,6 +165,12 @@ const Paiements = () => {
       {error && (
         <Card padding="sm" className="mb-4 border border-red-100 bg-red-50">
           <p className="text-sm text-red-600">{error}</p>
+        </Card>
+      )}
+
+      {recuError && (
+        <Card padding="sm" className="mb-4 border border-red-100 bg-red-50">
+          <p className="text-sm text-red-600">{recuError}</p>
         </Card>
       )}
 
@@ -197,6 +218,16 @@ const Paiements = () => {
                   {Number(paiement.montant).toLocaleString()} FCFA
                 </p>
                 <p className="text-neutral-400 text-xs">Montant payé</p>
+                {paiement.statut === 'VALIDE' && (
+                  <button
+                    onClick={() => handleDownloadRecu(paiement)}
+                    disabled={recuEnCoursId === paiement.id}
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100 disabled:opacity-50"
+                  >
+                    <IconDownload className="h-3.5 w-3.5" />
+                    {recuEnCoursId === paiement.id ? 'Génération...' : 'Télécharger le reçu'}
+                  </button>
+                )}
                 {isAdmin && (
                   <select
                     value={paiement.statut}
