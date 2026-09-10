@@ -7,7 +7,7 @@ import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { Select, Input } from '../components/ui/Input';
 import { PAIEMENT_STATUS_VARIANTS } from '../components/ui/statusVariants';
-import { IconClose, IconInbox } from '../components/ui/icons';
+import { IconClose, IconInbox, IconCreditCard } from '../components/ui/icons';
 
 const METHODE_LABELS = {
   MYNITA: 'MyNITA',
@@ -119,6 +119,10 @@ const Paiements = () => {
     }
   };
 
+  const totalPaye = paiements
+    .filter((p) => p.statut === 'VALIDE')
+    .reduce((somme, p) => somme + Number(p.montant), 0);
+
   return (
     <DashboardLayout
       title={isAdmin ? 'Paiements' : 'Mes paiements'}
@@ -127,6 +131,20 @@ const Paiements = () => {
     >
       {loading && (
         <div className="py-12 text-center text-neutral-400">Chargement...</div>
+      )}
+
+      {!loading && !error && paiements.length > 0 && (
+        <Card hoverable className="mb-6 flex items-center gap-4">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-secondary-50 text-secondary-700">
+            <IconCreditCard className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-sm text-neutral-500">
+              {isAdmin ? 'Total payé (tous clients, paiements validés)' : 'Total payé (paiements validés)'}
+            </p>
+            <p className="text-2xl font-bold text-neutral-800">{totalPaye.toLocaleString()} FCFA</p>
+          </div>
+        </Card>
       )}
 
       {error && (

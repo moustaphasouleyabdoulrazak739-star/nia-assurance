@@ -9,6 +9,48 @@ import { Select, Textarea, Input } from '../components/ui/Input';
 import { SINISTRE_STATUS_VARIANTS } from '../components/ui/statusVariants';
 import { IconClose, IconDownload, IconInbox } from '../components/ui/icons';
 
+const ETAPES_SINISTRE = ['Déclaré', 'En cours', 'Traité'];
+
+function etapeSinistreIndex(statut) {
+  if (statut === 'EN_ATTENTE') return 0;
+  if (statut === 'EN_COURS') return 1;
+  return 2; // APPROUVE, REJETE, REGLE : le dossier a atteint son etape finale
+}
+
+/** Mini-timeline de traitement (declare -> en cours -> traite). */
+function SinistreTimeline({ statut }) {
+  const etapeActuelle = etapeSinistreIndex(statut);
+  const estRejete = statut === 'REJETE';
+
+  return (
+    <div className="mt-4 flex items-center border-t border-neutral-100 pt-3">
+      {ETAPES_SINISTRE.map((etape, i) => {
+        const atteinte = i <= etapeActuelle;
+        const pastille = !atteinte
+          ? 'bg-neutral-100 text-neutral-400'
+          : i === 2 && estRejete
+            ? 'bg-red-500 text-white'
+            : 'bg-secondary-600 text-white';
+        return (
+          <div key={etape} className="flex flex-1 items-center last:flex-none">
+            <div className="flex items-center gap-2">
+              <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${pastille}`}>
+                {i + 1}
+              </span>
+              <span className={`text-xs font-medium whitespace-nowrap ${atteinte ? 'text-neutral-700' : 'text-neutral-400'}`}>
+                {etape}
+              </span>
+            </div>
+            {i < ETAPES_SINISTRE.length - 1 && (
+              <div className={`mx-2 h-0.5 flex-1 ${i < etapeActuelle ? 'bg-secondary-600' : 'bg-neutral-100'}`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 const Sinistres = () => {
   const { user } = useAuth();
   const [sinistres, setSinistres] = useState([]);
@@ -215,6 +257,7 @@ const Sinistres = () => {
                 )}
               </div>
             </div>
+            <SinistreTimeline statut={sinistre.statut} />
           </Card>
         ))}
       </div>

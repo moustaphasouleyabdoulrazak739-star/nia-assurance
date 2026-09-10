@@ -7,9 +7,17 @@ import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { Select, Textarea, Input } from '../components/ui/Input';
 import { CONTRAT_STATUS_VARIANTS } from '../components/ui/statusVariants';
-import { IconClose, IconDownload, IconInbox } from '../components/ui/icons';
+import { estEcheanceProche } from '../utils/dates';
+import { IconClose, IconDownload, IconInbox, IconClock } from '../components/ui/icons';
 
 const FILTRES = ['TOUS', 'ACTIF', 'EXPIRE', 'SUSPENDU', 'RESILIE'];
+const TYPES_FILTRE = [
+  { value: 'TOUS', label: 'Tous les types' },
+  { value: 'AUTO', label: 'Assurance Auto' },
+  { value: 'SANTE', label: 'Assurance Santé' },
+  { value: 'HABITATION', label: 'Assurance Habitation' },
+  { value: 'VIE', label: 'Assurance Vie' },
+];
 
 const FORM_VIDE = {
   client: '',
@@ -28,6 +36,7 @@ const Contrats = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filtre, setFiltre] = useState('TOUS');
+  const [filtreType, setFiltreType] = useState('TOUS');
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -65,9 +74,10 @@ const Contrats = () => {
     if (isAdmin) fetchClients();
   }, [isAdmin]);
 
-  const contratsFiltres = filtre === 'TOUS'
-    ? contrats
-    : contrats.filter(c => c.statut === filtre);
+  const contratsFiltres = contrats.filter(c =>
+    (filtre === 'TOUS' || c.statut === filtre) &&
+    (filtreType === 'TOUS' || c.type_assurance === filtreType)
+  );
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -132,7 +142,7 @@ const Contrats = () => {
       subtitle={isAdmin ? 'Tous les contrats clients' : 'Vos contrats en cours'}
       actions={isAdmin && <Button onClick={openCreate}>Nouveau contrat</Button>}
     >
-      <div className="flex gap-2 mb-6 flex-wrap">
+      <div className="flex flex-wrap items-center gap-2 mb-6">
         {FILTRES.map(f => (
           <button
             key={f}
@@ -146,6 +156,15 @@ const Contrats = () => {
             {f}
           </button>
         ))}
+        <select
+          value={filtreType}
+          onChange={(e) => setFiltreType(e.target.value)}
+          className="ml-auto rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-600 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+        >
+          {TYPES_FILTRE.map((t) => (
+            <option key={t.value} value={t.value}>{t.label}</option>
+          ))}
+        </select>
       </div>
 
       {loading && (
@@ -182,9 +201,17 @@ const Contrats = () => {
                 <p className="text-neutral-400 text-xs mt-1">
                   Du {contrat.date_debut} au {contrat.date_fin}
                 </p>
-                <Badge variant={CONTRAT_STATUS_VARIANTS[contrat.statut] || 'neutral'} className="mt-2">
-                  {contrat.statut}
-                </Badge>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <Badge variant={CONTRAT_STATUS_VARIANTS[contrat.statut] || 'neutral'}>
+                    {contrat.statut}
+                  </Badge>
+                  {estEcheanceProche(contrat) && (
+                    <Badge variant="warning" className="inline-flex items-center gap-1">
+                      <IconClock className="h-3 w-3" />
+                      Échéance proche
+                    </Badge>
+                  )}
+                </div>
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-primary-600">

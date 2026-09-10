@@ -59,8 +59,13 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   };
 
+  // Permet a une page (ex: Profil) de refleter dans le contexte un champ
+  // utilisateur modifie via /auth/profile/ (telephone, nom...), sans
+  // dupliquer la reponse deja renvoyee par le PATCH dans un nouvel appel GET.
+  const updateUser = (data) => setUser((prev) => ({ ...prev, ...data }));
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
