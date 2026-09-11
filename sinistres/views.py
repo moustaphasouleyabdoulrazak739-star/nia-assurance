@@ -3,6 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Sinistre
 from .serializers import SinistreSerializer, SinistreCreateSerializer, SinistreReviewSerializer
+from journal.utils import enregistrer_action
 
 
 class SinistreListView(generics.ListAPIView):
@@ -50,6 +51,13 @@ class SinistreDetailView(generics.RetrieveUpdateDestroyAPIView):
                 'error': 'Permission refusée'
             }, status=status.HTTP_403_FORBIDDEN)
         return super().update(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        sinistre = serializer.save()
+        resume = f'Sinistre {sinistre.numero_sinistre} marqué {sinistre.get_statut_display()}'
+        if sinistre.montant_indemnite:
+            resume += f', indemnité {sinistre.montant_indemnite:,.0f} FCFA'.replace(',', ' ')
+        enregistrer_action(self.request.user, 'SINISTRE_TRAITE', resume, sinistre=sinistre)
 
     def destroy(self, request, *args, **kwargs):
         if request.user.role != 'ADMIN':

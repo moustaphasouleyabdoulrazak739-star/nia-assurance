@@ -7,6 +7,7 @@ import {
   IconAlertTriangle,
   IconCreditCard,
   IconClipboardList,
+  IconListBullet,
   IconUser,
   IconLogout,
 } from './icons';
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
   { to: '/demandes', label: 'Demandes de contrat', icon: IconClipboardList, badgeKey: 'demandes' },
   { to: '/sinistres', label: 'Sinistres', icon: IconAlertTriangle },
   { to: '/paiements', label: 'Paiements', icon: IconCreditCard },
+  { to: '/journal', label: "Journal d'activité", icon: IconListBullet, adminOnly: true },
   { to: '/profil', label: 'Mon profil', icon: IconUser },
 ];
 
@@ -71,7 +73,7 @@ export default function Sidebar({ open, onClose, user, onLogout }) {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-          {NAV_ITEMS.map(({ to, label, icon: Icon, badgeKey }) => {
+          {NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin).map(({ to, label, icon: Icon, badgeKey }) => {
             const count = badgeKey && isAdmin ? badgeCounts[badgeKey] : 0;
             return (
               <NavLink

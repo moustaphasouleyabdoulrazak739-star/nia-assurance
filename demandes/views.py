@@ -13,6 +13,7 @@ from .serializers import (
 from contrats.models import Contrat
 from contrats.serializers import ContratSerializer
 from nia_assurance.utils import generate_numero
+from journal.utils import enregistrer_action
 
 
 class DemandeListView(generics.ListAPIView):
@@ -151,6 +152,12 @@ class DemandeValiderView(APIView):
         demande.date_traitement = timezone.now()
         demande.save()
 
+        enregistrer_action(
+            request.user, 'DEMANDE_VALIDEE',
+            f"Demande {demande.numero_demande} validée, contrat {contrat.numero_contrat} créé",
+            demande=demande, contrat=contrat,
+        )
+
         return Response({
             'demande': DemandeContratSerializer(demande, context={'request': request}).data,
             'contrat': ContratSerializer(contrat).data,
@@ -181,6 +188,12 @@ class DemandeRejeterView(APIView):
         demande.motif_rejet = serializer.validated_data['motif_rejet']
         demande.date_traitement = timezone.now()
         demande.save()
+
+        enregistrer_action(
+            request.user, 'DEMANDE_REJETEE',
+            f"Demande {demande.numero_demande} rejetée",
+            demande=demande,
+        )
 
         return Response({
             'demande': DemandeContratSerializer(demande, context={'request': request}).data,

@@ -5,6 +5,7 @@ from rest_framework.test import APITestCase
 from users.models import User
 from clients.models import Client
 from contrats.models import Contrat
+from journal.models import JournalActivite
 from .models import DemandeContrat
 
 
@@ -312,6 +313,45 @@ class DemandeRejeterTests(APITestCase):
             'motif_rejet': 'test',
         })
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class DemandeJournalTests(APITestCase):
+    """Regression : valider/rejeter une demande doit laisser une trace dans
+    le journal d'activite."""
+
+    def test_validating_demande_logs_journal_entry(self):
+        client_profile = make_client()
+        demande = DemandeContrat.objects.create(
+            client=client_profile, numero_demande='DEM-1', type_assurance='AUTO'
+        )
+        admin = make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.post(reverse('demande_valider', args=[demande.id]), {
+            'date_debut': '2026-01-01', 'date_fin': '2027-01-01', 'montant_prime': '150000.00',
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        entree = JournalActivite.objects.get(action='DEMANDE_VALIDEE')
+        self.assertEqual(entree.utilisateur, admin)
+        self.assertEqual(entree.demande_id, demande.id)
+        self.assertIsNotNone(entree.contrat_id)
+        self.assertIn('DEM-1', entree.resume)
+
+    def test_rejecting_demande_logs_journal_entry(self):
+        client_profile = make_client()
+        demande = DemandeContrat.objects.create(
+            client=client_profile, numero_demande='DEM-1', type_assurance='AUTO'
+        )
+        admin = make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.post(reverse('demande_rejeter', args=[demande.id]), {
+            'motif_rejet': 'Document illisible',
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        entree = JournalActivite.objects.get(action='DEMANDE_REJETEE')
+        self.assertEqual(entree.utilisateur, admin)
+        self.assertEqual(entree.demande_id, demande.id)
 
 
 class DemandeDocumentUrlTests(APITestCase):

@@ -4,6 +4,7 @@ from rest_framework.test import APITestCase
 from users.models import User
 from clients.models import Client
 from contrats.models import Contrat
+from journal.models import JournalActivite
 from .models import Sinistre
 
 
@@ -130,3 +131,31 @@ class SinistreReviewTests(APITestCase):
         sinistre.refresh_from_db()
         self.assertEqual(str(sinistre.montant_reclame), '500000.00')
         self.assertEqual(sinistre.type_sinistre, 'VOL')
+
+
+class SinistreJournalTests(APITestCase):
+    """Regression : traiter un sinistre doit laisser une trace dans le
+    journal d'activite, avec le montant de l'indemnite dans le resume."""
+
+    def make_sinistre(self):
+        client_profile = make_client()
+        contrat = make_contrat(client_profile)
+        return Sinistre.objects.create(
+            contrat=contrat, numero_sinistre='SIN-1', **SINISTRE_PAYLOAD,
+        )
+
+    def test_treating_sinistre_logs_journal_entry(self):
+        sinistre = self.make_sinistre()
+        admin = User.objects.create_user(email='admin@nia.ne', password='Secret123!', nom='Admin', prenom='X', role='ADMIN', is_staff=True)
+        self.client.force_authenticate(user=admin)
+        response = self.client.patch(reverse('sinistre_detail', args=[sinistre.id]), {
+            'statut': 'APPROUVE', 'montant_indemnite': '150000.00',
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        entree = JournalActivite.objects.get(action='SINISTRE_TRAITE')
+        self.assertEqual(entree.utilisateur, admin)
+        self.assertEqual(entree.sinistre_id, sinistre.id)
+        self.assertIn('SIN-1', entree.resume)
+        self.assertIn('Approuvé', entree.resume)
+        self.assertIn('150 000 FCFA', entree.resume)

@@ -8,6 +8,7 @@ import Contrats from "./pages/Contrats";
 import Demandes from "./pages/Demandes";
 import Sinistres from "./pages/Sinistres";
 import Paiements from "./pages/Paiements";
+import Journal from "./pages/Journal";
 import Profil from "./pages/Profil";
 
 function PrivateRoute({ children }) {
@@ -23,6 +24,14 @@ function PrivateRoute({ children }) {
     );
   }
   return user ? children : <Navigate to="/login" replace />;
+}
+
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'AGENT';
+  if (!user) return <Navigate to="/login" replace />;
+  return isAdmin ? children : <Navigate to="/dashboard" replace />;
 }
 
 function PublicRoute({ children }) {
@@ -47,6 +56,7 @@ function AppRoutes() {
       <Route path="/demandes" element={<PrivateRoute><Demandes /></PrivateRoute>} />
       <Route path="/sinistres" element={<PrivateRoute><Sinistres /></PrivateRoute>} />
       <Route path="/paiements" element={<PrivateRoute><Paiements /></PrivateRoute>} />
+      <Route path="/journal" element={<AdminRoute><Journal /></AdminRoute>} />
       <Route path="/profil" element={<PrivateRoute><Profil /></PrivateRoute>} />
 
       {/* 404 */}

@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from users.models import User
 from clients.models import Client
+from journal.models import JournalActivite
 from .models import Contrat
 
 
@@ -130,3 +131,32 @@ class ContratAttestationTests(APITestCase):
         contrat = Contrat.objects.create(client=client_profile, numero_contrat='CTR-1', **CONTRAT_PAYLOAD)
         response = self.client.get(reverse('contrat_attestation', args=[contrat.id]))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class ContratJournalTests(APITestCase):
+    """Regression : la creation et la modification d'un contrat doivent
+    laisser une trace dans le journal d'activite."""
+
+    def test_creating_contrat_logs_journal_entry(self):
+        client_profile = make_client()
+        admin = make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.post(reverse('contrat_create'), {**CONTRAT_PAYLOAD, 'client': client_profile.id})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        entree = JournalActivite.objects.get(action='CONTRAT_CREE')
+        self.assertEqual(entree.utilisateur, admin)
+        self.assertEqual(entree.contrat_id, response.data['id'])
+        self.assertIn(response.data['numero_contrat'], entree.resume)
+
+    def test_updating_contrat_logs_journal_entry(self):
+        client_profile = make_client()
+        contrat = Contrat.objects.create(client=client_profile, numero_contrat='CTR-1', **CONTRAT_PAYLOAD)
+        admin = make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.patch(reverse('contrat_detail', args=[contrat.id]), {'statut': 'SUSPENDU'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        entree = JournalActivite.objects.get(action='CONTRAT_MODIFIE')
+        self.assertEqual(entree.utilisateur, admin)
+        self.assertEqual(entree.contrat_id, contrat.id)

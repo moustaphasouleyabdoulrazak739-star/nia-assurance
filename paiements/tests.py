@@ -4,6 +4,7 @@ from rest_framework.test import APITestCase
 from users.models import User
 from clients.models import Client
 from contrats.models import Contrat
+from journal.models import JournalActivite
 from .models import Paiement
 
 
@@ -154,3 +155,46 @@ class PaiementRecuTests(APITestCase):
         self.client.force_authenticate(user=admin)
         response = self.client.get(reverse('paiement_recu', args=[paiement.id]))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class PaiementJournalTests(APITestCase):
+    """Regression : valider/rejeter/rembourser un paiement doit laisser une
+    trace dans le journal d'activite, avec l'action correspondant au statut."""
+
+    def make_paiement(self):
+        client_profile = make_client()
+        contrat = make_contrat(client_profile)
+        return Paiement.objects.create(
+            client=client_profile, contrat=contrat, numero_recu='REC-1', **PAIEMENT_PAYLOAD,
+        )
+
+    def make_admin(self):
+        return User.objects.create_user(email='admin@nia.ne', password='Secret123!', nom='Admin', prenom='X', role='ADMIN', is_staff=True)
+
+    def test_validating_paiement_logs_journal_entry(self):
+        paiement = self.make_paiement()
+        admin = self.make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.patch(reverse('paiement_detail', args=[paiement.id]), {'statut': 'VALIDE'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        entree = JournalActivite.objects.get(action='PAIEMENT_VALIDE')
+        self.assertEqual(entree.utilisateur, admin)
+        self.assertEqual(entree.paiement_id, paiement.id)
+        self.assertIn('REC-1', entree.resume)
+
+    def test_marking_paiement_echoue_logs_journal_entry(self):
+        paiement = self.make_paiement()
+        admin = self.make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.patch(reverse('paiement_detail', args=[paiement.id]), {'statut': 'ECHOUE'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(JournalActivite.objects.filter(action='PAIEMENT_ECHOUE', paiement=paiement).exists())
+
+    def test_marking_paiement_rembourse_logs_journal_entry(self):
+        paiement = self.make_paiement()
+        admin = self.make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.patch(reverse('paiement_detail', args=[paiement.id]), {'statut': 'REMBOURSE'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(JournalActivite.objects.filter(action='PAIEMENT_REMBOURSE', paiement=paiement).exists())

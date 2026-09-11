@@ -7,6 +7,13 @@ from rest_framework.views import APIView
 from .models import Paiement
 from .serializers import PaiementSerializer, PaiementCreateSerializer, PaiementReviewSerializer
 from nia_assurance.pdf_utils import generer_recu_paiement
+from journal.utils import enregistrer_action
+
+ACTION_JOURNAL_PAR_STATUT = {
+    'VALIDE': 'PAIEMENT_VALIDE',
+    'ECHOUE': 'PAIEMENT_ECHOUE',
+    'REMBOURSE': 'PAIEMENT_REMBOURSE',
+}
 
 
 class PaiementListView(generics.ListAPIView):
@@ -54,6 +61,13 @@ class PaiementDetailView(generics.RetrieveUpdateAPIView):
                 'error': 'Permission refusée'
             }, status=status.HTTP_403_FORBIDDEN)
         return super().update(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        paiement = serializer.save()
+        action = ACTION_JOURNAL_PAR_STATUT.get(paiement.statut)
+        if action:
+            resume = f'Paiement {paiement.numero_recu} marqué {paiement.get_statut_display()}'
+            enregistrer_action(self.request.user, action, resume, paiement=paiement)
 
 
 class PaiementRecuView(APIView):

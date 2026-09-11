@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from .models import Contrat
 from .serializers import ContratSerializer, ContratCreateSerializer
 from nia_assurance.pdf_utils import generer_attestation_contrat
+from journal.utils import enregistrer_action
 
 
 class ContratListView(generics.ListAPIView):
@@ -31,6 +32,14 @@ class ContratCreateView(generics.CreateAPIView):
             }, status=status.HTTP_403_FORBIDDEN)
         return super().create(request, *args, **kwargs)
 
+    def perform_create(self, serializer):
+        contrat = serializer.save()
+        enregistrer_action(
+            self.request.user, 'CONTRAT_CREE',
+            f'Contrat {contrat.numero_contrat} créé pour {contrat.client}',
+            contrat=contrat,
+        )
+
 
 class ContratDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
@@ -52,6 +61,14 @@ class ContratDetailView(generics.RetrieveUpdateDestroyAPIView):
                 'error': 'Permission refusée'
             }, status=status.HTTP_403_FORBIDDEN)
         return super().update(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        contrat = serializer.save()
+        enregistrer_action(
+            self.request.user, 'CONTRAT_MODIFIE',
+            f'Contrat {contrat.numero_contrat} modifié',
+            contrat=contrat,
+        )
 
     def destroy(self, request, *args, **kwargs):
         if request.user.role != 'ADMIN':
