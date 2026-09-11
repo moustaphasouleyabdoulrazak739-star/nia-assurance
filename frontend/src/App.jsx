@@ -9,6 +9,7 @@ import Demandes from "./pages/Demandes";
 import Sinistres from "./pages/Sinistres";
 import Paiements from "./pages/Paiements";
 import Journal from "./pages/Journal";
+import Statistiques from "./pages/Statistiques";
 import Profil from "./pages/Profil";
 
 function PrivateRoute({ children }) {
@@ -57,6 +58,7 @@ function AppRoutes() {
       <Route path="/sinistres" element={<PrivateRoute><Sinistres /></PrivateRoute>} />
       <Route path="/paiements" element={<PrivateRoute><Paiements /></PrivateRoute>} />
       <Route path="/journal" element={<AdminRoute><Journal /></AdminRoute>} />
+      <Route path="/statistiques" element={<AdminRoute><Statistiques /></AdminRoute>} />
       <Route path="/profil" element={<PrivateRoute><Profil /></PrivateRoute>} />
 
       {/* 404 */}

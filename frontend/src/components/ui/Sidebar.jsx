@@ -8,6 +8,7 @@ import {
   IconCreditCard,
   IconClipboardList,
   IconListBullet,
+  IconChartBar,
   IconUser,
   IconLogout,
 } from './icons';
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
   { to: '/demandes', label: 'Demandes de contrat', icon: IconClipboardList, badgeKey: 'demandes' },
   { to: '/sinistres', label: 'Sinistres', icon: IconAlertTriangle },
   { to: '/paiements', label: 'Paiements', icon: IconCreditCard },
+  { to: '/statistiques', label: 'Statistiques', icon: IconChartBar, adminOnly: true },
   { to: '/journal', label: "Journal d'activité", icon: IconListBullet, adminOnly: true },
   { to: '/profil', label: 'Mon profil', icon: IconUser },
 ];
