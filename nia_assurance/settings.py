@@ -104,11 +104,19 @@ REST_FRAMEWORK = {
 }
 
 # CORS
+# Note pour l'app mobile Expo (mobile/) : les requetes natives (Android/iOS)
+# ne passent PAS par le mecanisme CORS des navigateurs (pas d'Origin, pas de
+# preflight) - cette liste ne les concerne pas, seul JWTAuthentication (sans
+# session/cookie) suffit. Elle ne compte que si l'app est ouverte via le
+# preview web d'Expo (`expo start --web`, servi sur localhost:8081) dans un
+# vrai navigateur.
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://localhost:5173',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:5173',
+    'http://localhost:8081',
+    'http://127.0.0.1:8081',
 ]
 
 AUTH_PASSWORD_VALIDATORS = [

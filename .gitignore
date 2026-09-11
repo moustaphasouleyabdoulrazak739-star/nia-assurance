@@ -43,11 +43,24 @@ yarn-error.log*
 pnpm-debug.log*
 
 # ---------------------------------------------------------------------------
+# Mobile (Expo / React Native)
+# ---------------------------------------------------------------------------
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/expo-env.d.ts
+mobile/.kotlin/
+mobile/ios/
+mobile/android/
+
+# ---------------------------------------------------------------------------
 # Outils / éditeurs / OS
 # ---------------------------------------------------------------------------
 .vscode/*
 !.vscode/extensions.json
 .idea/
+.claude/
 *.swp
 *.swo
 .DS_Store

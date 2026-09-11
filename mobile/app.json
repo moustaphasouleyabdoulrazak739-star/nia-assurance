@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "NIA Assurance",
+    "slug": "nia-assurance-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FAFAF9",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ne.nia.assurance.mobile"
+    },
+    "android": {
+      "package": "ne.nia.assurance.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker"
+    ]
+  }
+}
