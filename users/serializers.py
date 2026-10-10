@@ -20,7 +20,10 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({'password': 'Les mots de passe ne correspondent pas'})
+            # "password" est ici la clef du dict d'erreurs DRF (le champ en
+            # faute), pas un mot de passe en dur : bandit confond les deux
+            # car il ne regarde que la chaine associee a la clef.
+            raise serializers.ValidationError({'password': 'Les mots de passe ne correspondent pas'})  # nosec B105
         return attrs
 
     def create(self, validated_data):

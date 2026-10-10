@@ -3,11 +3,28 @@ from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-nia-assurance-2024')
+# Pas de valeur par defaut ici : une cle manquante doit faire echouer le
+# demarrage plutot que de retomber silencieusement sur une valeur connue.
+# Voir .env.example pour generer une cle avec get_random_secret_key().
+SECRET_KEY = config('SECRET_KEY')
 
-DEBUG = config('DEBUG', default=True, cast=bool)
+# Defaut a False : un .env absent ou incomplet doit se comporter comme de la
+# production (fermee), jamais comme du dev (ouvert) par accident.
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='localhost,127.0.0.1',
+    cast=lambda v: [h.strip() for h in v.split(',') if h.strip()],
+)
+
+if DEBUG:
+    # L'app mobile Expo (mobile/src/api/config.js) joint le backend via l'IP
+    # LAN de la machine de dev, qui change a chaque reseau/redemarrage et ne
+    # peut donc pas etre listee a l'avance. On reste permissif uniquement en
+    # DEBUG (reseau local de dev) ; ALLOWED_HOSTS ci-dessus (liste explicite,
+    # fermee par defaut) est ce qui s'applique reellement en production.
+    ALLOWED_HOSTS = ['*']
 
 # Applications
 DJANGO_APPS = [
@@ -125,6 +142,22 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+
+# Securite HTTPS / cookies (audit DevSecOps, etape 2)
+# Desactives en dev (DEBUG=True) pour ne rien casser sur http://localhost.
+# Actives automatiquement en production (DEBUG=False) : rien a retenir a
+# activer manuellement au moment du deploiement.
+SECURE_SSL_REDIRECT = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
+# HSTS : volontairement PAS lie a DEBUG seul. Un HSTS mal configure (duree
+# trop longue, active avant que le HTTPS soit stable) est difficile a
+# annuler cote navigateur. Reste a 0 (desactive) jusqu'a activation
+# explicite via la variable d'environnement, une fois le HTTPS en place.
+SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=0, cast=int)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_HSTS_SECONDS > 0
+SECURE_HSTS_PRELOAD = SECURE_HSTS_SECONDS > 0
 
 LANGUAGE_CODE = 'fr-fr'
 TIME_ZONE = 'Africa/Niamey'
