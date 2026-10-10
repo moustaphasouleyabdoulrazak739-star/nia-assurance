@@ -105,9 +105,20 @@ AUTH_USER_MODEL = 'users.User'
 # JWT Configuration
 from datetime import timedelta
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
+    # 30 min d'acces : assez court pour limiter la fenetre d'exploitation
+    # d'un jeton vole, assez long pour qu'une session active ne declenche
+    # pas un rafraichissement a chaque requete. Le rafraichissement est
+    # transparent (intercepteurs web/mobile), donc invisible pour l'usager.
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
+    # Sans ceci, ROTATE_REFRESH_TOKENS renvoie un nouveau refresh token a
+    # chaque rafraichissement mais laisse l'ancien valide jusqu'a sa propre
+    # expiration : un refresh token vole reste exploitable meme apres que le
+    # client legitime en a deja obtenu un nouveau. BLACKLIST_AFTER_ROTATION
+    # invalide l'ancien des qu'il est echange (app rest_framework_simplejwt.
+    # token_blacklist, deja installee).
+    'BLACKLIST_AFTER_ROTATION': True,
 }
 
 # REST Framework

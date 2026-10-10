@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import api, { ACCESS_TOKEN_KEY } from './client';
+import api from './client';
+import { getAccessToken } from './tokenStorage';
 import { API_BASE_URL } from './config';
 
 // GET /api/contrats/ — le backend filtre déjà par rôle (un CLIENT ne voit
@@ -36,7 +36,7 @@ function messageDepuisStatut(statut) {
 // legacy est toujours incluse et documentée pour SDK 57, avec un
 // comportement éprouvé.
 export async function telechargerAttestation(contrat) {
-  const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+  const token = await getAccessToken();
   const url = `${API_BASE_URL}/contrats/${contrat.id}/attestation/`;
   const destination = `${FileSystem.cacheDirectory}attestation_${contrat.numero_contrat}.pdf`;
 

@@ -1,19 +1,19 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { login as loginRequest, fetchProfile } from '../api/auth';
-import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from '../api/client';
+import { getAccessToken, setTokens, clearTokens } from '../api/tokenStorage';
+import { setUnauthorizedHandler } from '../api/authEvents';
 
 const AuthContext = createContext(null);
 
 // Équivalent mobile de frontend/src/context/AuthContext.jsx : même contrat
-// (user, loading, login, logout) mais persistance via AsyncStorage au lieu
-// du localStorage du navigateur.
+// (user, loading, login, logout) mais persistance via expo-secure-store à
+// la place du localStorage du navigateur.
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const restoreSession = useCallback(async () => {
-    const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+    const token = await getAccessToken();
     if (!token) {
       setLoading(false);
       return;
@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
       const profile = await fetchProfile();
       setUser(profile);
     } catch {
-      await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY]);
+      await clearTokens();
     } finally {
       setLoading(false);
     }
@@ -39,18 +39,22 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     const data = await loginRequest(email, password);
-    await AsyncStorage.multiSet([
-      [ACCESS_TOKEN_KEY, data.access],
-      [REFRESH_TOKEN_KEY, data.refresh],
-    ]);
+    await setTokens({ access: data.access, refresh: data.refresh });
     setUser(data.user);
     return data;
   }, []);
 
   const logout = useCallback(async () => {
-    await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY]);
+    await clearTokens();
     setUser(null);
   }, []);
+
+  useEffect(() => {
+    // Permet a l'intercepteur axios (mobile/src/api/client.js), hors de
+    // l'arbre React, de forcer cette meme deconnexion quand le
+    // rafraichissement du jeton echoue (refresh token expire/revoque).
+    setUnauthorizedHandler(logout);
+  }, [logout]);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout }}>
