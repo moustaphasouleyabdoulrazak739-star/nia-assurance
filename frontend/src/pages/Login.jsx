@@ -8,6 +8,25 @@ import { Input } from '../components/ui/Input';
 import { IconShield, IconFileText, IconCreditCard, IconMail, IconLock, IconCheckCircle } from '../components/ui/icons';
 import heroImage from '../assets/login-hero.jpg';
 
+// Message distinct pour un 429 (throttling backend, cf. users/views.py) :
+// ne doit jamais se confondre avec "mot de passe incorrect", sous peine de
+// faire croire a l'utilisateur que son mot de passe a change. Utilise le
+// delai indique par le serveur (en-tete Retry-After) quand il est present.
+function messageErreurConnexion(err) {
+  if (err.response?.status === 429) {
+    const secondes = parseInt(err.response.headers?.['retry-after'], 10);
+    if (Number.isFinite(secondes) && secondes > 0) {
+      if (secondes < 60) {
+        return `Trop de tentatives. Réessayez dans ${secondes} secondes.`;
+      }
+      const minutes = Math.ceil(secondes / 60);
+      return `Trop de tentatives. Réessayez dans ${minutes} minute${minutes > 1 ? 's' : ''}.`;
+    }
+    return 'Trop de tentatives. Réessayez dans une minute.';
+  }
+  return 'Email ou mot de passe incorrect';
+}
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,8 +42,8 @@ const Login = () => {
     try {
       await login(email, password);
       navigate('/dashboard');
-    } catch {
-      setError('Email ou mot de passe incorrect');
+    } catch (err) {
+      setError(messageErreurConnexion(err));
     } finally {
       setLoading(false);
     }

@@ -15,6 +15,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../theme/colors';
 
+// Message distinct pour un 429 (throttling backend, cf. users/views.py) :
+// ne doit jamais se confondre avec "mot de passe incorrect", sous peine de
+// faire croire a l'utilisateur que son mot de passe a change. Utilise le
+// delai indique par le serveur (en-tete Retry-After) quand il est present.
+function messageErreurConnexion(err) {
+  if (err.response?.status === 429) {
+    const secondes = parseInt(err.response.headers?.['retry-after'], 10);
+    if (Number.isFinite(secondes) && secondes > 0) {
+      if (secondes < 60) {
+        return `Trop de tentatives. Réessayez dans ${secondes} secondes.`;
+      }
+      const minutes = Math.ceil(secondes / 60);
+      return `Trop de tentatives. Réessayez dans ${minutes} minute${minutes > 1 ? 's' : ''}.`;
+    }
+    return 'Trop de tentatives. Réessayez dans une minute.';
+  }
+  return err.response?.data?.error || 'Email ou mot de passe incorrect.';
+}
+
 export default function LoginScreen() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
@@ -32,7 +51,7 @@ export default function LoginScreen() {
     try {
       await login(email.trim().toLowerCase(), password);
     } catch (err) {
-      setError(err.response?.data?.error || 'Email ou mot de passe incorrect.');
+      setError(messageErreurConnexion(err));
     } finally {
       setLoading(false);
     }

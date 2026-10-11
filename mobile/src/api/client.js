@@ -5,6 +5,13 @@ import { notifyUnauthorized } from './authEvents';
 
 const REFRESH_PATH = '/auth/token/refresh/';
 
+// Routes d'authentification elles-memes : un 401 ici est un refus de
+// connexion/inscription/deconnexion, jamais un jeton expire. Memes routes
+// que frontend/src/services/api.js, meme bug corrige : un mauvais mot de
+// passe sur l'ecran de connexion declenchait un rafraichissement (qui
+// echoue, faute de jeton a rafraichir) suivi d'une deconnexion.
+const ROUTES_SANS_RAFRAICHISSEMENT = ['/auth/login/', '/auth/register/', '/auth/logout/', REFRESH_PATH];
+
 // eslint-disable-next-line import/no-named-as-default-member -- axios par defaut (cf. frontend/src/services/api.js)
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -59,7 +66,15 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (originalRequest.url === REFRESH_PATH || originalRequest._retry) {
+    // Ni rafraîchissement ni déconnexion : route d'authentification, ou
+    // requête qui ne portait même pas de jeton d'accès au départ.
+    const estRouteAuth = ROUTES_SANS_RAFRAICHISSEMENT.includes(originalRequest.url);
+    const avaitUnJeton = Boolean(originalRequest.headers?.Authorization);
+    if (estRouteAuth || !avaitUnJeton) {
+      return Promise.reject(error);
+    }
+
+    if (originalRequest._retry) {
       await clearTokens();
       notifyUnauthorized();
       return Promise.reject(error);

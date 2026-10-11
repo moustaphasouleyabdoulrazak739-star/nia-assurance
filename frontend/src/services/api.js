@@ -3,6 +3,15 @@ import axios from 'axios';
 const API_URL = 'http://127.0.0.1:8000/api';
 const REFRESH_PATH = '/auth/token/refresh/';
 
+// Routes d'authentification elles-memes : un 401 ici est un refus de
+// connexion/inscription/deconnexion, jamais un jeton expire - il n'y a
+// d'ailleurs aucun jeton en jeu sur login/register. Les exclure evite le
+// bug constate : un mauvais mot de passe sur /auth/login/ declenchait un
+// rafraichissement (qui echoue, faute de jeton a rafraichir), suivi d'une
+// deconnexion qui rechargeait la page de connexion et effacait le message
+// d'erreur et le formulaire.
+const ROUTES_SANS_RAFRAICHISSEMENT = ['/auth/login/', '/auth/register/', '/auth/logout/', REFRESH_PATH];
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -67,12 +76,22 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // L'appel de refresh passe par axios "brut" (voir refreshAccessToken),
-    // jamais par cette instance `api` : ce garde-fou reste au cas où un
-    // appel futur l'invoquerait via `api`, pour ne jamais rejouer un
-    // /auth/token/refresh/ en échec (boucle infinie). Une requête n'est
-    // par ailleurs rejouée qu'une seule fois (_retry).
-    if (originalRequest.url === REFRESH_PATH || originalRequest._retry) {
+    // Ni rafraîchissement ni déconnexion automatique :
+    // - sur une route d'authentification elle-même (login/register/logout,
+    //   ou l'appel de refresh lui-même rejoué via cette instance) ;
+    // - sur une requête qui ne portait même pas de jeton d'accès au départ
+    //   (rien à rafraîchir, ce n'est pas une expiration de session).
+    // Dans ces deux cas, l'erreur remonte telle quelle à l'appelant (ex :
+    // le formulaire de connexion affiche son propre message).
+    const estRouteAuth = ROUTES_SANS_RAFRAICHISSEMENT.includes(originalRequest.url);
+    const avaitUnJeton = Boolean(originalRequest.headers?.Authorization);
+    if (estRouteAuth || !avaitUnJeton) {
+      return Promise.reject(error);
+    }
+
+    // Une requête (qui avait bien un jeton) n'est rejouée qu'une seule
+    // fois : si elle échoue encore après rafraîchissement, déconnexion.
+    if (originalRequest._retry) {
       logout();
       return Promise.reject(error);
     }
