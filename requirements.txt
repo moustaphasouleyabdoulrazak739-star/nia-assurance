@@ -9,4 +9,4 @@ PyJWT==2.15.0
 python-decouple==3.8
 reportlab==5.0.1
 sqlparse==0.6.0
-tzdata==2026.2
+tzdata==2026.5
