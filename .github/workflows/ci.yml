@@ -1,0 +1,191 @@
+name: CI DevSecOps
+
+# Rejoue en continu les verifications faites pendant l'audit DevSecOps :
+# tests backend/frontend/mobile, analyse statique, audit de dependances,
+# secrets. Jamais de pull_request_target (pas d'execution de code non
+# verifie avec des privileges elargis), aucun secret du depot necessaire
+# au fonctionnement du pipeline.
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Minimal par defaut pour tous les jobs : aucun n'ecrit sur le depot, ne
+# commente une PR, ni ne publie de paquet.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    name: Secrets (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (historique complet)
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Installer gitleaks
+        run: |
+          set -euo pipefail
+          curl -sSL -o gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/gitleaks_8.30.0_linux_x64.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          chmod +x gitleaks
+
+      - name: Scanner tout l'historique
+        # Regles par defaut de gitleaks + regles propres au projet et
+        # exception de commit documentee, voir .gitleaks.toml et
+        # SECURITY.md.
+        run: ./gitleaks git . --log-opts="--all" --config .gitleaks.toml --redact --no-banner
+
+  backend:
+    name: Backend (Django)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: nia_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # DEBUG=True : c'est la configuration sous laquelle toute la suite
+      # de tests a ete ecrite et verifiee tout au long de l'audit (avec
+      # DEBUG=False, SECURE_SSL_REDIRECT force une redirection HTTPS que
+      # le client de test ne satisfait jamais, et casse tout). Le
+      # comportement de production (DEBUG=False) est verifie separement
+      # par manage.py check --deploy, pas par la suite de tests.
+      DEBUG: "True"
+      DB_NAME: nia_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: 127.0.0.1
+      DB_PORT: "5432"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Python 3.13 (identique au projet)
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Installer les dependances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install bandit==1.9.4 pip-audit==2.10.1
+
+      - name: Generer une SECRET_KEY ephemere
+        # Jamais ecrite dans le depot, jamais affichee : generee a la
+        # volee pour ce run, masquee dans les logs, et perdue a la fin.
+        run: |
+          KEY=$(python -c "import secrets; print(secrets.token_urlsafe(50))")
+          echo "::add-mask::$KEY"
+          echo "SECRET_KEY=$KEY" >> "$GITHUB_ENV"
+
+      - name: Attendre que PostgreSQL soit pret
+        run: |
+          until pg_isready -h 127.0.0.1 -p 5432 -U postgres; do sleep 1; done
+        env:
+          PGPASSWORD: postgres
+
+      - name: manage.py check
+        run: python manage.py check
+
+      - name: Migrations a jour (une migration oubliee fait echouer le pipeline)
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Suite de tests complete
+        run: python manage.py test
+
+      - name: bandit (analyse statique)
+        run: >-
+          bandit -r .
+          -x "./node_modules,./frontend,./mobile,./media,*/migrations/*,*/tests.py,*/test_*.py,*/tests/*"
+
+      - name: pip-audit (aucune exception acceptee, voir SECURITY.md)
+        run: pip-audit -r requirements.txt
+
+  frontend:
+    name: Frontend (React)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Node.js
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Installer les dependances (lockfile strict)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests (intercepteur JWT, message 429)
+        run: npm test
+
+      - name: Build de production
+        run: npm run build
+
+      - name: Audit des dependances de production
+        # --omit=dev : seules les dependances reellement livrees au
+        # navigateur comptent. Les risques deja connus et acceptes
+        # (Tailwind 4, Vite 6+, tous en devDependencies) sont documentes
+        # dans SECURITY.md, verifie a la date de redaction : 0 vulnerabilite
+        # en --omit=dev.
+        run: npm audit --omit=dev
+
+  mobile:
+    name: Mobile (Expo)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Node.js
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Installer les dependances (lockfile strict)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Politique d'audit des dependances (voir SECURITY.md)
+        # Expo ne separe pas outillage et code embarque comme un projet
+        # web : la chaine Metro/Expo CLI vit dans "dependencies", pas
+        # "devDependencies", donc --omit=dev ne suffit pas ici. Le script
+        # filtre par nom de paquet (stable) plutot que par chemin de
+        # dependances (fragile, cf. commentaires du script).
+        run: node scripts/check-audit-policy.mjs

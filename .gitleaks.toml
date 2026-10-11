@@ -1,0 +1,47 @@
+# Configuration gitleaks pour le pipeline CI (.github/workflows/ci.yml).
+# Regles par defaut de gitleaks + deux regles propres au projet : l'audit
+# DevSecOps initial a montre que gitleaks seul ne detecte pas une
+# SECRET_KEY Django codee en dur (entropie trop faible pour ses regles
+# generiques, surtout avec le prefixe "django-insecure-" genere par Django
+# lui-meme, qui ressemble a du texte normal).
+
+[extend]
+useDefault = true
+
+# --- Regles propres au projet ---
+
+[[rules]]
+id = "django-insecure-secret-key"
+description = "Valeur de cle secrete Django auto-generee (prefixe django-insecure-) : jamais valide hors dev local, meme en tant que valeur par defaut."
+regex = '''django-insecure-[A-Za-z0-9\-_!@#$%^&*(){}+=~]{10,}'''
+tags = ["django", "secret-key"]
+
+[[rules]]
+id = "django-secret-key-hardcoded-default"
+description = "SECRET_KEY avec une valeur par defaut codee en dur dans le code Python (default=... sur config('SECRET_KEY', ...)) : une cle manquante doit faire echouer le demarrage, jamais retomber sur une valeur connue."
+regex = '''SECRET_KEY['"]?\s*,\s*default\s*=\s*['"][^'"]+['"]'''
+tags = ["django", "secret-key"]
+
+# --- Exceptions documentees ---
+#
+# Le commit initial du depot public contient la valeur par defaut
+# "django-insecure-nia-assurance-2024" en clair dans nia_assurance/settings.py.
+# Cette cle a ete ROTEE (changee) le 2026-10-10 : voir le commit
+# "fix(security): restreint PATCH /auth/profile/, limite le login, valide
+# son entree" et l'audit DevSecOps qui l'a identifiee. Une fois rotee, la
+# valeur lue dans l'historique n'a plus aucune valeur pour un attaquant -
+# reecrire l'historique public n'aurait fait que casser les clones
+# existants sans rien securiser de plus. Voir SECURITY.md.
+#
+# Toute AUTRE occurrence (ce commit ou un autre) continue de faire
+# echouer le pipeline : cette exception est volontairement limitee a ce
+# seul SHA, jamais a un chemin de fichier ou une regle entiere.
+[allowlist]
+commits = [
+  "c6e1e8a26bc383a0f5ff158b1545f6d7ce8583a9",
+]
+paths = [
+  '''(^|/)node_modules/''',
+  '''(^|/)venv/''',
+  '''(^|/)\.git/''',
+]
