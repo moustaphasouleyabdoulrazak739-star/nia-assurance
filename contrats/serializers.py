@@ -12,6 +12,10 @@ class ContratSerializer(serializers.ModelSerializer):
     statut_display = serializers.CharField(
         source='get_statut_display', read_only=True
     )
+    # Plus d'URL /media/ brute ici (audit DevSecOps, constat 4.1) : juste un
+    # indicateur de presence. Le fichier se recupere via la vue protegee
+    # GET /api/contrats/<id>/document/ (contrats.views.ContratDocumentView).
+    document = serializers.SerializerMethodField()
 
     class Meta:
         model = Contrat
@@ -23,6 +27,9 @@ class ContratSerializer(serializers.ModelSerializer):
             'document', 'date_creation', 'date_modification'
         ]
         read_only_fields = ['date_creation', 'date_modification']
+
+    def get_document(self, obj):
+        return True if obj.document else None
 
 
 class ContratCreateSerializer(serializers.ModelSerializer):

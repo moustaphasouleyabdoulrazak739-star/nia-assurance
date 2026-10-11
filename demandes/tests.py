@@ -354,14 +354,18 @@ class DemandeJournalTests(APITestCase):
         self.assertEqual(entree.demande_id, demande.id)
 
 
-class DemandeDocumentUrlTests(APITestCase):
-    """Regression : le frontend prefixait manuellement l'URL du document avec
-    l'origine de l'API, alors que le serializer la renvoie deja absolue
-    (request.build_absolute_uri) - ce qui produisait un lien casse (double
-    prefixe) et un clic silencieusement sans effet. On verifie ici que l'API
-    renvoie bien une URL absolue et directement utilisable telle quelle."""
+class DemandeDocumentFileTests(APITestCase):
+    """Regression constat 4.1 : les documents d'une demande (piece
+    d'identite, carte grise...) ne sont plus servis en direct et sans
+    authentification via /media/, mais via cette vue protegee qui
+    verifie la propriete avant de les renvoyer.
 
-    def test_document_fichier_url_is_absolute_in_demande_detail(self):
+    Remplace l'ancien DemandeDocumentUrlTests, qui verifiait que le champ
+    `fichier` du serializer exposait une URL /media/ absolue - c'est
+    exactement ce que ce fichier a corrige : `fichier` n'est plus qu'un
+    indicateur booleen de presence (voir DocumentDemandeSerializer)."""
+
+    def test_fichier_field_is_a_boolean_presence_flag_not_a_media_url(self):
         client_profile = make_client()
         self.client.force_authenticate(user=client_profile.user)
         create_response = self.client.post(reverse('demande_create'), {
@@ -374,10 +378,60 @@ class DemandeDocumentUrlTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         documents = response.data['documents']
         self.assertEqual(len(documents), 1)
-        url = documents[0]['fichier']
-        self.assertTrue(url, 'le champ fichier ne doit pas etre vide')
-        self.assertTrue(
-            url.startswith('http://') or url.startswith('https://'),
-            f"l'URL du document devrait etre absolue, recu : {url}"
-        )
-        self.assertIn('/media/demandes/documents/', url)
+        self.assertIs(documents[0]['fichier'], True)
+
+    def test_client_can_download_own_document(self):
+        client_profile = make_client()
+        self.client.force_authenticate(user=client_profile.user)
+        create_response = self.client.post(reverse('demande_create'), {
+            'type_assurance': 'SANTE',
+            'piece_identite': fichier('id.pdf'),
+        }, format='multipart')
+        doc_id = create_response.data['demande']['documents'][0]['id']
+
+        response = self.client.get(reverse('demande_document', args=[doc_id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_client_cannot_download_others_document(self):
+        """Reproduit l'IDOR du rapport d'audit, cette fois sur une piece
+        jointe de demande de contrat."""
+        victime = make_client('victime@nia.ne')
+        attaquant = make_client('attaquant@nia.ne')
+        self.client.force_authenticate(user=victime.user)
+        create_response = self.client.post(reverse('demande_create'), {
+            'type_assurance': 'SANTE',
+            'piece_identite': fichier('id.pdf'),
+        }, format='multipart')
+        doc_id = create_response.data['demande']['documents'][0]['id']
+
+        self.client.force_authenticate(user=attaquant.user)
+        response = self.client.get(reverse('demande_document', args=[doc_id]))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_unauthenticated_cannot_download_document(self):
+        client_profile = make_client()
+        self.client.force_authenticate(user=client_profile.user)
+        create_response = self.client.post(reverse('demande_create'), {
+            'type_assurance': 'SANTE',
+            'piece_identite': fichier('id.pdf'),
+        }, format='multipart')
+        doc_id = create_response.data['demande']['documents'][0]['id']
+
+        self.client.force_authenticate(user=None)
+        response = self.client.get(reverse('demande_document', args=[doc_id]))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_admin_can_download_any_document(self):
+        client_profile = make_client()
+        self.client.force_authenticate(user=client_profile.user)
+        create_response = self.client.post(reverse('demande_create'), {
+            'type_assurance': 'SANTE',
+            'piece_identite': fichier('id.pdf'),
+        }, format='multipart')
+        doc_id = create_response.data['demande']['documents'][0]['id']
+
+        admin = make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.get(reverse('demande_document', args=[doc_id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -18,6 +18,35 @@ export async function telechargerPdf(api, url, nomFichier) {
   window.URL.revokeObjectURL(blobUrl);
 }
 
+/** Meme principe que telechargerPdf, generalise a n'importe quel fichier
+ * protege (document de contrat/sinistre, piece de demande) : le type est
+ * repris de l'en-tete Content-Type de la reponse plutot que fige a
+ * application/pdf. Necessaire depuis que ces fichiers ne sont plus servis
+ * en direct via /media/ (qui n'envoie pas le jeton JWT) mais par une route
+ * de l'API (audit DevSecOps, constat 4.1). */
+export async function telechargerFichier(api, url, nomFichier) {
+  const response = await api.get(url, { responseType: 'blob' });
+  const type = response.headers['content-type'] || 'application/octet-stream';
+  const blobUrl = window.URL.createObjectURL(new Blob([response.data], { type }));
+  const lien = document.createElement('a');
+  lien.href = blobUrl;
+  lien.download = nomFichier;
+  document.body.appendChild(lien);
+  lien.click();
+  lien.remove();
+  window.URL.revokeObjectURL(blobUrl);
+}
+
+/** Recupere un fichier protege (typiquement une image) et renvoie une URL
+ * de blob locale, utilisable comme `src` d'un <img> - un <img src> brut ne
+ * peut pas porter l'en-tete Authorization. Penser a revoquer l'URL
+ * renvoyee (window.URL.revokeObjectURL) quand elle n'est plus affichee. */
+export async function obtenirApercuFichier(api, url) {
+  const response = await api.get(url, { responseType: 'blob' });
+  const type = response.headers['content-type'] || 'application/octet-stream';
+  return window.URL.createObjectURL(new Blob([response.data], { type }));
+}
+
 /** Extrait un message d'erreur lisible d'une reponse recuperee en blob
  * (ex: contrat pas actif, paiement pas validé) — le corps de l'erreur est
  * un Blob JSON tant que responseType: 'blob' est utilise sur la requete. */

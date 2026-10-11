@@ -4,6 +4,7 @@ from .views import (
     ClientCreateView,
     ClientDetailView,
     ClientMeView,
+    ClientPhotoView,
 )
 
 urlpatterns = [
@@ -11,4 +12,5 @@ urlpatterns = [
     path('create/', ClientCreateView.as_view(), name='client_create'),
     path('me/', ClientMeView.as_view(), name='client_me'),
     path('<int:pk>/', ClientDetailView.as_view(), name='client_detail'),
+    path('<int:pk>/photo/', ClientPhotoView.as_view(), name='client_photo'),
 ]

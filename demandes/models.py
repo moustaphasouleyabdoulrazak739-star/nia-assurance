@@ -2,6 +2,7 @@ from django.db import models
 from clients.models import Client
 from contrats.models import Contrat
 from .validators import validate_document_file
+from nia_assurance.utils import upload_document_demande
 
 
 class DemandeContrat(models.Model):
@@ -63,7 +64,7 @@ class DocumentDemande(models.Model):
 
     demande = models.ForeignKey(DemandeContrat, on_delete=models.CASCADE, related_name='documents')
     type_document = models.CharField(max_length=20, choices=TYPE_CHOICES)
-    fichier = models.FileField(upload_to='demandes/documents/', validators=[validate_document_file])
+    fichier = models.FileField(upload_to=upload_document_demande, validators=[validate_document_file])
     date_upload = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

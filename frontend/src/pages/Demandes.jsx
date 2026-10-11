@@ -8,6 +8,7 @@ import Badge from '../components/ui/Badge';
 import { Select, Textarea, Input } from '../components/ui/Input';
 import { DEMANDE_STATUS_VARIANTS } from '../components/ui/statusVariants';
 import { TYPES_ASSURANCE, DOCUMENTS_PAR_TYPE } from '../constants/demandes';
+import { telechargerFichier, extraireErreurTelechargement } from '../utils/downloadPdf';
 import { IconClose, IconDownload, IconInbox, IconRefresh } from '../components/ui/icons';
 
 const FILTRES_ADMIN = ['EN_ATTENTE', 'VALIDEE', 'REJETEE', 'TOUS'];
@@ -270,6 +271,8 @@ function VueCompagnie({ demandes, loading, error, filtre, setFiltre, onRefresh }
   const [rejeterForm, setRejeterForm] = useState({ motif_rejet: '' });
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [documentEnCoursId, setDocumentEnCoursId] = useState(null);
+  const [documentError, setDocumentError] = useState('');
 
   const openDetail = (demande) => {
     setSelectedDemande(demande);
@@ -280,6 +283,21 @@ function VueCompagnie({ demandes, loading, error, filtre, setFiltre, onRefresh }
   };
 
   const closeDetail = () => setSelectedDemande(null);
+
+  // Les pieces jointes d'une demande ne sont plus des liens <a href>
+  // directs vers /media/ (qui n'envoie pas le jeton JWT et n'est de toute
+  // facon plus servi sans authentification - audit DevSecOps, constat 4.1).
+  const handleDownloadDocument = async (doc) => {
+    setDocumentEnCoursId(doc.id);
+    setDocumentError('');
+    try {
+      await telechargerFichier(api, `/demandes/documents/${doc.id}/`, doc.type_document_display);
+    } catch (err) {
+      setDocumentError(await extraireErreurTelechargement(err, 'Impossible de télécharger le document.'));
+    } finally {
+      setDocumentEnCoursId(null);
+    }
+  };
 
   const handleValider = async (e) => {
     e.preventDefault();
@@ -402,21 +420,23 @@ function VueCompagnie({ demandes, loading, error, filtre, setFiltre, onRefresh }
 
               <div>
                 <p className="mb-2 text-sm font-medium text-neutral-700">Documents fournis</p>
+                {documentError && (
+                  <p className="mb-2 text-sm text-red-600">{documentError}</p>
+                )}
                 {selectedDemande.documents.length === 0 ? (
                   <p className="text-sm text-neutral-400">Aucun document.</p>
                 ) : (
                   <div className="space-y-2">
                     {selectedDemande.documents.map((doc) => (
-                      <a
+                      <button
                         key={doc.id}
-                        href={doc.fichier}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 rounded-lg bg-secondary-50 px-3 py-2 text-sm font-medium text-secondary-700 hover:bg-secondary-100"
+                        onClick={() => handleDownloadDocument(doc)}
+                        disabled={documentEnCoursId === doc.id}
+                        className="flex w-full items-center gap-2 rounded-lg bg-secondary-50 px-3 py-2 text-sm font-medium text-secondary-700 hover:bg-secondary-100 disabled:opacity-50"
                       >
                         <IconDownload className="h-4 w-4" />
-                        {doc.type_document_display}
-                      </a>
+                        {documentEnCoursId === doc.id ? 'Téléchargement...' : doc.type_document_display}
+                      </button>
                     ))}
                   </div>
                 )}

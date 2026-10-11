@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from .models import Contrat
 from .serializers import ContratSerializer, ContratCreateSerializer
 from nia_assurance.pdf_utils import generer_attestation_contrat
+from nia_assurance.files import servir_fichier_protege
 from journal.utils import enregistrer_action
 
 
@@ -101,3 +102,20 @@ class ContratAttestationView(APIView):
         response = HttpResponse(pdf, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="attestation_{contrat.numero_contrat}.pdf"'
         return response
+
+
+class ContratDocumentView(APIView):
+    """GET /api/contrats/<id>/document/ - fichier joint au contrat (ex:
+    contrat signe scanne). Remplace l'ancien acces direct et non
+    authentifie via /media/ (audit DevSecOps, constat 4.1) : meme regle de
+    portee IDOR que ContratAttestationView ci-dessus."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        user = request.user
+        if user.role in ('ADMIN', 'AGENT'):
+            contrat = get_object_or_404(Contrat, pk=pk)
+        else:
+            contrat = get_object_or_404(Contrat, pk=pk, client__user=user)
+        return servir_fichier_protege(contrat.document)

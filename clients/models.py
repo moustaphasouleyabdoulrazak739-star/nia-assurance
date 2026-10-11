@@ -1,5 +1,6 @@
 from django.db import models
 from users.models import User
+from nia_assurance.utils import upload_photo_client
 
 
 class Client(models.Model):
@@ -18,7 +19,7 @@ class Client(models.Model):
     adresse = models.TextField(blank=True)
     ville = models.CharField(max_length=100, blank=True)
     profession = models.CharField(max_length=100, blank=True)
-    photo = models.ImageField(upload_to='clients/photos/', blank=True, null=True)
+    photo = models.ImageField(upload_to=upload_photo_client, blank=True, null=True)
     date_creation = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)
 

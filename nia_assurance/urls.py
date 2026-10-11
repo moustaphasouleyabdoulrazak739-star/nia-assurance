@@ -1,7 +1,5 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -18,4 +16,13 @@ urlpatterns = [
     path('api/journal/', include('journal.urls')),
     path('api/statistiques/', include('statistiques.urls')),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Pas de static(settings.MEDIA_URL, ...) ici : les fichiers uploades
+    # (pieces d'identite, documents de contrat/sinistre, photos) ne sont
+    # plus jamais servis en direct sans authentification (audit DevSecOps,
+    # constat 4.1). Chaque fichier passe desormais par une vue protegee,
+    # dediee a son modele, qui verifie la propriete avant de le renvoyer :
+    # contrats.views.ContratDocumentView, sinistres.views.SinistreDocumentView,
+    # clients.views.ClientPhotoView, demandes.views.DocumentDemandeFileView.
+    # Fonctionne aussi bien en DEBUG=False qu'en DEBUG=True, contrairement
+    # au helper static() qui ne s'active qu'en DEBUG=True.
+]

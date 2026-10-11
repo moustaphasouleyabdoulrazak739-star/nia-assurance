@@ -1,5 +1,7 @@
 from django.db import models
 from contrats.models import Contrat
+from demandes.validators import validate_document_file
+from nia_assurance.utils import upload_document_sinistre
 
 
 class Sinistre(models.Model):
@@ -30,7 +32,10 @@ class Sinistre(models.Model):
     montant_reclame = models.DecimalField(max_digits=10, decimal_places=2)
     montant_indemnite = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='EN_ATTENTE')
-    document = models.FileField(upload_to='sinistres/documents/', blank=True, null=True)
+    document = models.FileField(
+        upload_to=upload_document_sinistre, blank=True, null=True,
+        validators=[validate_document_file],
+    )
     commentaire = models.TextField(blank=True)
     date_modification = models.DateTimeField(auto_now=True)
 

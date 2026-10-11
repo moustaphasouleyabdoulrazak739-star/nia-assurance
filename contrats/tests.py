@@ -1,3 +1,4 @@
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -160,3 +161,98 @@ class ContratJournalTests(APITestCase):
         entree = JournalActivite.objects.get(action='CONTRAT_MODIFIE')
         self.assertEqual(entree.utilisateur, admin)
         self.assertEqual(entree.contrat_id, contrat.id)
+
+
+class ContratDocumentTests(APITestCase):
+    """Regression constat 4.1 : le document d'un contrat n'est plus servi
+    en direct et sans authentification via /media/, mais via cette vue
+    protegee qui verifie la propriete avant de le renvoyer."""
+
+    def make_contrat_avec_document(self, client_profile, numero='CTR-1'):
+        return Contrat.objects.create(
+            client=client_profile, numero_contrat=numero, **CONTRAT_PAYLOAD,
+            document=SimpleUploadedFile('piece.pdf', b'%PDF-1.4 contenu', content_type='application/pdf'),
+        )
+
+    def test_client_can_download_own_contrat_document(self):
+        client_profile = make_client()
+        contrat = self.make_contrat_avec_document(client_profile)
+        self.client.force_authenticate(user=client_profile.user)
+        response = self.client.get(reverse('contrat_document', args=[contrat.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn('inline', response['Content-Disposition'])
+
+    def test_client_cannot_download_others_contrat_document(self):
+        """Reproduit l'IDOR du rapport d'audit : un client ne doit jamais
+        pouvoir recuperer le document d'un contrat qui n'est pas le sien."""
+        victime = make_client('victime@nia.ne')
+        attaquant = make_client('attaquant@nia.ne')
+        contrat_victime = self.make_contrat_avec_document(victime, numero='CTR-V')
+
+        self.client.force_authenticate(user=attaquant.user)
+        response = self.client.get(reverse('contrat_document', args=[contrat_victime.id]))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_unauthenticated_cannot_download_contrat_document(self):
+        """Reproduit le constat central de l'audit : avant, cette meme
+        requete sans aucun en-tete Authorization renvoyait 200 et le
+        fichier, via /media/."""
+        client_profile = make_client()
+        contrat = self.make_contrat_avec_document(client_profile)
+        response = self.client.get(reverse('contrat_document', args=[contrat.id]))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_admin_can_download_any_contrat_document(self):
+        client_profile = make_client()
+        contrat = self.make_contrat_avec_document(client_profile)
+        admin = make_admin()
+        self.client.force_authenticate(user=admin)
+        response = self.client.get(reverse('contrat_document', args=[contrat.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_contrat_without_document_returns_404(self):
+        client_profile = make_client()
+        contrat = Contrat.objects.create(client=client_profile, numero_contrat='CTR-1', **CONTRAT_PAYLOAD)
+        self.client.force_authenticate(user=client_profile.user)
+        response = self.client.get(reverse('contrat_document', args=[contrat.id]))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class ContratDocumentUploadValidationTests(APITestCase):
+    """Regression constat 4.2 : Contrat.document n'avait aucun validateur
+    (n'importe quel type, n'importe quelle taille)."""
+
+    def test_oversized_document_is_rejected(self):
+        client_profile = make_client()
+        admin = make_admin()
+        self.client.force_authenticate(user=admin)
+        gros_fichier = SimpleUploadedFile(
+            'gros.pdf', b'x' * (6 * 1024 * 1024), content_type='application/pdf',
+        )
+        response = self.client.post(reverse('contrat_create'), {
+            **CONTRAT_PAYLOAD, 'client': client_profile.id, 'document': gros_fichier,
+        }, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_wrong_file_type_is_rejected(self):
+        client_profile = make_client()
+        admin = make_admin()
+        self.client.force_authenticate(user=admin)
+        fichier_html = SimpleUploadedFile(
+            'evil.html', b'<script>alert(1)</script>', content_type='text/html',
+        )
+        response = self.client.post(reverse('contrat_create'), {
+            **CONTRAT_PAYLOAD, 'client': client_profile.id, 'document': fichier_html,
+        }, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_valid_pdf_document_is_accepted(self):
+        client_profile = make_client()
+        admin = make_admin()
+        self.client.force_authenticate(user=admin)
+        fichier_pdf = SimpleUploadedFile('ok.pdf', b'%PDF-1.4', content_type='application/pdf')
+        response = self.client.post(reverse('contrat_create'), {
+            **CONTRAT_PAYLOAD, 'client': client_profile.id, 'document': fichier_pdf,
+        }, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)

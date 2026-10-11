@@ -1,9 +1,10 @@
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import DemandeContrat
+from .models import DemandeContrat, DocumentDemande
 from .serializers import (
     DemandeContratSerializer,
     DemandeContratCreateSerializer,
@@ -13,6 +14,7 @@ from .serializers import (
 from contrats.models import Contrat
 from contrats.serializers import ContratSerializer
 from nia_assurance.utils import generate_numero
+from nia_assurance.files import servir_fichier_protege
 from journal.utils import enregistrer_action
 
 
@@ -199,3 +201,21 @@ class DemandeRejeterView(APIView):
             'demande': DemandeContratSerializer(demande, context={'request': request}).data,
             'message': 'Demande rejetée'
         }, status=status.HTTP_200_OK)
+
+
+class DocumentDemandeFileView(APIView):
+    """GET /api/demandes/documents/<id>/ - piece jointe d'une demande de
+    contrat (piece d'identite, carte grise...). Remplace l'ancien acces
+    direct et non authentifie via /media/ (audit DevSecOps, constat 4.1) :
+    meme regle de portee que le reste de l'app (CLIENT : ses propres
+    demandes uniquement, ADMIN/AGENT : toutes)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        user = request.user
+        if user.role in ('ADMIN', 'AGENT'):
+            document = get_object_or_404(DocumentDemande, pk=pk)
+        else:
+            document = get_object_or_404(DocumentDemande, pk=pk, demande__client__user=user)
+        return servir_fichier_protege(document.fichier)

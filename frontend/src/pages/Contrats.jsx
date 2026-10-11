@@ -8,7 +8,7 @@ import Badge from '../components/ui/Badge';
 import { Select, Textarea, Input } from '../components/ui/Input';
 import { CONTRAT_STATUS_VARIANTS } from '../components/ui/statusVariants';
 import { estEcheanceProche } from '../utils/dates';
-import { telechargerPdf, extraireErreurTelechargement } from '../utils/downloadPdf';
+import { telechargerPdf, telechargerFichier, extraireErreurTelechargement } from '../utils/downloadPdf';
 import { IconClose, IconDownload, IconInbox, IconClock } from '../components/ui/icons';
 
 const FILTRES = ['TOUS', 'ACTIF', 'EXPIRE', 'SUSPENDU', 'RESILIE'];
@@ -40,6 +40,8 @@ const Contrats = () => {
   const [filtreType, setFiltreType] = useState('TOUS');
   const [attestationEnCoursId, setAttestationEnCoursId] = useState(null);
   const [attestationError, setAttestationError] = useState('');
+  const [documentEnCoursId, setDocumentEnCoursId] = useState(null);
+  const [documentError, setDocumentError] = useState('');
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -151,6 +153,22 @@ const Contrats = () => {
     }
   };
 
+  // Le document joint au contrat n'est plus un lien <a href> direct vers
+  // /media/ (qui n'envoie pas le jeton JWT et n'est de toute facon plus
+  // servi sans authentification - audit DevSecOps, constat 4.1) : il
+  // passe par la meme recuperation en blob que l'attestation ci-dessus.
+  const handleDownloadDocument = async (contrat) => {
+    setDocumentEnCoursId(contrat.id);
+    setDocumentError('');
+    try {
+      await telechargerFichier(api, `/contrats/${contrat.id}/document/`, `document_${contrat.numero_contrat}`);
+    } catch (err) {
+      setDocumentError(await extraireErreurTelechargement(err, 'Impossible de télécharger le document.'));
+    } finally {
+      setDocumentEnCoursId(null);
+    }
+  };
+
   return (
     <DashboardLayout
       title={isAdmin ? 'Contrats' : 'Mes contrats'}
@@ -195,6 +213,12 @@ const Contrats = () => {
       {attestationError && (
         <Card padding="sm" className="mb-4 border border-red-100 bg-red-50">
           <p className="text-sm text-red-600">{attestationError}</p>
+        </Card>
+      )}
+
+      {documentError && (
+        <Card padding="sm" className="mb-4 border border-red-100 bg-red-50">
+          <p className="text-sm text-red-600">{documentError}</p>
         </Card>
       )}
 
@@ -250,15 +274,14 @@ const Contrats = () => {
                     </button>
                   )}
                   {contrat.document && (
-                    <a
-                      href={contrat.document}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100"
+                    <button
+                      onClick={() => handleDownloadDocument(contrat)}
+                      disabled={documentEnCoursId === contrat.id}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100 disabled:opacity-50"
                     >
                       <IconDownload className="h-3.5 w-3.5" />
-                      Télécharger PDF
-                    </a>
+                      {documentEnCoursId === contrat.id ? 'Téléchargement...' : 'Télécharger le document'}
+                    </button>
                   )}
                   {isAdmin && (
                     <button

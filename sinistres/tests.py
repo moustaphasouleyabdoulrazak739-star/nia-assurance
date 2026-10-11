@@ -1,3 +1,4 @@
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -159,3 +160,91 @@ class SinistreJournalTests(APITestCase):
         self.assertIn('SIN-1', entree.resume)
         self.assertIn('Approuvé', entree.resume)
         self.assertIn('150 000 FCFA', entree.resume)
+
+
+class SinistreDocumentTests(APITestCase):
+    """Regression constat 4.1 : le document d'un sinistre n'est plus servi
+    en direct et sans authentification via /media/, mais via cette vue
+    protegee qui verifie la propriete avant de le renvoyer."""
+
+    def make_sinistre_avec_document(self, client_profile, numero='SIN-1'):
+        contrat = make_contrat(client_profile, numero=f'CTR-{numero}')
+        return Sinistre.objects.create(
+            contrat=contrat, numero_sinistre=numero, **SINISTRE_PAYLOAD,
+            document=SimpleUploadedFile('piece.pdf', b'%PDF-1.4 contenu', content_type='application/pdf'),
+        )
+
+    def test_client_can_download_own_sinistre_document(self):
+        client_profile = make_client()
+        sinistre = self.make_sinistre_avec_document(client_profile)
+        self.client.force_authenticate(user=client_profile.user)
+        response = self.client.get(reverse('sinistre_document', args=[sinistre.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_client_cannot_download_others_sinistre_document(self):
+        """Reproduit l'IDOR du rapport d'audit, cette fois sur un sinistre."""
+        victime = make_client('victime@nia.ne')
+        attaquant = make_client('attaquant@nia.ne')
+        sinistre_victime = self.make_sinistre_avec_document(victime, numero='SIN-V')
+
+        self.client.force_authenticate(user=attaquant.user)
+        response = self.client.get(reverse('sinistre_document', args=[sinistre_victime.id]))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_unauthenticated_cannot_download_sinistre_document(self):
+        """Reproduit le constat central de l'audit (acces /media/ sans
+        aucune authentification), cette fois sur un sinistre. Inclut le
+        cas de l'upload HTML execute en XSS stocke (constat 4.2) : le
+        fichier est desormais inaccessible avant meme de regarder son type."""
+        client_profile = make_client()
+        sinistre = self.make_sinistre_avec_document(client_profile)
+        response = self.client.get(reverse('sinistre_document', args=[sinistre.id]))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_admin_can_download_any_sinistre_document(self):
+        client_profile = make_client()
+        sinistre = self.make_sinistre_avec_document(client_profile)
+        admin = User.objects.create_user(email='admin@nia.ne', password='Secret123!', nom='Admin', prenom='X', role='ADMIN', is_staff=True)
+        self.client.force_authenticate(user=admin)
+        response = self.client.get(reverse('sinistre_document', args=[sinistre.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class SinistreDocumentUploadValidationTests(APITestCase):
+    """Regression constat 4.2 : Sinistre.document n'avait aucun validateur.
+    Reproduit precisement l'upload HTML malveillant de l'audit."""
+
+    def test_html_file_with_script_is_rejected(self):
+        client_profile = make_client()
+        contrat = make_contrat(client_profile)
+        self.client.force_authenticate(user=client_profile.user)
+        fichier_html = SimpleUploadedFile(
+            'evil.html', b'<html><script>alert(document.cookie)</script></html>', content_type='text/html',
+        )
+        response = self.client.post(reverse('sinistre_create'), {
+            **SINISTRE_PAYLOAD, 'contrat': contrat.id, 'document': fichier_html,
+        }, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_oversized_document_is_rejected(self):
+        client_profile = make_client()
+        contrat = make_contrat(client_profile)
+        self.client.force_authenticate(user=client_profile.user)
+        gros_fichier = SimpleUploadedFile(
+            'gros.pdf', b'x' * (6 * 1024 * 1024), content_type='application/pdf',
+        )
+        response = self.client.post(reverse('sinistre_create'), {
+            **SINISTRE_PAYLOAD, 'contrat': contrat.id, 'document': gros_fichier,
+        }, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_valid_pdf_document_is_accepted(self):
+        client_profile = make_client()
+        contrat = make_contrat(client_profile)
+        self.client.force_authenticate(user=client_profile.user)
+        fichier_pdf = SimpleUploadedFile('ok.pdf', b'%PDF-1.4', content_type='application/pdf')
+        response = self.client.post(reverse('sinistre_create'), {
+            **SINISTRE_PAYLOAD, 'contrat': contrat.id, 'document': fichier_pdf,
+        }, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)

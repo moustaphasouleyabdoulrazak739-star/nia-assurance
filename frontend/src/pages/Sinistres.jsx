@@ -7,6 +7,7 @@ import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { Select, Textarea, Input } from '../components/ui/Input';
 import { SINISTRE_STATUS_VARIANTS } from '../components/ui/statusVariants';
+import { telechargerFichier, extraireErreurTelechargement } from '../utils/downloadPdf';
 import { IconClose, IconDownload, IconInbox } from '../components/ui/icons';
 
 const ETAPES_SINISTRE = ['Déclaré', 'En cours', 'Traité'];
@@ -73,6 +74,9 @@ const Sinistres = () => {
   const [reviewForm, setReviewForm] = useState({ statut: '', montant_indemnite: '', commentaire: '' });
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewError, setReviewError] = useState('');
+
+  const [documentEnCoursId, setDocumentEnCoursId] = useState(null);
+  const [documentError, setDocumentError] = useState('');
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'AGENT';
 
@@ -148,6 +152,21 @@ const Sinistres = () => {
     setReviewForm({ ...reviewForm, [e.target.name]: e.target.value });
   };
 
+  // Le document joint au sinistre n'est plus un lien <a href> direct vers
+  // /media/ (qui n'envoie pas le jeton JWT et n'est de toute facon plus
+  // servi sans authentification - audit DevSecOps, constat 4.1).
+  const handleDownloadDocument = async (sinistre) => {
+    setDocumentEnCoursId(sinistre.id);
+    setDocumentError('');
+    try {
+      await telechargerFichier(api, `/sinistres/${sinistre.id}/document/`, `document_${sinistre.numero_sinistre}`);
+    } catch (err) {
+      setDocumentError(await extraireErreurTelechargement(err, 'Impossible de télécharger le document.'));
+    } finally {
+      setDocumentEnCoursId(null);
+    }
+  };
+
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     setReviewLoading(true);
@@ -180,6 +199,12 @@ const Sinistres = () => {
       {error && (
         <Card padding="sm" className="mb-4 border border-red-100 bg-red-50">
           <p className="text-sm text-red-600">{error}</p>
+        </Card>
+      )}
+
+      {documentError && (
+        <Card padding="sm" className="mb-4 border border-red-100 bg-red-50">
+          <p className="text-sm text-red-600">{documentError}</p>
         </Card>
       )}
 
@@ -237,15 +262,14 @@ const Sinistres = () => {
                   </div>
                 )}
                 {sinistre.document && (
-                  <a
-                    href={sinistre.document}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100"
+                  <button
+                    onClick={() => handleDownloadDocument(sinistre)}
+                    disabled={documentEnCoursId === sinistre.id}
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100 disabled:opacity-50"
                   >
                     <IconDownload className="h-3.5 w-3.5" />
-                    Télécharger PDF
-                  </a>
+                    {documentEnCoursId === sinistre.id ? 'Téléchargement...' : 'Télécharger le document'}
+                  </button>
                 )}
                 {isAdmin && (
                   <button

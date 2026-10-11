@@ -13,11 +13,18 @@ class DocumentDemandeSerializer(serializers.ModelSerializer):
     type_document_display = serializers.CharField(
         source='get_type_document_display', read_only=True
     )
+    # Plus d'URL /media/ brute ici (audit DevSecOps, constat 4.1) : juste un
+    # indicateur de presence. Le fichier se recupere via la vue protegee
+    # GET /api/demandes/documents/<id>/ (demandes.views.DocumentDemandeFileView).
+    fichier = serializers.SerializerMethodField()
 
     class Meta:
         model = DocumentDemande
         fields = ['id', 'type_document', 'type_document_display', 'fichier', 'date_upload']
         read_only_fields = ['id', 'date_upload']
+
+    def get_fichier(self, obj):
+        return True if obj.fichier else None
 
 
 class DemandeContratSerializer(serializers.ModelSerializer):

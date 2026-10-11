@@ -1,8 +1,11 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import Client
 from .serializers import ClientSerializer, ClientCreateSerializer
+from nia_assurance.files import servir_fichier_protege
 
 
 class ClientListView(generics.ListAPIView):
@@ -62,4 +65,21 @@ class ClientMeView(generics.RetrieveUpdateAPIView):
 
     def update(self, request, *args, **kwargs):
         kwargs['partial'] = True
-        return super().update(request, *args, **kwargs)    
+        return super().update(request, *args, **kwargs)
+
+
+class ClientPhotoView(APIView):
+    """GET /api/clients/<id>/photo/ - photo de profil. Remplace l'ancien
+    acces direct et non authentifie via /media/ (audit DevSecOps, constat
+    4.1) : meme regle de portee que les autres vues (CLIENT : la sienne
+    uniquement, ADMIN/AGENT : toutes)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        user = request.user
+        if user.role in ('ADMIN', 'AGENT'):
+            client = get_object_or_404(Client, pk=pk)
+        else:
+            client = get_object_or_404(Client, pk=pk, user=user)
+        return servir_fichier_protege(client.photo)

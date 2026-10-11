@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { Input, Select, Textarea } from '../components/ui/Input';
+import { obtenirApercuFichier } from '../utils/downloadPdf';
 import { IconFileText, IconClock, IconLock, IconPhone } from '../components/ui/icons';
 
 function extraireMessageErreur(err, messageParDefaut) {
@@ -27,6 +28,17 @@ const Profil = () => {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
   const [contratsActifs, setContratsActifs] = useState(null);
+  // URL de blob locale (photo recuperee via la route protegee) : a revoquer
+  // avant d'en creer une nouvelle, pour ne pas accumuler de fuites memoire.
+  const blobUrlRef = useRef(null);
+
+  const setPhotoPreviewBlob = (url) => {
+    if (blobUrlRef.current) {
+      window.URL.revokeObjectURL(blobUrlRef.current);
+    }
+    blobUrlRef.current = url;
+    setPhotoPreview(url);
+  };
   const [form, setForm] = useState({
     cin: '',
     date_naissance: '',
@@ -59,8 +71,18 @@ const Profil = () => {
         ville: data.ville || '',
         profession: data.profession || '',
       }));
-      if (data.photo) {
-        setPhotoPreview(data.photo);
+      // `photo` n'est plus qu'un indicateur de presence (true/null) : le
+      // fichier lui-meme se recupere via la route protegee, qui n'est plus
+      // servie sans authentification via /media/ (audit DevSecOps, constat
+      // 4.1). Un <img src> brut ne peut pas porter le jeton JWT, d'ou ce
+      // passage par un blob, comme pour les telechargements de documents.
+      if (data.photo && data.id) {
+        try {
+          const url = await obtenirApercuFichier(api, `/clients/${data.id}/photo/`);
+          setPhotoPreviewBlob(url);
+        } catch {
+          // Pas bloquant : la page reste utilisable sans aperçu.
+        }
       }
     } catch {
       setError('Impossible de charger le profil.');
@@ -92,9 +114,18 @@ const Profil = () => {
     const file = e.target.files[0];
     if (file) {
       setPhotoFile(file);
-      setPhotoPreview(URL.createObjectURL(file));
+      setPhotoPreviewBlob(URL.createObjectURL(file));
     }
   };
+
+  useEffect(() => {
+    // Revoque le dernier blob en date au demontage de la page.
+    return () => {
+      if (blobUrlRef.current) {
+        window.URL.revokeObjectURL(blobUrlRef.current);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

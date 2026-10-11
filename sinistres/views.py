@@ -1,8 +1,11 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import Sinistre
 from .serializers import SinistreSerializer, SinistreCreateSerializer, SinistreReviewSerializer
+from nia_assurance.files import servir_fichier_protege
 from journal.utils import enregistrer_action
 
 
@@ -65,3 +68,20 @@ class SinistreDetailView(generics.RetrieveUpdateDestroyAPIView):
                 'error': 'Permission refusée'
             }, status=status.HTTP_403_FORBIDDEN)
         return super().destroy(request, *args, **kwargs)
+
+
+class SinistreDocumentView(APIView):
+    """GET /api/sinistres/<id>/document/ - piece jointe du sinistre.
+    Remplace l'ancien acces direct et non authentifie via /media/ (audit
+    DevSecOps, constat 4.1) : meme regle de portee IDOR que les autres
+    vues de ce fichier."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        user = request.user
+        if user.role in ('ADMIN', 'AGENT'):
+            sinistre = get_object_or_404(Sinistre, pk=pk)
+        else:
+            sinistre = get_object_or_404(Sinistre, pk=pk, contrat__client__user=user)
+        return servir_fichier_protege(sinistre.document)

@@ -1,5 +1,7 @@
 from django.db import models
 from clients.models import Client
+from demandes.validators import validate_document_file
+from nia_assurance.utils import upload_document_contrat
 
 
 class Contrat(models.Model):
@@ -26,7 +28,10 @@ class Contrat(models.Model):
     montant_prime = models.DecimalField(max_digits=10, decimal_places=2)
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='ACTIF')
     description = models.TextField(blank=True)
-    document = models.FileField(upload_to='contrats/documents/', blank=True, null=True)
+    document = models.FileField(
+        upload_to=upload_document_contrat, blank=True, null=True,
+        validators=[validate_document_file],
+    )
     date_creation = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)
 
