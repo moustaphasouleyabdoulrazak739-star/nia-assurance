@@ -4,10 +4,38 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Serializer de LECTURE (profil, imbrique dans ClientSerializer...).
+    Ne jamais l'utiliser pour une ecriture : role n'y est pas protege par
+    read_only_fields, volontairement - c'est ProfileUpdateSerializer qui
+    sert desormais a ecrire via /api/auth/profile/ (voir plus bas)."""
+
     class Meta:
         model = User
         fields = ['id', 'email', 'nom', 'prenom', 'telephone', 'role', 'date_creation']
         read_only_fields = ['date_creation']
+
+
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    """Serializer d'ECRITURE pour PATCH/PUT /api/auth/profile/. N'expose
+    que ce qu'un utilisateur doit pouvoir modifier lui-meme sur son propre
+    compte. role et email en sont absents : les exposer permettait a
+    n'importe quel CLIENT de s'auto-promouvoir ADMIN d'un simple PATCH
+    (audit DevSecOps, constat 3.1) - le changement de role doit rester un
+    geste administratif a part, pas un champ de formulaire self-service."""
+
+    class Meta:
+        model = User
+        fields = ['nom', 'prenom', 'telephone']
+
+
+class LoginSerializer(serializers.Serializer):
+    """Valide la FORME de la requete de connexion avant tout appel a
+    authenticate() : un email/mot de passe du mauvais type (entier, objet)
+    levait auparavant une exception non interceptee -> 500 avec la page de
+    debug complete au lieu d'un 400 propre (audit DevSecOps, constat 7.1)."""
+
+    email = serializers.CharField()
+    password = serializers.CharField()
 
 
 class RegisterSerializer(serializers.ModelSerializer):

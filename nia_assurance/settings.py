@@ -129,6 +129,17 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    # Throttling cible (login, changement de mot de passe) plutot que
+    # global : voir users/views.py pour les vues qui declarent
+    # throttle_classes/throttle_scope. Pas de limite ailleurs par defaut.
+    # Cache en memoire du process (pas de CACHES configure) : suffisant
+    # pour un seul process ; a revoir si le projet passe en multi-process
+    # (le compteur ne serait alors plus partage entre workers).
+    'DEFAULT_THROTTLE_RATES': {
+        'login': '10/min',
+        'login-email': '5/min',
+        'change-password': '8/min',
+    },
 }
 
 # CORS
