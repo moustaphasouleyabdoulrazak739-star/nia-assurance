@@ -57,6 +57,20 @@ function refreshAccessToken() {
   return refreshPromise;
 }
 
+// Pour les appels qui ne passent pas par axios (FileSystem.downloadAsync des
+// PDF) : même rafraîchissement partagé que l'intercepteur ci-dessous (même
+// verrou refreshPromise, jetons écrits uniquement dans SecureStore), et même
+// déconnexion si le refresh token est lui-même expiré ou révoqué.
+export async function rafraichirJetonOuDeconnecter() {
+  try {
+    return await refreshAccessToken();
+  } catch (refreshError) {
+    await clearTokens();
+    notifyUnauthorized();
+    throw refreshError;
+  }
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
