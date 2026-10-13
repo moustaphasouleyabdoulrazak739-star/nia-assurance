@@ -17,3 +17,10 @@ export const SINISTRE_STATUS_VARIANTS = {
   REJETE: 'danger',
   REGLE: 'neutral',
 };
+
+export const PAIEMENT_STATUS_VARIANTS = {
+  EN_ATTENTE: 'warning',
+  VALIDE: 'success',
+  ECHOUE: 'danger',
+  REMBOURSE: 'neutral',
+};
