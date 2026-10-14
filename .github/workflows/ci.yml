@@ -182,6 +182,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Tests unitaires (node --test, aucune dependance de test)
+        run: npm test
+
       - name: Politique d'audit des dependances (voir SECURITY.md)
         # Expo ne separe pas outillage et code embarque comme un projet
         # web : la chaine Metro/Expo CLI vit dans "dependencies", pas

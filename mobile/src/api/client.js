@@ -2,6 +2,7 @@ import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { getAccessToken, getRefreshToken, setTokens, clearTokens } from './tokenStorage';
 import { notifyUnauthorized } from './authEvents';
+import { DELAI_REQUETE_MS, doitRejouerApresErreurReseau, estErreurReseau } from '../utils/reseau';
 
 const REFRESH_PATH = '/auth/token/refresh/';
 
@@ -12,9 +13,15 @@ const REFRESH_PATH = '/auth/token/refresh/';
 // echoue, faute de jeton a rafraichir) suivi d'une deconnexion.
 const ROUTES_SANS_RAFRAICHISSEMENT = ['/auth/login/', '/auth/register/', '/auth/logout/', REFRESH_PATH];
 
+// Délai maximal par défaut : sans lui, une requête partie sur une connexion
+// morte laissait l'écran en chargement indéfiniment (voir utils/reseau.js).
+// Surchargeable par requête avec l'option axios standard `timeout`, ex.
+// api.post(url, data, { timeout: DELAI_ENVOI_FICHIERS_MS }) ; la valeur
+// surchargée est conservée lors d'une nouvelle tentative (même config).
 // eslint-disable-next-line import/no-named-as-default-member -- axios par defaut (cf. frontend/src/services/api.js)
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: DELAI_REQUETE_MS,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -44,7 +51,9 @@ function refreshAccessToken() {
         if (!refresh) {
           throw new Error('Pas de refresh token');
         }
-        return axios.post(`${API_BASE_URL}${REFRESH_PATH}`, { refresh });
+        // Délai obligatoire ici aussi : un refresh sans réponse garderait
+        // refreshPromise en attente, et avec lui toutes les requêtes en 401.
+        return axios.post(`${API_BASE_URL}${REFRESH_PATH}`, { refresh }, { timeout: DELAI_REQUETE_MS });
       })
       .then(async (response) => {
         await setTokens({ access: response.data.access, refresh: response.data.refresh });
@@ -65,16 +74,33 @@ export async function rafraichirJetonOuDeconnecter() {
   try {
     return await refreshAccessToken();
   } catch (refreshError) {
-    await clearTokens();
-    notifyUnauthorized();
+    await deconnecterSaufErreurReseau(refreshError);
     throw refreshError;
   }
+}
+
+// Un refresh qui échoue faute de réseau (timeout, Wi-Fi coupé) ne dit rien
+// de la validité du refresh token : on garde la session, la prochaine
+// requête retentera. Seul un refus du serveur (401...) déconnecte.
+async function deconnecterSaufErreurReseau(refreshError) {
+  if (estErreurReseau(refreshError)) return;
+  await clearTokens();
+  notifyUnauthorized();
 }
 
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Connexion morte ou serveur muet : une seule nouvelle tentative, et
+    // seulement pour un GET (jamais un POST/PATCH, cf. utils/reseau.js).
+    // axios annule la requête au timeout, ce qui ferme la connexion : la
+    // nouvelle tentative part sur une connexion neuve.
+    if (doitRejouerApresErreurReseau(originalRequest, error)) {
+      originalRequest._nouvelleTentativeReseau = true;
+      return api(originalRequest);
+    }
 
     if (error.response?.status !== 401 || !originalRequest) {
       return Promise.reject(error);
@@ -95,15 +121,17 @@ api.interceptors.response.use(
     }
     originalRequest._retry = true;
 
+    // Seul l'échec du refresh lui-même peut déconnecter : une erreur de la
+    // requête rejouée (404, réseau...) remonte telle quelle à l'écran.
+    let newAccessToken;
     try {
-      const newAccessToken = await refreshAccessToken();
-      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-      return api(originalRequest);
+      newAccessToken = await refreshAccessToken();
     } catch (refreshError) {
-      await clearTokens();
-      notifyUnauthorized();
+      await deconnecterSaufErreurReseau(refreshError);
       return Promise.reject(refreshError);
     }
+    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+    return api(originalRequest);
   }
 );
 
