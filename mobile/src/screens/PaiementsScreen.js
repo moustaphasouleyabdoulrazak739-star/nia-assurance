@@ -7,6 +7,7 @@ import { colors } from '../theme/colors';
 import { PAIEMENT_STATUS_VARIANTS } from '../theme/statusVariants';
 import { formaterDate, formaterMontant } from '../utils/format';
 import { fetchPaiements, libelleMethode } from '../api/paiements';
+import { messageErreurChargement } from '../utils/reseau';
 
 // Liste des paiements du client connecté (le backend filtre déjà par rôle,
 // cf. paiements/views.py:PaiementListView). Un appui ouvre le détail, d'où
@@ -22,8 +23,8 @@ export default function PaiementsScreen({ navigation }) {
       setError('');
       const data = await fetchPaiements();
       setPaiements(data);
-    } catch {
-      setError('Impossible de charger vos paiements.');
+    } catch (err) {
+      setError(messageErreurChargement(err, 'Impossible de charger vos paiements.'));
     }
   }, []);
 

@@ -7,6 +7,7 @@ import SinistreTimeline from '../components/SinistreTimeline';
 import { colors } from '../theme/colors';
 import { SINISTRE_STATUS_VARIANTS } from '../theme/statusVariants';
 import { fetchSinistres } from '../api/sinistres';
+import { messageErreurChargement } from '../utils/reseau';
 
 // Liste des sinistres du client connecté (le backend filtre déjà par rôle,
 // cf. sinistres/views.py:SinistreListView) + accès à la déclaration d'un
@@ -22,8 +23,8 @@ export default function SinistresScreen({ navigation }) {
       setError('');
       const data = await fetchSinistres();
       setSinistres(data);
-    } catch {
-      setError('Impossible de charger vos sinistres.');
+    } catch (err) {
+      setError(messageErreurChargement(err, 'Impossible de charger vos sinistres.'));
     }
   }, []);
 
@@ -106,6 +107,9 @@ export default function SinistresScreen({ navigation }) {
       {!loading && error && (
         <View style={styles.centered}>
           <Text style={styles.error}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={onRefresh} activeOpacity={0.8}>
+            <Text style={styles.retryButtonText}>Réessayer</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -145,6 +149,14 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   error: { color: colors.danger, fontSize: 14, textAlign: 'center' },
+  retryButton: {
+    marginTop: 14,
+    backgroundColor: colors.primarySoft,
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+  retryButtonText: { color: colors.primary, fontSize: 13, fontWeight: '700' },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', marginBottom: 16 },
   emptyButton: {
     backgroundColor: colors.secondarySoft,

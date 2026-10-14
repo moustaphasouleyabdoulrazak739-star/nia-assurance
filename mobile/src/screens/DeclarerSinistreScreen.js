@@ -13,6 +13,7 @@ import DateField from '../components/DateField';
 import { colors } from '../theme/colors';
 import { fetchContrats } from '../api/contrats';
 import { creerSinistre, extraireErreursChamps, TYPES_SINISTRE } from '../api/sinistres';
+import { messageErreurChargement, messageErreurEnvoi } from '../utils/reseau';
 
 const CHAMPS_VIDES = {
   contrat: '',
@@ -45,8 +46,8 @@ export default function DeclarerSinistreScreen({ navigation }) {
       try {
         const data = await fetchContrats();
         setContrats(data.filter((contrat) => contrat.statut === 'ACTIF'));
-      } catch {
-        setContratsErreur('Impossible de charger vos contrats.');
+      } catch (err) {
+        setContratsErreur(messageErreurChargement(err, 'Impossible de charger vos contrats.'));
       }
     })();
   }, []);
@@ -72,7 +73,7 @@ export default function DeclarerSinistreScreen({ navigation }) {
       if (Object.keys(champs).length > 0) {
         setErreurs(champs);
       } else {
-        setErreurGenerale('Erreur lors de la déclaration. Vérifiez les informations.');
+        setErreurGenerale(messageErreurEnvoi(err, 'Erreur lors de la déclaration. Vérifiez les informations.'));
       }
     } finally {
       setEnvoiEnCours(false);

@@ -15,6 +15,7 @@ import { formaterMontant } from '../utils/format';
 import { fetchContrats } from '../api/contrats';
 import { extraireErreursChamps } from '../api/sinistres';
 import { creerPaiement, METHODES_MOBILE_MONEY, METHODES_PAIEMENT } from '../api/paiements';
+import { messageErreurChargement, messageErreurEnvoi } from '../utils/reseau';
 
 const CHAMPS_VIDES = { contrat: '', montant: '', methode: '', reference: '' };
 
@@ -39,8 +40,8 @@ export default function EffectuerPaiementScreen({ navigation }) {
       try {
         const data = await fetchContrats();
         setContrats(data.filter((contrat) => contrat.statut === 'ACTIF'));
-      } catch {
-        setContratsErreur('Impossible de charger vos contrats.');
+      } catch (err) {
+        setContratsErreur(messageErreurChargement(err, 'Impossible de charger vos contrats.'));
       } finally {
         setContratsChargement(false);
       }
@@ -90,7 +91,7 @@ export default function EffectuerPaiementScreen({ navigation }) {
       const { non_field_errors: nonChamp, ...parChamp } = champs;
       if (Object.keys(parChamp).length > 0) setErreurs(parChamp);
       if (nonChamp || Object.keys(parChamp).length === 0) {
-        setErreurGenerale(nonChamp || 'Erreur lors du paiement. Vérifiez les informations.');
+        setErreurGenerale(nonChamp || messageErreurEnvoi(err, 'Erreur lors du paiement. Vérifiez les informations.'));
       }
     } finally {
       setEnvoiEnCours(false);

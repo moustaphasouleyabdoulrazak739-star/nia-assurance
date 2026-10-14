@@ -14,6 +14,7 @@ import { colors } from '../theme/colors';
 import { PAIEMENT_STATUS_VARIANTS } from '../theme/statusVariants';
 import { formaterDateHeure, formaterMontant } from '../utils/format';
 import { fetchPaiement, libelleMethode, telechargerRecu } from '../api/paiements';
+import { messageErreurChargement } from '../utils/reseau';
 
 // Détail d'un paiement. Affiche tout de suite la version reçue de la liste
 // (paramètre de navigation) puis la recharge via GET /api/paiements/<id>/
@@ -31,8 +32,8 @@ export default function PaiementDetailScreen({ route }) {
     try {
       setError('');
       setPaiement(await fetchPaiement(id));
-    } catch {
-      setError('Impossible de mettre à jour ce paiement.');
+    } catch (err) {
+      setError(messageErreurChargement(err, 'Impossible de mettre à jour ce paiement.'));
     }
   }, [id]);
 
@@ -42,8 +43,8 @@ export default function PaiementDetailScreen({ route }) {
       try {
         const data = await fetchPaiement(id);
         if (!annule) setPaiement(data);
-      } catch {
-        if (!annule) setError('Impossible de mettre à jour ce paiement.');
+      } catch (err) {
+        if (!annule) setError(messageErreurChargement(err, 'Impossible de mettre à jour ce paiement.'));
       }
     })();
     return () => {
