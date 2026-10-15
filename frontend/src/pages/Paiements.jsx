@@ -8,6 +8,7 @@ import Badge from '../components/ui/Badge';
 import { Select, Input } from '../components/ui/Input';
 import { PAIEMENT_STATUS_VARIANTS } from '../components/ui/statusVariants';
 import { telechargerPdf, extraireErreurTelechargement } from '../utils/downloadPdf';
+import { extraireErreursChamps } from '../utils/erreursChamps';
 import { IconClose, IconInbox, IconCreditCard, IconDownload } from '../components/ui/icons';
 
 const METHODE_LABELS = {
@@ -27,6 +28,9 @@ const Paiements = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
+  // Erreurs de validation renvoyees par l'API, affichees sous chaque champ
+  // (ex. "montant" different de la prime, telephone MyNITA/AmanaTa invalide).
+  const [erreursChamps, setErreursChamps] = useState({});
   const [form, setForm] = useState({
     contrat: '',
     montant: '',
@@ -70,6 +74,15 @@ const Paiements = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    // Un champ modifie perd son erreur ; changer de contrat recalcule le
+    // montant, changer de methode change la nature de la reference.
+    const effaces = { contrat: ['contrat', 'montant'], methode: ['methode', 'reference'] }[name] || [name];
+    setErreursChamps((prev) => {
+      const suivant = { ...prev };
+      effaces.forEach((champ) => delete suivant[champ]);
+      return suivant;
+    });
+
     if (name === 'contrat') {
       const contratChoisi = contrats.find(c => String(c.id) === String(value));
       setForm({
@@ -87,6 +100,7 @@ const Paiements = () => {
     setFormLoading(true);
     setFormError('');
     setFormSuccess('');
+    setErreursChamps({});
     try {
       await api.post('/paiements/create/', form);
       setFormSuccess('Paiement effectué avec succès !');
@@ -96,8 +110,16 @@ const Paiements = () => {
         setShowModal(false);
         setFormSuccess('');
       }, 2000);
-    } catch {
-      setFormError('Erreur lors du paiement. Vérifiez les informations.');
+    } catch (err) {
+      const { champs, general } = extraireErreursChamps(err);
+      setErreursChamps(champs);
+      if (general) {
+        setFormError(general);
+      } else if (Object.keys(champs).length > 0) {
+        setFormError('Certaines informations sont invalides, voir ci-dessous.');
+      } else {
+        setFormError('Erreur lors du paiement. Vérifiez les informations.');
+      }
     } finally {
       setFormLoading(false);
     }
@@ -107,6 +129,7 @@ const Paiements = () => {
     setForm({ contrat: '', montant: '', methode: '', reference: '' });
     setFormError('');
     setFormSuccess('');
+    setErreursChamps({});
     setShowModal(true);
   };
 
@@ -283,6 +306,7 @@ const Paiements = () => {
                 name="contrat"
                 value={form.contrat}
                 onChange={handleChange}
+                error={erreursChamps.contrat}
                 required
               >
                 <option value="">Choisir un contrat</option>
@@ -302,6 +326,7 @@ const Paiements = () => {
                 onChange={handleChange}
                 placeholder="Sélectionner un contrat"
                 hint="Montant automatiquement rempli depuis la prime du contrat"
+                error={erreursChamps.montant}
                 className="bg-primary-50"
                 readOnly
               />
@@ -312,6 +337,7 @@ const Paiements = () => {
                 name="methode"
                 value={form.methode}
                 onChange={handleChange}
+                error={erreursChamps.methode}
                 required
               >
                 <option value="">Choisir la méthode</option>
@@ -330,6 +356,7 @@ const Paiements = () => {
                   value={form.reference}
                   onChange={handleChange}
                   placeholder="Ex: 96000000"
+                  error={erreursChamps.reference}
                   required
                 />
               )}
@@ -343,6 +370,7 @@ const Paiements = () => {
                   value={form.reference}
                   onChange={handleChange}
                   placeholder="Référence du virement ou reçu"
+                  error={erreursChamps.reference}
                 />
               )}
 
