@@ -11,6 +11,7 @@ import { colors } from '../theme/colors';
 const MENU_ITEMS = [
   { label: 'Mes contrats', route: 'Contrats' },
   { label: 'Mes sinistres', route: 'Sinistres' },
+  { label: 'Mes paiements', route: 'Paiements' },
 ];
 
 // Écran minimal : le seul but ici est de prouver que le JWT stocké au login

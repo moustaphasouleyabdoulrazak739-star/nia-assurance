@@ -7,6 +7,9 @@ import HomeScreen from '../screens/HomeScreen';
 import ContratsScreen from '../screens/ContratsScreen';
 import SinistresScreen from '../screens/SinistresScreen';
 import DeclarerSinistreScreen from '../screens/DeclarerSinistreScreen';
+import PaiementsScreen from '../screens/PaiementsScreen';
+import PaiementDetailScreen from '../screens/PaiementDetailScreen';
+import EffectuerPaiementScreen from '../screens/EffectuerPaiementScreen';
 import { colors } from '../theme/colors';
 
 const Stack = createNativeStackNavigator();
@@ -81,6 +84,48 @@ export default function RootNavigator() {
                 headerShown: true,
                 title: 'Déclarer un sinistre',
                 headerStyle: { backgroundColor: colors.secondary },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: '700' },
+              }}
+            />
+            <Stack.Screen
+              name="Paiements"
+              component={PaiementsScreen}
+              options={({ navigation }) => ({
+                headerShown: true,
+                title: 'Mes paiements',
+                headerStyle: { backgroundColor: colors.primary },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: '700' },
+                headerRight: () => (
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('EffectuerPaiement')}
+                    style={styles.headerButton}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.headerButtonText}>{'+'}</Text>
+                  </TouchableOpacity>
+                ),
+              })}
+            />
+            <Stack.Screen
+              name="PaiementDetail"
+              component={PaiementDetailScreen}
+              options={{
+                headerShown: true,
+                title: 'Détail du paiement',
+                headerStyle: { backgroundColor: colors.primary },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: '700' },
+              }}
+            />
+            <Stack.Screen
+              name="EffectuerPaiement"
+              component={EffectuerPaiementScreen}
+              options={{
+                headerShown: true,
+                title: 'Effectuer un paiement',
+                headerStyle: { backgroundColor: colors.primary },
                 headerTintColor: '#fff',
                 headerTitleStyle: { fontWeight: '700' },
               }}

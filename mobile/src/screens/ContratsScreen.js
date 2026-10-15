@@ -14,6 +14,7 @@ import { colors } from '../theme/colors';
 import { CONTRAT_STATUS_VARIANTS } from '../theme/statusVariants';
 import { estEcheanceProche } from '../utils/dates';
 import { fetchContrats, telechargerAttestation } from '../api/contrats';
+import { messageErreurChargement } from '../utils/reseau';
 
 // Liste des contrats du client connecté (le backend filtre déjà par rôle,
 // cf. contrats/views.py:ContratListView) + téléchargement de l'attestation
@@ -31,8 +32,8 @@ export default function ContratsScreen() {
       setError('');
       const data = await fetchContrats();
       setContrats(data);
-    } catch {
-      setError('Impossible de charger vos contrats.');
+    } catch (err) {
+      setError(messageErreurChargement(err, 'Impossible de charger vos contrats.'));
     }
   }, []);
 
@@ -118,6 +119,9 @@ export default function ContratsScreen() {
       {!loading && error && (
         <View style={styles.centered}>
           <Text style={styles.error}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={onRefresh} activeOpacity={0.8}>
+            <Text style={styles.retryButtonText}>Réessayer</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -153,6 +157,14 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   error: { color: colors.danger, fontSize: 14, textAlign: 'center' },
+  retryButton: {
+    marginTop: 14,
+    backgroundColor: colors.primarySoft,
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+  retryButtonText: { color: colors.primary, fontSize: 13, fontWeight: '700' },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center' },
   list: { padding: 16, paddingBottom: 32, flexGrow: 1 },
   downloadError: {
