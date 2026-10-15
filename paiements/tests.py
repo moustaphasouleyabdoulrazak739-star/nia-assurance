@@ -29,7 +29,7 @@ def make_contrat(client_profile, statut='ACTIF', numero='CTR-1'):
 PAIEMENT_PAYLOAD = {
     'montant': '150000.00',
     'methode': 'MYNITA',
-    'reference': '',
+    'reference': '96000000',
 }
 
 
@@ -179,6 +179,79 @@ class PaiementMontantTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertNotIn('montant', response.data)
         self.assertNotIn('150 000', str(response.data))
+
+
+class PaiementTelephoneTests(APITestCase):
+    """MyNITA/AmanaTa : numero de telephone nigerien obligatoire dans
+    `reference`, controle et normalise (+227XXXXXXXX) par le serveur."""
+
+    def setUp(self):
+        self.client_profile = make_client()
+        self.contrat = make_contrat(self.client_profile)
+        self.client.force_authenticate(user=self.client_profile.user)
+
+    def payer(self, **champs):
+        payload = {**PAIEMENT_PAYLOAD, 'contrat': self.contrat.id, **champs}
+        return self.client.post(reverse('paiement_create'), payload, format='json')
+
+    def assertRefuseSurReference(self, response):
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('reference', response.data)
+        self.assertFalse(Paiement.objects.filter(contrat=self.contrat).exists())
+
+    def test_telephone_absent_est_refuse_pour_le_mobile_money(self):
+        for methode in ('MYNITA', 'AMANATA'):
+            for reference in ('', '   '):
+                with self.subTest(methode=methode, reference=reference):
+                    response = self.payer(methode=methode, reference=reference)
+                    self.assertRefuseSurReference(response)
+                    self.assertIn('obligatoire', str(response.data['reference']))
+        payload = {**PAIEMENT_PAYLOAD, 'contrat': self.contrat.id}
+        del payload['reference']
+        response = self.client.post(reverse('paiement_create'), payload, format='json')
+        self.assertRefuseSurReference(response)
+
+    def test_telephone_au_mauvais_format_est_refuse(self):
+        for reference in (
+            '9600000', '960000000', 'abcdefgh', '96-00-00-00', '96.00.00.00',
+            '+22696000000', '22796000000', '+227 9600000', '0227 96000000',
+            '٩٦' + '٠' * 6,  # "96000000" en chiffres arabes-indiens
+        ):
+            with self.subTest(reference=reference):
+                response = self.payer(reference=reference)
+                self.assertRefuseSurReference(response)
+                self.assertIn('8 chiffres', str(response.data['reference']))
+
+    def test_formats_valides_enregistres_sous_forme_normalisee(self):
+        for reference in (
+            '96000000', '96 00 00 00', '+22796000000', '+227 96 00 00 00',
+            '0022796000000', '00227 96 00 00 00', ' 96000000 ',
+        ):
+            with self.subTest(reference=reference):
+                Paiement.objects.all().delete()
+                response = self.payer(reference=reference)
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+                self.assertEqual(Paiement.objects.get().reference, '+22796000000')
+                self.assertEqual(response.data['paiement']['reference'], '+22796000000')
+
+    def test_amanata_soumis_a_la_meme_regle(self):
+        response = self.payer(methode='AMANATA', reference='+227 90 12 34 56')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Paiement.objects.get().reference, '+22790123456')
+
+    def test_reference_libre_et_facultative_pour_especes_et_virement(self):
+        for methode, reference in (('ESPECES', ''), ('VIREMENT', 'VIR-2026/123 BOA')):
+            with self.subTest(methode=methode):
+                Paiement.objects.all().delete()
+                response = self.payer(methode=methode, reference=reference)
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+                self.assertEqual(Paiement.objects.get().reference, reference)
+
+    def test_erreurs_montant_et_telephone_remontees_ensemble(self):
+        response = self.payer(montant='1.00', reference='')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('montant', response.data)
+        self.assertIn('reference', response.data)
 
 
 class PaiementReviewTests(APITestCase):

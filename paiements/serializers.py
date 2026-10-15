@@ -1,3 +1,4 @@
+import re
 from decimal import Decimal
 
 from rest_framework import serializers
@@ -26,6 +27,25 @@ class PaiementSerializer(serializers.ModelSerializer):
             'date_paiement', 'date_modification'
         ]
         read_only_fields = ['date_paiement', 'date_modification']
+
+
+# Modes mobile money : le champ `reference` porte alors le numero de
+# telephone du compte, obligatoire (meme regle que les formulaires web et
+# mobile, desormais imposee aussi par le serveur).
+METHODES_MOBILE_MONEY = ('MYNITA', 'AMANATA')
+
+# Numero nigerien : 8 chiffres, prefixe international +227 ou 00227
+# facultatif ; les espaces sont ignores. [0-9] et non \d, qui accepterait
+# aussi des chiffres non latins (ex. arabes-indiens).
+TELEPHONE_NIGER_RE = re.compile(r'(?:\+227|00227)?([0-9]{8})')
+
+
+def normaliser_telephone_niger(valeur):
+    """'96 00 00 00', '+227 96000000', '0022796000000' -> '+22796000000'.
+    Renvoie None si le format n'est pas reconnu."""
+    compact = ''.join((valeur or '').split())
+    correspondance = TELEPHONE_NIGER_RE.fullmatch(compact)
+    return f'+227{correspondance.group(1)}' if correspondance else None
 
 
 def formater_fcfa(montant):
@@ -71,13 +91,26 @@ class PaiementCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'contrat': 'Ce contrat ne vous appartient pas'
             })
+        erreurs = {}
         if attrs['montant'] != contrat.montant_prime:
-            raise serializers.ValidationError({
-                'montant': (
-                    'Le montant doit être égal à la prime du contrat '
-                    f'({formater_fcfa(contrat.montant_prime)}).'
+            erreurs['montant'] = (
+                'Le montant doit être égal à la prime du contrat '
+                f'({formater_fcfa(contrat.montant_prime)}).'
+            )
+        if attrs['methode'] in METHODES_MOBILE_MONEY:
+            reference = attrs.get('reference', '')
+            telephone = normaliser_telephone_niger(reference)
+            if not reference.strip():
+                erreurs['reference'] = 'Le numéro de téléphone est obligatoire pour ce mode de paiement.'
+            elif telephone is None:
+                erreurs['reference'] = (
+                    'Numéro de téléphone invalide : 8 chiffres attendus, '
+                    'ex. 96 00 00 00 ou +227 96 00 00 00.'
                 )
-            })
+            else:
+                attrs['reference'] = telephone
+        if erreurs:
+            raise serializers.ValidationError(erreurs)
         return attrs
 
     def create(self, validated_data):
