@@ -65,6 +65,20 @@ export function estErreurReseau(erreur) {
   return estDelaiDepasse(erreur) || erreur.code === 'ERR_NETWORK';
 }
 
+// Erreur levée par une tâche de téléchargement expo-file-system. Celle-ci
+// résout avec un statut HTTP dès que le serveur répond (même 401/404) : une
+// exception signifie donc toujours qu'aucune réponse n'a été reçue (Wi-Fi
+// coupé, serveur injoignable). L'erreur native porte son propre code (ex.
+// UnableToDownloadException) et un message technique ("failed to connect
+// to /<ip>:8000") à ne jamais afficher tel quel : on la convertit en erreur
+// réseau, en gardant l'originale dans `cause` pour le débogage.
+export function normaliserErreurTelechargement(erreur) {
+  if (estDelaiDepasse(erreur)) return erreur;
+  const reseau = new Error('Téléchargement impossible : aucune réponse du serveur', { cause: erreur });
+  reseau.code = 'ERR_NETWORK';
+  return reseau;
+}
+
 // Une seule nouvelle tentative automatique, uniquement pour une lecture
 // (GET) : rejouer un POST/PATCH/PUT/DELETE dont la réponse s'est perdue
 // risquerait un paiement ou un sinistre enregistré en double.

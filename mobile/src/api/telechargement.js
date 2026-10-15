@@ -3,7 +3,13 @@ import * as Sharing from 'expo-sharing';
 import { getAccessToken } from './tokenStorage';
 import { API_BASE_URL } from './config';
 import { rafraichirJetonOuDeconnecter } from './client';
-import { avecDelai, DELAI_TELECHARGEMENT_MS, estDelaiDepasse, estErreurReseau } from '../utils/reseau';
+import {
+  avecDelai,
+  DELAI_TELECHARGEMENT_MS,
+  estDelaiDepasse,
+  estErreurReseau,
+  normaliserErreurTelechargement,
+} from '../utils/reseau';
 
 // Télécharge un PDF servi par une vue Django authentifiée (attestation,
 // reçu...) puis ouvre la feuille de partage native — pas de viewer PDF
@@ -61,9 +67,7 @@ export async function telechargerEtPartagerPdf({
       return resultat;
     } catch (err) {
       await supprimerFichier();
-      // Toute exception de la tâche native (Wi-Fi coupé, serveur injoignable)
-      // est une erreur réseau : aucune réponse HTTP n'a été reçue.
-      throw estDelaiDepasse(err) ? err : Object.assign(err, { code: err.code || 'ERR_NETWORK' });
+      throw normaliserErreurTelechargement(err);
     }
   };
 

@@ -9,6 +9,7 @@ import {
   estErreurReseau,
   messageErreurChargement,
   messageErreurEnvoi,
+  normaliserErreurTelechargement,
 } from '../src/utils/reseau.js';
 
 const attendre = (ms, valeur) => new Promise((resoudre) => setTimeout(() => resoudre(valeur), ms));
@@ -85,4 +86,23 @@ test('messages : timeout, réseau absent, erreur applicative', () => {
   assert.equal(messageErreurChargement({ response: { status: 500 } }, 'défaut'), 'défaut');
   assert.match(messageErreurEnvoi(timeoutAxios, 'défaut'), /Vérifiez la liste/);
   assert.equal(messageErreurEnvoi({ response: { status: 400 } }, 'défaut'), 'défaut');
+});
+
+test("normaliserErreurTelechargement : l'erreur native codée d'Expo devient une erreur réseau", () => {
+  // Reproduit le cas constaté sur téléphone : Wi-Fi coupé pendant le
+  // téléchargement du reçu, message brut affiché à l'écran.
+  const native = Object.assign(new Error('failed to connect to /192.168.20.220 (port 8000)'), {
+    code: 'ERR_UNABLE_TO_DOWNLOAD',
+  });
+  const normalisee = normaliserErreurTelechargement(native);
+  assert.equal(estErreurReseau(normalisee), true);
+  assert.equal(normalisee.cause, native);
+  assert.match(messageErreurChargement(normalisee, 'défaut'), /Connexion au serveur impossible/);
+  assert.doesNotMatch(messageErreurChargement(normalisee, 'défaut'), /192\.168/);
+});
+
+test('normaliserErreurTelechargement : un délai dépassé reste un délai dépassé', () => {
+  const delai = new DelaiDepasseError(30000);
+  assert.equal(normaliserErreurTelechargement(delai), delai);
+  assert.match(messageErreurChargement(delai, 'défaut'), /ne répond pas/);
 });
