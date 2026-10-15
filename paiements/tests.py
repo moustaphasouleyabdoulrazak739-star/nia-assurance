@@ -83,6 +83,22 @@ class PaiementOwnershipTests(APITestCase):
         response = self.client.post(reverse('paiement_create'), {**PAIEMENT_PAYLOAD, 'contrat': contrat.id})
         self.assertTrue(response.data['paiement']['numero_recu'].startswith('REC-'))
 
+    def test_numero_recu_envoye_par_le_client_est_ignore(self):
+        """numero_recu est en lecture seule : un client ne peut pas imposer
+        son propre numero de recu (ni imiter celui d'un autre paiement)."""
+        client_profile = make_client()
+        contrat = make_contrat(client_profile)
+        self.client.force_authenticate(user=client_profile.user)
+        response = self.client.post(reverse('paiement_create'), {
+            **PAIEMENT_PAYLOAD, 'contrat': contrat.id, 'numero_recu': 'REC-FAUX-0001',
+        })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        numero = response.data['paiement']['numero_recu']
+        self.assertNotEqual(numero, 'REC-FAUX-0001')
+        self.assertRegex(numero, r'^REC-\d{4}-\d{4}$')
+        self.assertEqual(Paiement.objects.get(contrat=contrat).numero_recu, numero)
+        self.assertFalse(Paiement.objects.filter(numero_recu='REC-FAUX-0001').exists())
+
 
 class PaiementMontantTests(APITestCase):
     """Le backend ne fait jamais confiance au montant envoye : il doit etre

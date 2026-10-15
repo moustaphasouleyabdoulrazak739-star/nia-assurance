@@ -38,7 +38,6 @@ def formater_fcfa(montant):
 
 
 class PaiementCreateSerializer(serializers.ModelSerializer):
-    numero_recu = serializers.CharField(required=False, allow_blank=True)
     # Le montant envoye ne sert que de confirmation du montant affiche au
     # client : il doit etre egal a la prime du contrat (comparaison en
     # Decimal), et c'est toujours la prime, jamais la valeur recue, qui est
@@ -56,7 +55,10 @@ class PaiementCreateSerializer(serializers.ModelSerializer):
             'id', 'contrat', 'numero_recu',
             'montant', 'methode', 'reference'
         ]
-        read_only_fields = ['id']
+        # numero_recu toujours genere par le serveur (cf. create) : une valeur
+        # envoyee par le client est ignoree, sinon il pourrait imposer un
+        # numero de recu arbitraire (ex. imitant celui d'un autre paiement).
+        read_only_fields = ['id', 'numero_recu']
 
     def validate(self, attrs):
         contrat = attrs.get('contrat') or getattr(self.instance, 'contrat', None)
@@ -84,8 +86,7 @@ class PaiementCreateSerializer(serializers.ModelSerializer):
         validated_data['client'] = validated_data['contrat'].client
         # Jamais le montant recu : celui calcule cote serveur.
         validated_data['montant'] = validated_data['contrat'].montant_prime
-        if not validated_data.get('numero_recu'):
-            validated_data['numero_recu'] = generate_numero(Paiement, 'numero_recu', 'REC')
+        validated_data['numero_recu'] = generate_numero(Paiement, 'numero_recu', 'REC')
         return super().create(validated_data)
 
 
