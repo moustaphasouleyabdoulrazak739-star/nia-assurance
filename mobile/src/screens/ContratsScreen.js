@@ -13,6 +13,7 @@ import Badge from '../components/Badge';
 import { colors } from '../theme/colors';
 import { CONTRAT_STATUS_VARIANTS } from '../theme/statusVariants';
 import { estEcheanceProche } from '../utils/dates';
+import { formaterMontant } from '../utils/format';
 import { fetchContrats, telechargerAttestation } from '../api/contrats';
 import { messageErreurChargement } from '../utils/reseau';
 
@@ -72,7 +73,7 @@ export default function ContratsScreen() {
         <View style={styles.cardHeader}>
           <Text style={styles.numero}>{contrat.numero_contrat}</Text>
           <Text style={styles.montant}>
-            {Number(contrat.montant_prime).toLocaleString('fr-FR')} FCFA
+            {formaterMontant(contrat.montant_prime)}
           </Text>
         </View>
 

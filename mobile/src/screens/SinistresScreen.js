@@ -6,6 +6,7 @@ import Badge from '../components/Badge';
 import SinistreTimeline from '../components/SinistreTimeline';
 import { colors } from '../theme/colors';
 import { SINISTRE_STATUS_VARIANTS } from '../theme/statusVariants';
+import { formaterMontant } from '../utils/format';
 import { fetchSinistres } from '../api/sinistres';
 import { messageErreurChargement } from '../utils/reseau';
 
@@ -71,14 +72,14 @@ export default function SinistresScreen({ navigation }) {
       <View style={styles.montantsRow}>
         <View style={styles.montantBloc}>
           <Text style={styles.montant}>
-            {Number(sinistre.montant_reclame).toLocaleString('fr-FR')} FCFA
+            {formaterMontant(sinistre.montant_reclame)}
           </Text>
           <Text style={styles.montantLabel}>Montant réclamé</Text>
         </View>
         {sinistre.montant_indemnite ? (
           <View style={styles.montantBloc}>
             <Text style={[styles.montant, styles.indemnite]}>
-              {Number(sinistre.montant_indemnite).toLocaleString('fr-FR')} FCFA
+              {formaterMontant(sinistre.montant_indemnite)}
             </Text>
             <Text style={styles.montantLabel}>Indemnité</Text>
           </View>
