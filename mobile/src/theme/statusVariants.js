@@ -24,3 +24,9 @@ export const PAIEMENT_STATUS_VARIANTS = {
   ECHOUE: 'danger',
   REMBOURSE: 'neutral',
 };
+
+export const DEMANDE_STATUS_VARIANTS = {
+  EN_ATTENTE: 'warning',
+  VALIDEE: 'success',
+  REJETEE: 'danger',
+};
