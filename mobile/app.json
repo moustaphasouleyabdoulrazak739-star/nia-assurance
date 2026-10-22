@@ -25,7 +25,15 @@
     },
     "plugins": [
       "@react-native-community/datetimepicker",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "NIA Assurance accède à vos photos pour joindre les pièces de vos demandes de contrat.",
+          "cameraPermission": "NIA Assurance utilise l'appareil photo pour photographier les pièces de vos demandes de contrat.",
+          "microphonePermission": false
+        }
+      ]
     ]
   }
 }
