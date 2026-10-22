@@ -226,7 +226,7 @@ const Paiements = () => {
                 <p className="text-neutral-400 text-xs mt-1">
                   Contrat : {paiement.contrat?.numero_contrat}
                   {isAdmin && paiement.client?.user && (
-                    <> — {paiement.client.user.prenom} {paiement.client.user.nom}</>
+                    <>, {paiement.client.user.prenom} {paiement.client.user.nom}</>
                   )}
                 </p>
                 <p className="text-neutral-400 text-xs mt-1">
