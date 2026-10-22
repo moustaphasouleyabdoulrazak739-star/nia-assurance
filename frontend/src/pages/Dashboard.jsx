@@ -6,6 +6,7 @@ import DashboardLayout from "../components/layout/DashboardLayout";
 import Card from "../components/ui/Card";
 import BackgroundPattern from "../components/ui/BackgroundPattern";
 import { estEcheanceProche } from "../utils/dates";
+import { formaterMontant } from "../utils/format";
 import {
   IconFileText,
   IconAlertTriangle,
@@ -232,7 +233,7 @@ export default function Dashboard() {
                 label="Dernier paiement"
                 value={
                   derniereActivite.paiement
-                    ? `${Number(derniereActivite.paiement.montant).toLocaleString()} FCFA — ${derniereActivite.paiement.statut_display}`
+                    ? `${formaterMontant(derniereActivite.paiement.montant)} · ${derniereActivite.paiement.statut_display}`
                     : 'Aucun paiement effectué'
                 }
                 to="/paiements"
