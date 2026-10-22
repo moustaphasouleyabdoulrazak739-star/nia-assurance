@@ -5,11 +5,13 @@ import DashboardLayout from '../components/layout/DashboardLayout';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import { Select, Input } from '../components/ui/Input';
+import { Select, Input, ChampVerrouille } from '../components/ui/Input';
 import { PAIEMENT_STATUS_VARIANTS } from '../components/ui/statusVariants';
 import { telechargerPdf, extraireErreurTelechargement } from '../utils/downloadPdf';
 import { extraireErreursChamps } from '../utils/erreursChamps';
-import { IconClose, IconInbox, IconCreditCard, IconDownload } from '../components/ui/icons';
+import { formaterMontant } from '../utils/format';
+import { libelleMontant } from '../utils/paiements';
+import { IconClose, IconInbox, IconCreditCard, IconDownload, IconLock } from '../components/ui/icons';
 
 const METHODE_LABELS = {
   MYNITA: 'MyNITA',
@@ -180,7 +182,7 @@ const Paiements = () => {
             <p className="text-sm text-neutral-500">
               {isAdmin ? 'Total payé (tous clients, paiements validés)' : 'Total payé (paiements validés)'}
             </p>
-            <p className="text-2xl font-bold text-neutral-800">{totalPaye.toLocaleString()} FCFA</p>
+            <p className="text-2xl font-bold text-neutral-800">{formaterMontant(totalPaye)}</p>
           </div>
         </Card>
       )}
@@ -238,9 +240,9 @@ const Paiements = () => {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-primary-600">
-                  {Number(paiement.montant).toLocaleString()} FCFA
+                  {formaterMontant(paiement.montant)}
                 </p>
-                <p className="text-neutral-400 text-xs">Montant payé</p>
+                <p className="text-neutral-400 text-xs">{libelleMontant(paiement.statut)}</p>
                 {paiement.statut === 'VALIDE' && (
                   <button
                     onClick={() => handleDownloadRecu(paiement)}
@@ -317,18 +319,15 @@ const Paiements = () => {
                 ))}
               </Select>
 
-              <Input
+              <ChampVerrouille
                 id="montant"
-                label="Montant (FCFA)"
-                type="number"
-                name="montant"
-                value={form.montant}
-                onChange={handleChange}
+                label="Montant"
+                value={formaterMontant(form.montant)}
                 placeholder="Sélectionner un contrat"
-                hint="Montant automatiquement rempli depuis la prime du contrat"
+                mention="Fixé par le contrat"
+                icon={IconLock}
+                hint="Montant égal à la prime du contrat, non modifiable"
                 error={erreursChamps.montant}
-                className="bg-primary-50"
-                readOnly
               />
 
               <Select
