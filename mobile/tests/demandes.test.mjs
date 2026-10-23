@@ -5,12 +5,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  adapterMessageServeur,
   documentsPourType,
+  estMessageProfilIncomplet,
   extraireErreursDemande,
   formaterTaille,
   idsDejaResoumises,
   libelleStatut,
   libelleTypeAssurance,
+  MESSAGE_PROFIL_INCOMPLET,
   MESSAGES,
   nomPourEnvoi,
   partiesFormulaire,
@@ -133,8 +136,8 @@ test('extraireErreursDemande : erreurs du serializer par champ (y compris fichie
 });
 
 test('extraireErreursDemande : erreurs de vue (profil incomplet, demande non rejetée) en message général', () => {
-  const profil = extraireErreursDemande({ response: { status: 400, data: { error: 'Complétez votre profil.' } } });
-  assert.deepEqual(profil, { champs: {}, general: 'Complétez votre profil.' });
+  const profil = extraireErreursDemande({ response: { status: 400, data: { error: 'Profil client introuvable.' } } });
+  assert.deepEqual(profil, { champs: {}, general: 'Profil client introuvable.' });
   const nonRejetee = extraireErreursDemande({
     response: { status: 400, data: { error: 'Seule une demande rejetée peut être resoumise.' } },
   });
@@ -189,4 +192,28 @@ test('formaterTaille', () => {
   assert.equal(formaterTaille(2048), '2 Ko');
   assert.equal(formaterTaille(5 * 1024 * 1024), '5,0 Mo');
   assert.equal(formaterTaille(undefined), '');
+});
+
+// Texte exact renvoyé par demandes/views.py (_get_client_ou_erreur).
+const MESSAGE_SERVEUR_PROFIL =
+  'Complétez votre profil (CIN, date de naissance, adresse, ville) depuis "Mon profil" avant de demander un contrat.';
+
+test('estMessageProfilIncomplet : reconnaît le message serveur, pas les autres', () => {
+  assert.equal(estMessageProfilIncomplet(MESSAGE_SERVEUR_PROFIL), true);
+  assert.equal(estMessageProfilIncomplet('Completez votre profil depuis Mon profil.'), true);
+  assert.equal(estMessageProfilIncomplet('Profil client introuvable.'), false);
+  assert.equal(estMessageProfilIncomplet('Cette demande a déjà été traitée.'), false);
+  assert.equal(estMessageProfilIncomplet(undefined), false);
+  assert.equal(estMessageProfilIncomplet(null), false);
+});
+
+test('adapterMessageServeur : remplace le renvoi vers « Mon profil », laisse le reste intact', () => {
+  assert.equal(adapterMessageServeur(MESSAGE_SERVEUR_PROFIL), MESSAGE_PROFIL_INCOMPLET);
+  assert.equal(adapterMessageServeur('Permission refusée'), 'Permission refusée');
+  assert.doesNotMatch(MESSAGE_PROFIL_INCOMPLET, /Mon profil|—|–/);
+});
+
+test('extraireErreursDemande : profil incomplet affiché avec le message mobile', () => {
+  const resultat = extraireErreursDemande({ response: { status: 400, data: { error: MESSAGE_SERVEUR_PROFIL } } });
+  assert.deepEqual(resultat, { champs: {}, general: MESSAGE_PROFIL_INCOMPLET });
 });

@@ -162,6 +162,24 @@ function enTexte(valeur) {
   return String(valeur ?? '');
 }
 
+// TEMPORAIRE : en attendant l'écran Profil mobile. Le serveur
+// (demandes/views.py, _get_client_ou_erreur) refuse une demande si le profil
+// client est incomplet, avec un message qui renvoie vers « Mon profil », un
+// écran qui n'existe que sur le web. Pas de code d'erreur dédié : on
+// reconnaît ce cas à son texte et on oriente vers l'espace client web. À
+// retirer (ou à faire pointer vers l'écran mobile) quand celui-ci existera.
+export const MESSAGE_PROFIL_INCOMPLET =
+  "Votre profil est incomplet. Complétez-le depuis l'espace client web, puis renvoyez votre demande.";
+
+export function estMessageProfilIncomplet(texte) {
+  const t = String(texte ?? '').toLowerCase();
+  return /compl[eé]tez votre profil/.test(t) || /mon profil/.test(t);
+}
+
+export function adapterMessageServeur(texte) {
+  return estMessageProfilIncomplet(texte) ? MESSAGE_PROFIL_INCOMPLET : texte;
+}
+
 // Répartit une réponse d'erreur API entre les champs du formulaire et un
 // message général. Formes possibles côté backend :
 // - 400 du serializer : {piece_identite: ["..."], documents: ["..."], ...}
@@ -182,7 +200,7 @@ export function extraireErreursDemande(err) {
       const texte = enTexte(valeur).trim();
       if (!texte) continue;
       if (CHAMPS_FORMULAIRE.includes(cle)) champs[cle] = texte;
-      else generaux.push(texte);
+      else generaux.push(adapterMessageServeur(texte));
     }
   } else if (typeof data === 'string' && data.trim() && data.length < 300 && !data.includes('<')) {
     generaux.push(data.trim());
