@@ -1,3 +1,6 @@
+import io
+import os
+
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
@@ -6,7 +9,8 @@ from users.models import User
 from clients.models import Client
 from contrats.models import Contrat
 from journal.models import JournalActivite
-from .models import DemandeContrat
+from PIL import Image
+from .models import DemandeContrat, DocumentDemande
 
 
 def make_client(email='client@nia.ne', profil_complet=True):
@@ -23,8 +27,19 @@ def make_admin(email='admin@nia.ne'):
     return User.objects.create_user(email=email, password='Secret123!', nom='Admin', prenom='X', role='ADMIN', is_staff=True)
 
 
-def fichier(nom='piece.pdf', content_type='application/pdf', taille=100):
-    return SimpleUploadedFile(nom, b'x' * taille, content_type=content_type)
+# Vrais en-tetes : le serveur verifie la signature du fichier, pas seulement
+# son Content-Type (voir demandes.validators.validate_document_content).
+EN_TETE_PDF = b'%PDF-1.4\n'
+EN_TETE_JPEG = b'\xff\xd8\xff\xe0\x00\x10JFIF\x00'
+EN_TETE_PNG = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR'
+EN_TETE_PAR_EXTENSION = {'.pdf': EN_TETE_PDF, '.jpg': EN_TETE_JPEG, '.jpeg': EN_TETE_JPEG, '.png': EN_TETE_PNG}
+
+
+def fichier(nom='piece.pdf', content_type='application/pdf', taille=100, contenu=None):
+    if contenu is None:
+        en_tete = EN_TETE_PAR_EXTENSION.get(os.path.splitext(nom)[1].lower(), b'')
+        contenu = en_tete + b'x' * max(taille - len(en_tete), 0)
+    return SimpleUploadedFile(nom, contenu, content_type=content_type)
 
 
 class DemandeCreatePermissionTests(APITestCase):
@@ -435,3 +450,86 @@ class DemandeDocumentFileTests(APITestCase):
         self.client.force_authenticate(user=admin)
         response = self.client.get(reverse('demande_document', args=[doc_id]))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+def vrai_fichier(format_pillow):
+    """Vrai fichier genere par Pillow (PDF, JPEG ou PNG), pas un simple
+    en-tete : prouve que des documents reels passent la verification."""
+    tampon = io.BytesIO()
+    Image.new('RGB', (4, 4), color=(0, 128, 0)).save(tampon, format_pillow)
+    return tampon.getvalue()
+
+
+class DemandeFileContentTests(APITestCase):
+    """Le serveur verifie la signature reelle du fichier : l'extension, le
+    type declare et le contenu doivent designer le meme format."""
+
+    def setUp(self):
+        self.client_profile = make_client()
+        self.client.force_authenticate(user=self.client_profile.user)
+
+    def poster(self, piece):
+        return self.client.post(reverse('demande_create'), {
+            'type_assurance': 'SANTE',
+            'piece_identite': piece,
+        }, format='multipart')
+
+    def assert_contenu_refuse(self, response):
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data['piece_identite'][0],
+            'Le contenu du fichier ne correspond pas à un PDF, JPEG ou PNG valide.',
+        )
+        self.assertEqual(DemandeContrat.objects.count(), 0)
+
+    def test_texte_renomme_en_pdf_est_refuse(self):
+        faux = fichier('id.pdf', contenu=b'Ceci est un simple texte, pas un PDF.')
+        self.assert_contenu_refuse(self.poster(faux))
+
+    def test_png_renomme_en_pdf_est_refuse(self):
+        png = fichier('id.pdf', content_type='application/pdf', contenu=vrai_fichier('PNG'))
+        self.assert_contenu_refuse(self.poster(png))
+
+    def test_pdf_renomme_en_png_est_refuse(self):
+        pdf = fichier('id.png', content_type='image/png', contenu=vrai_fichier('PDF'))
+        self.assert_contenu_refuse(self.poster(pdf))
+
+    def test_type_declare_different_du_contenu_est_refuse(self):
+        pdf = fichier('id.pdf', content_type='image/jpeg', contenu=vrai_fichier('PDF'))
+        self.assert_contenu_refuse(self.poster(pdf))
+
+    def test_fichier_sans_extension_est_refuse(self):
+        pdf = fichier('id', contenu=vrai_fichier('PDF'))
+        self.assert_contenu_refuse(self.poster(pdf))
+
+    def test_vrai_pdf_est_accepte(self):
+        response = self.poster(fichier('id.pdf', 'application/pdf', contenu=vrai_fichier('PDF')))
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_vrai_jpeg_est_accepte(self):
+        response = self.poster(fichier('id.jpg', 'image/jpeg', contenu=vrai_fichier('JPEG')))
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_vrai_jpeg_extension_jpeg_est_accepte(self):
+        response = self.poster(fichier('id.JPEG', 'image/jpeg', contenu=vrai_fichier('JPEG')))
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_vrai_png_est_accepte(self):
+        response = self.poster(fichier('id.png', 'image/png', contenu=vrai_fichier('PNG')))
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_fichier_enregistre_non_tronque_par_lecture_en_tete(self):
+        contenu = vrai_fichier('PDF')
+        response = self.poster(fichier('id.pdf', 'application/pdf', contenu=contenu))
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        document = DocumentDemande.objects.get(demande_id=response.data['demande']['id'])
+        with document.fichier.open('rb') as f:
+            self.assertEqual(f.read(), contenu)
+
+    def test_taille_maximale_toujours_verifiee_avec_vrai_en_tete(self):
+        gros = fichier('gros.pdf', taille=6 * 1024 * 1024)
+        response = self.poster(gros)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('5 Mo', response.data['piece_identite'][0])
+

@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 from .models import DemandeContrat, DocumentDemande
 from .constants import DOCUMENTS_REQUIS, CHAMP_PAR_TYPE_DOCUMENT
-from .validators import validate_document_file
+from .validators import validate_document_file, validate_document_content
 from clients.serializers import ClientSerializer
 from contrats.models import Contrat
 from contrats.serializers import ContratSerializer
@@ -74,6 +74,7 @@ class DemandeContratCreateSerializer(serializers.Serializer):
             if fichier:
                 try:
                     validate_document_file(fichier)
+                    validate_document_content(fichier)
                 except DjangoValidationError as exc:
                     erreurs[champ] = ' '.join(exc.messages)
                 if isinstance(regle, str) and regle.startswith('un_de:'):
