@@ -533,3 +533,41 @@ class DemandeFileContentTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('5 Mo', response.data['piece_identite'][0])
 
+
+class DemandeResoumissionUniqueTests(APITestCase):
+    """Une demande rejetee ne peut etre corrigee et renvoyee qu'une fois."""
+
+    def setUp(self):
+        self.client_profile = make_client()
+        self.ancienne = DemandeContrat.objects.create(
+            client=self.client_profile, numero_demande='DEM-OLD', type_assurance='SANTE',
+            statut='REJETEE', motif_rejet='Document illisible',
+        )
+        self.client.force_authenticate(user=self.client_profile.user)
+
+    def resoumettre(self):
+        return self.client.post(reverse('demande_resoumettre', args=[self.ancienne.id]), {
+            'type_assurance': 'SANTE',
+            'piece_identite': fichier(),
+        }, format='multipart')
+
+    def test_double_resoumission_refusee(self):
+        premiere = self.resoumettre()
+        self.assertEqual(premiere.status_code, status.HTTP_201_CREATED)
+
+        seconde = self.resoumettre()
+        self.assertEqual(seconde.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(seconde.data['error'], 'Cette demande a déjà été corrigée et renvoyée.')
+        self.assertEqual(self.ancienne.resoumissions.count(), 1)
+        self.assertEqual(DemandeContrat.objects.count(), 2)
+
+    def test_resoumission_invalide_ne_consomme_pas_la_correction(self):
+        """Un renvoi refuse (document manquant) ne cree rien : le client
+        peut encore corriger et renvoyer."""
+        invalide = self.client.post(reverse('demande_resoumettre', args=[self.ancienne.id]), {
+            'type_assurance': 'SANTE',
+        }, format='multipart')
+        self.assertEqual(invalide.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(self.ancienne.resoumissions.exists())
+
+        self.assertEqual(self.resoumettre().status_code, status.HTTP_201_CREATED)
