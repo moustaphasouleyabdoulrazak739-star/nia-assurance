@@ -129,13 +129,17 @@ export default function EffectuerPaiementScreen({ navigation }) {
         />
 
         <Text style={styles.label}>Montant</Text>
-        <View style={[styles.montantBox, erreurs.montant && styles.inputError]}>
+        <View
+          style={[styles.montantBox, erreurs.montant && styles.inputError]}
+          accessible
+          accessibilityLabel={`Montant, ${formaterMontant(form.montant) || 'aucun contrat choisi'}, fixé par le contrat, non modifiable`}
+        >
           <Text style={form.montant ? styles.montantValeur : styles.placeholder}>
-            {form.montant ? formaterMontant(form.montant) : 'Sélectionner un contrat'}
+            {formaterMontant(form.montant) || 'Sélectionner un contrat'}
           </Text>
         </View>
         <Text style={erreurs.montant ? styles.fieldError : styles.hint}>
-          {erreurs.montant || 'Montant automatiquement rempli depuis la prime du contrat'}
+          {erreurs.montant || 'Montant égal à la prime du contrat, non modifiable'}
         </Text>
 
         <View style={styles.espace} />
@@ -200,9 +204,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: colors.primarySoft,
+    backgroundColor: colors.neutralSoft,
   },
-  montantValeur: { fontSize: 15, fontWeight: '700', color: colors.primary },
+  montantValeur: { fontSize: 15, fontWeight: '700', color: colors.neutral },
   placeholder: { fontSize: 15, color: colors.textLight },
   hint: { color: colors.textMuted, fontSize: 12, marginTop: 4 },
   espace: { height: 8 },

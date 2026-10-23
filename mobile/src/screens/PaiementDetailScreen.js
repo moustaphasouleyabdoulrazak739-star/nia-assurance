@@ -13,6 +13,7 @@ import Badge from '../components/Badge';
 import { colors } from '../theme/colors';
 import { PAIEMENT_STATUS_VARIANTS } from '../theme/statusVariants';
 import { formaterDateHeure, formaterMontant } from '../utils/format';
+import { libelleMontant } from '../utils/paiements';
 import { fetchPaiement, libelleMethode, telechargerRecu } from '../api/paiements';
 import { messageErreurChargement } from '../utils/reseau';
 
@@ -101,6 +102,7 @@ export default function PaiementDetailScreen({ route }) {
           <Text style={styles.cardLabel}>Reçu n°</Text>
           <Text style={styles.numero}>{paiement.numero_recu}</Text>
           <Text style={styles.montant}>{formaterMontant(paiement.montant)}</Text>
+          <Text style={styles.cardLabel}>{libelleMontant(paiement.statut)}</Text>
           <Badge variant={PAIEMENT_STATUS_VARIANTS[paiement.statut] || 'neutral'} style={styles.badge}>
             {paiement.statut_display || paiement.statut}
           </Badge>

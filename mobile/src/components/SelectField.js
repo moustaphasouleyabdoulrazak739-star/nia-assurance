@@ -18,7 +18,7 @@ export default function SelectField({ label, placeholder, value, options, onChan
         onPress={() => setOuvert(true)}
         activeOpacity={0.7}
       >
-        <Text style={selection ? styles.value : styles.placeholder} numberOfLines={1}>
+        <Text style={selection ? styles.value : styles.placeholder} numberOfLines={2}>
           {selection ? selection.label : placeholder}
         </Text>
         <Text style={styles.chevron}>{'v'}</Text>

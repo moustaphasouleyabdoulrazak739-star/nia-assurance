@@ -6,6 +6,7 @@ import Badge from '../components/Badge';
 import { colors } from '../theme/colors';
 import { PAIEMENT_STATUS_VARIANTS } from '../theme/statusVariants';
 import { formaterDate, formaterMontant } from '../utils/format';
+import { libelleMontant } from '../utils/paiements';
 import { fetchPaiements, libelleMethode } from '../api/paiements';
 import { messageErreurChargement } from '../utils/reseau';
 
@@ -58,7 +59,10 @@ export default function PaiementsScreen({ navigation }) {
     >
       <View style={styles.cardHeader}>
         <Text style={styles.numero}>{paiement.numero_recu}</Text>
-        <Text style={styles.montant}>{formaterMontant(paiement.montant)}</Text>
+        <View style={styles.montantBloc}>
+          <Text style={styles.montant}>{formaterMontant(paiement.montant)}</Text>
+          <Text style={styles.montantLabel}>{libelleMontant(paiement.statut)}</Text>
+        </View>
       </View>
 
       <Text style={styles.contrat}>Contrat {paiement.contrat?.numero_contrat}</Text>
@@ -164,7 +168,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   numero: { fontSize: 16, fontWeight: '700', color: colors.text, flexShrink: 1 },
+  montantBloc: { alignItems: 'flex-end' },
   montant: { fontSize: 16, fontWeight: '700', color: colors.primary },
+  montantLabel: { fontSize: 11, color: colors.textLight, marginTop: 1 },
   contrat: { fontSize: 14, color: colors.textMuted, marginTop: 4 },
   meta: { fontSize: 12, color: colors.textLight, marginTop: 4 },
   badgeRow: {

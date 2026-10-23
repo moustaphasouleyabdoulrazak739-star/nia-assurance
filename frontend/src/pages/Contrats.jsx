@@ -8,6 +8,7 @@ import Badge from '../components/ui/Badge';
 import { Select, Textarea, Input } from '../components/ui/Input';
 import { CONTRAT_STATUS_VARIANTS } from '../components/ui/statusVariants';
 import { estEcheanceProche } from '../utils/dates';
+import { formaterMontant } from '../utils/format';
 import { telechargerPdf, telechargerFichier, extraireErreurTelechargement } from '../utils/downloadPdf';
 import { IconClose, IconDownload, IconInbox, IconClock } from '../components/ui/icons';
 
@@ -260,7 +261,7 @@ const Contrats = () => {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-primary-600">
-                  {Number(contrat.montant_prime).toLocaleString()} FCFA
+                  {formaterMontant(contrat.montant_prime)}
                 </p>
                 <div className="mt-2 flex flex-col items-end gap-2">
                   {contrat.statut === 'ACTIF' && (

@@ -8,6 +8,7 @@ import Badge from '../components/ui/Badge';
 import { Select, Textarea, Input } from '../components/ui/Input';
 import { SINISTRE_STATUS_VARIANTS } from '../components/ui/statusVariants';
 import { telechargerFichier, extraireErreurTelechargement } from '../utils/downloadPdf';
+import { formaterMontant } from '../utils/format';
 import { IconClose, IconDownload, IconInbox } from '../components/ui/icons';
 
 const ETAPES_SINISTRE = ['Déclaré', 'En cours', 'Traité'];
@@ -250,13 +251,13 @@ const Sinistres = () => {
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-primary-600">
-                  {Number(sinistre.montant_reclame).toLocaleString()} FCFA
+                  {formaterMontant(sinistre.montant_reclame)}
                 </p>
                 <p className="text-neutral-400 text-xs">Montant réclamé</p>
                 {sinistre.montant_indemnite && (
                   <div className="mt-1">
                     <p className="text-lg font-bold text-secondary-700">
-                      {Number(sinistre.montant_indemnite).toLocaleString()} FCFA
+                      {formaterMontant(sinistre.montant_indemnite)}
                     </p>
                     <p className="text-neutral-400 text-xs">Indemnité</p>
                   </div>
@@ -427,7 +428,7 @@ const Sinistres = () => {
 
               <Card padding="sm" className="bg-neutral-50 text-sm text-neutral-600">
                 <p><strong>Type :</strong> {reviewTarget.type_sinistre}</p>
-                <p><strong>Montant réclamé :</strong> {Number(reviewTarget.montant_reclame).toLocaleString()} FCFA</p>
+                <p><strong>Montant réclamé :</strong> {formaterMontant(reviewTarget.montant_reclame)}</p>
                 {reviewTarget.description && <p><strong>Description :</strong> {reviewTarget.description}</p>}
               </Card>
 

@@ -6,6 +6,7 @@ import DashboardLayout from "../components/layout/DashboardLayout";
 import Card from "../components/ui/Card";
 import BackgroundPattern from "../components/ui/BackgroundPattern";
 import { estEcheanceProche } from "../utils/dates";
+import { formaterMontant } from "../utils/format";
 import {
   IconFileText,
   IconAlertTriangle,
@@ -63,7 +64,7 @@ function ActiviteRow({ icon: Icon, label, value, to }) {
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [stats, setStats] = useState({ contratsActifs: '—', sinistresEnAttente: '—', paiementsValides: '—' });
+  const [stats, setStats] = useState({ contratsActifs: '...', sinistresEnAttente: '...', paiementsValides: '...' });
   const [derniereActivite, setDerniereActivite] = useState({ sinistre: null, paiement: null, demande: null });
   const [contratsEcheanceProche, setContratsEcheanceProche] = useState([]);
 
@@ -149,7 +150,7 @@ export default function Dashboard() {
   return (
     <DashboardLayout
       title="Accueil"
-      subtitle={isAdmin ? "Vue d'ensemble — espace compagnie" : "Vue d'ensemble de votre espace"}
+      subtitle={isAdmin ? "Vue d'ensemble de l'espace compagnie" : "Vue d'ensemble de votre espace"}
     >
       {/* Motif de marque tres discret derriere toute la zone de contenu.
           Le motif est en position absolute (z-index:auto) : sans le wrapper
@@ -222,7 +223,7 @@ export default function Dashboard() {
                 label="Dernier sinistre déclaré"
                 value={
                   derniereActivite.sinistre
-                    ? `${derniereActivite.sinistre.numero_sinistre} — ${derniereActivite.sinistre.statut_display}`
+                    ? `${derniereActivite.sinistre.numero_sinistre}, ${derniereActivite.sinistre.statut_display}`
                     : 'Aucun sinistre déclaré'
                 }
                 to="/sinistres"
@@ -232,7 +233,7 @@ export default function Dashboard() {
                 label="Dernier paiement"
                 value={
                   derniereActivite.paiement
-                    ? `${Number(derniereActivite.paiement.montant).toLocaleString()} FCFA — ${derniereActivite.paiement.statut_display}`
+                    ? `${formaterMontant(derniereActivite.paiement.montant)}, ${derniereActivite.paiement.statut_display}`
                     : 'Aucun paiement effectué'
                 }
                 to="/paiements"
@@ -242,7 +243,7 @@ export default function Dashboard() {
                 label="Dernière demande de contrat"
                 value={
                   derniereActivite.demande
-                    ? `${derniereActivite.demande.type_assurance_display} — ${derniereActivite.demande.statut_display}`
+                    ? `${derniereActivite.demande.type_assurance_display}, ${derniereActivite.demande.statut_display}`
                     : 'Aucune demande envoyée'
                 }
                 to="/demandes"
