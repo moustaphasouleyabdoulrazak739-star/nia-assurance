@@ -10,7 +10,12 @@ import { PAIEMENT_STATUS_VARIANTS } from '../components/ui/statusVariants';
 import { telechargerPdf, extraireErreurTelechargement } from '../utils/downloadPdf';
 import { extraireErreursChamps } from '../utils/erreursChamps';
 import { formaterMontant } from '../utils/format';
-import { libelleMontant } from '../utils/paiements';
+import {
+  idsContratsEnAttente,
+  libelleMontant,
+  marquerContratEnAttente,
+  messageTropDeTentatives,
+} from '../utils/paiements';
 import { IconClose, IconInbox, IconCreditCard, IconDownload, IconLock } from '../components/ui/icons';
 
 const METHODE_LABELS = {
@@ -113,6 +118,13 @@ const Paiements = () => {
         setFormSuccess('');
       }, 2000);
     } catch (err) {
+      // 429 : throttle de creation (5/min), message clair plutot que le
+      // texte DRF.
+      const tropDeTentatives = messageTropDeTentatives(err);
+      if (tropDeTentatives) {
+        setFormError(tropDeTentatives);
+        return;
+      }
       const { champs, general } = extraireErreursChamps(err);
       setErreursChamps(champs);
       if (general) {
@@ -158,6 +170,10 @@ const Paiements = () => {
       setRecuEnCoursId(null);
     }
   };
+
+  // Contrats deja payes et en attente de validation : signales dans la
+  // liste, le serveur refuse un second paiement en attente.
+  const contratsEnAttente = idsContratsEnAttente(paiements);
 
   const totalPaye = paiements
     .filter((p) => p.statut === 'VALIDE')
@@ -314,7 +330,7 @@ const Paiements = () => {
                 <option value="">Choisir un contrat</option>
                 {contrats.map(c => (
                   <option key={c.id} value={c.id}>
-                    {c.numero_contrat} - {c.type_assurance}
+                    {marquerContratEnAttente(`${c.numero_contrat} - ${c.type_assurance}`, c.id, contratsEnAttente)}
                   </option>
                 ))}
               </Select>

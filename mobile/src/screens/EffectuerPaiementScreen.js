@@ -14,7 +14,8 @@ import { colors } from '../theme/colors';
 import { formaterMontant } from '../utils/format';
 import { fetchContrats } from '../api/contrats';
 import { extraireErreursChamps } from '../api/sinistres';
-import { creerPaiement, METHODES_MOBILE_MONEY, METHODES_PAIEMENT } from '../api/paiements';
+import { creerPaiement, fetchPaiements, METHODES_MOBILE_MONEY, METHODES_PAIEMENT } from '../api/paiements';
+import { idsContratsEnAttente, marquerContratEnAttente, messageTropDeTentatives } from '../utils/paiements';
 import { messageErreurChargement, messageErreurEnvoi } from '../utils/reseau';
 
 const CHAMPS_VIDES = { contrat: '', montant: '', methode: '', reference: '' };
@@ -30,6 +31,10 @@ export default function EffectuerPaiementScreen({ navigation }) {
   const [contrats, setContrats] = useState([]);
   const [contratsChargement, setContratsChargement] = useState(true);
   const [contratsErreur, setContratsErreur] = useState('');
+  // Contrats ayant déjà un paiement EN_ATTENTE (refusé par le serveur),
+  // signalés dans la liste. Chargement facultatif : en cas d'échec, la
+  // liste reste utilisable et le serveur garde le dernier mot.
+  const [contratsEnAttente, setContratsEnAttente] = useState(new Set());
   const [form, setForm] = useState(CHAMPS_VIDES);
   const [erreurs, setErreurs] = useState({});
   const [erreurGenerale, setErreurGenerale] = useState('');
@@ -44,6 +49,13 @@ export default function EffectuerPaiementScreen({ navigation }) {
         setContratsErreur(messageErreurChargement(err, 'Impossible de charger vos contrats.'));
       } finally {
         setContratsChargement(false);
+      }
+    })();
+    (async () => {
+      try {
+        setContratsEnAttente(idsContratsEnAttente(await fetchPaiements()));
+      } catch {
+        // Marquage indicatif seulement, voir plus haut.
       }
     })();
   }, []);
@@ -63,7 +75,11 @@ export default function EffectuerPaiementScreen({ navigation }) {
 
   const optionsContrats = contrats.map((contrat) => ({
     value: contrat.id,
-    label: `${contrat.numero_contrat} - ${contrat.type_assurance_display || contrat.type_assurance}`,
+    label: marquerContratEnAttente(
+      `${contrat.numero_contrat} - ${contrat.type_assurance_display || contrat.type_assurance}`,
+      contrat.id,
+      contratsEnAttente,
+    ),
   }));
 
   // Champs requis du formulaire web (attribut `required`), vérifiés ici
@@ -87,11 +103,21 @@ export default function EffectuerPaiementScreen({ navigation }) {
       await creerPaiement({ ...form, reference: form.reference.trim() });
       navigation.goBack();
     } catch (err) {
+      // 429 : throttle de création (5/min), message clair plutôt que le
+      // texte DRF.
+      const tropDeTentatives = messageTropDeTentatives(err);
+      if (tropDeTentatives) {
+        setErreurGenerale(tropDeTentatives);
+        return;
+      }
       const champs = extraireErreursChamps(err);
-      const { non_field_errors: nonChamp, ...parChamp } = champs;
+      // `detail` (erreur DRF sans champ) s'affiche en message général, pas
+      // sous un champ inexistant.
+      const { non_field_errors: nonChamp, detail, ...parChamp } = champs;
+      const general = nonChamp || detail;
       if (Object.keys(parChamp).length > 0) setErreurs(parChamp);
-      if (nonChamp || Object.keys(parChamp).length === 0) {
-        setErreurGenerale(nonChamp || messageErreurEnvoi(err, 'Erreur lors du paiement. Vérifiez les informations.'));
+      if (general || Object.keys(parChamp).length === 0) {
+        setErreurGenerale(general || messageErreurEnvoi(err, 'Erreur lors du paiement. Vérifiez les informations.'));
       }
     } finally {
       setEnvoiEnCours(false);

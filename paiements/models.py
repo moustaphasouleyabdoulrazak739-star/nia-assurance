@@ -1,6 +1,13 @@
 from django.db import models
+from django.db.models import Q
 from clients.models import Client
 from contrats.models import Contrat
+
+# Partages avec le serializer (refus applicatif et IntegrityError).
+CONTRAINTE_UN_PAIEMENT_EN_ATTENTE = 'paiement_unique_en_attente_par_contrat'
+MESSAGE_PAIEMENT_DEJA_EN_ATTENTE = (
+    'Un paiement est déjà en attente de validation pour ce contrat.'
+)
 
 
 class Paiement(models.Model):
@@ -36,3 +43,14 @@ class Paiement(models.Model):
         verbose_name = 'Paiement'
         verbose_name_plural = 'Paiements'
         ordering = ['-date_paiement']
+        constraints = [
+            # Au plus un paiement EN_ATTENTE par contrat, garanti par la base
+            # (index unique partiel PostgreSQL) : le controle applicatif du
+            # serializer ne suffit pas face a deux requetes simultanees.
+            models.UniqueConstraint(
+                fields=['contrat'],
+                condition=Q(statut='EN_ATTENTE'),
+                name=CONTRAINTE_UN_PAIEMENT_EN_ATTENTE,
+                violation_error_message=MESSAGE_PAIEMENT_DEJA_EN_ATTENTE,
+            ),
+        ]
