@@ -137,7 +137,6 @@ export default function EffectuerPaiementScreen({ navigation }) {
           <Text style={form.montant ? styles.montantValeur : styles.placeholder}>
             {formaterMontant(form.montant) || 'Sélectionner un contrat'}
           </Text>
-          <Text style={styles.montantVerrou}>Fixé par le contrat</Text>
         </View>
         <Text style={erreurs.montant ? styles.fieldError : styles.hint}>
           {erreurs.montant || 'Montant égal à la prime du contrat, non modifiable'}
@@ -206,13 +205,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     backgroundColor: colors.neutralSoft,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
   },
-  montantValeur: { fontSize: 15, fontWeight: '700', color: colors.neutral, flexShrink: 1 },
-  montantVerrou: { fontSize: 12, color: colors.textMuted },
+  montantValeur: { fontSize: 15, fontWeight: '700', color: colors.neutral },
   placeholder: { fontSize: 15, color: colors.textLight },
   hint: { color: colors.textMuted, fontSize: 12, marginTop: 4 },
   espace: { height: 8 },
