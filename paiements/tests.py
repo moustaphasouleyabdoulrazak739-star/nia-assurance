@@ -15,6 +15,7 @@ from .models import (
     MESSAGE_PAIEMENT_DEJA_EN_ATTENTE,
     Paiement,
 )
+from .views import PaiementCreateView
 
 
 def make_client(email='client@nia.ne'):
@@ -38,6 +39,18 @@ PAIEMENT_PAYLOAD = {
     'methode': 'MYNITA',
     'reference': '96000000',
 }
+
+
+class SansLimiteDeDebitMixin:
+    """Desactive le throttle 'paiement-create' (5/min) pour les classes qui
+    envoient plus de 5 requetes dans un meme test : elles verifient la
+    validation, pas la limitation de debit (testee par PaiementThrottleTests)."""
+
+    def setUp(self):
+        patcher = mock.patch.object(PaiementCreateView, 'throttle_classes', [])
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        super().setUp()
 
 
 class PaiementOwnershipTests(APITestCase):
@@ -107,12 +120,13 @@ class PaiementOwnershipTests(APITestCase):
         self.assertFalse(Paiement.objects.filter(numero_recu='REC-FAUX-0001').exists())
 
 
-class PaiementMontantTests(APITestCase):
+class PaiementMontantTests(SansLimiteDeDebitMixin, APITestCase):
     """Le backend ne fait jamais confiance au montant envoye : il doit etre
     egal a la prime du contrat (comparaison en Decimal), et c'est la prime
     calculee cote serveur qui est enregistree."""
 
     def setUp(self):
+        super().setUp()
         self.client_profile = make_client()
         self.contrat = make_contrat(self.client_profile)  # prime : 150000.00
         self.client.force_authenticate(user=self.client_profile.user)
@@ -188,11 +202,12 @@ class PaiementMontantTests(APITestCase):
         self.assertNotIn('150 000', str(response.data))
 
 
-class PaiementTelephoneTests(APITestCase):
+class PaiementTelephoneTests(SansLimiteDeDebitMixin, APITestCase):
     """MyNITA/AmanaTa : numero de telephone nigerien obligatoire dans
     `reference`, controle et normalise (+227XXXXXXXX) par le serveur."""
 
     def setUp(self):
+        super().setUp()
         self.client_profile = make_client()
         self.contrat = make_contrat(self.client_profile)
         self.client.force_authenticate(user=self.client_profile.user)
@@ -492,3 +507,43 @@ class PaiementDoublonTests(APITestCase):
         echoue.refresh_from_db()
         self.assertEqual(echoue.statut, 'ECHOUE')
 
+
+class PaiementThrottleTests(APITestCase):
+    """Creation de paiement limitee a 5 requetes par minute et par
+    utilisateur (scope 'paiement-create')."""
+
+    def setUp(self):
+        # Cache local partage par toute la suite : vide avant et apres pour
+        # n'affecter aucun autre test.
+        cache.clear()
+        self.client_profile = make_client()
+        self.client.force_authenticate(user=self.client_profile.user)
+
+    def tearDown(self):
+        cache.clear()
+
+    def payer(self, contrat):
+        payload = {**PAIEMENT_PAYLOAD, 'contrat': contrat.id}
+        return self.client.post(reverse('paiement_create'), payload, format='json')
+
+    def test_sixieme_requete_en_une_minute_refusee_en_429(self):
+        contrats = [
+            make_contrat(self.client_profile, numero=f'CTR-T{i}') for i in range(6)
+        ]
+        for contrat in contrats[:5]:
+            self.assertEqual(self.payer(contrat).status_code, status.HTTP_201_CREATED)
+        response = self.payer(contrats[5])
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertIn('Retry-After', response)
+        self.assertFalse(Paiement.objects.filter(contrat=contrats[5]).exists())
+
+    def test_limite_propre_a_chaque_utilisateur(self):
+        contrat = make_contrat(self.client_profile, numero='CTR-T')
+        for _ in range(5):
+            self.payer(contrat)
+        self.assertEqual(self.payer(contrat).status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+        autre = make_client('autre@nia.ne')
+        contrat_autre = make_contrat(autre, numero='CTR-AUTRE')
+        self.client.force_authenticate(user=autre.user)
+        self.assertEqual(self.payer(contrat_autre).status_code, status.HTTP_201_CREATED)

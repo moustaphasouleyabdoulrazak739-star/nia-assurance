@@ -139,6 +139,10 @@ REST_FRAMEWORK = {
         'login': '10/min',
         'login-email': '5/min',
         'change-password': '8/min',
+        # Creation de paiement (paiements/views.py), par utilisateur.
+        # Cache local garde volontairement pour l'instant : Redis (cache
+        # partage entre workers) viendra au deploiement.
+        'paiement-create': '5/min',
     },
 }
 
@@ -157,6 +161,11 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:8081',
     'http://127.0.0.1:8081',
 ]
+
+# Lisible par le JavaScript du web (requete cross-origin) : sans cela le
+# navigateur masque Retry-After et le message 429 du paiement ne peut pas
+# indiquer le delai exact (frontend/src/utils/paiements.js).
+CORS_EXPOSE_HEADERS = ['Retry-After']
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

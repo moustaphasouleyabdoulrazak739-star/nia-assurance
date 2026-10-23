@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from .models import Paiement
 from .serializers import PaiementSerializer, PaiementCreateSerializer, PaiementReviewSerializer
@@ -30,6 +31,11 @@ class PaiementListView(generics.ListAPIView):
 class PaiementCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PaiementCreateSerializer
+    # 5 tentatives par minute et par utilisateur (scope 'paiement-create',
+    # cf. DEFAULT_THROTTLE_RATES) : limite les doublons par clics repetes
+    # et les essais en rafale. Toute requete compte, meme refusee en 400.
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'paiement-create'
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
