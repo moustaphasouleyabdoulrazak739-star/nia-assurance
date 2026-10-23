@@ -5,10 +5,13 @@ import DashboardLayout from '../components/layout/DashboardLayout';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import { Select, Input } from '../components/ui/Input';
+import { Select, Input, ChampVerrouille } from '../components/ui/Input';
 import { PAIEMENT_STATUS_VARIANTS } from '../components/ui/statusVariants';
 import { telechargerPdf, extraireErreurTelechargement } from '../utils/downloadPdf';
-import { IconClose, IconInbox, IconCreditCard, IconDownload } from '../components/ui/icons';
+import { extraireErreursChamps } from '../utils/erreursChamps';
+import { formaterMontant } from '../utils/format';
+import { libelleMontant } from '../utils/paiements';
+import { IconClose, IconInbox, IconCreditCard, IconDownload, IconLock } from '../components/ui/icons';
 
 const METHODE_LABELS = {
   MYNITA: 'MyNITA',
@@ -27,6 +30,9 @@ const Paiements = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
+  // Erreurs de validation renvoyees par l'API, affichees sous chaque champ
+  // (ex. "montant" different de la prime, telephone MyNITA/AmanaTa invalide).
+  const [erreursChamps, setErreursChamps] = useState({});
   const [form, setForm] = useState({
     contrat: '',
     montant: '',
@@ -70,6 +76,15 @@ const Paiements = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    // Un champ modifie perd son erreur ; changer de contrat recalcule le
+    // montant, changer de methode change la nature de la reference.
+    const effaces = { contrat: ['contrat', 'montant'], methode: ['methode', 'reference'] }[name] || [name];
+    setErreursChamps((prev) => {
+      const suivant = { ...prev };
+      effaces.forEach((champ) => delete suivant[champ]);
+      return suivant;
+    });
+
     if (name === 'contrat') {
       const contratChoisi = contrats.find(c => String(c.id) === String(value));
       setForm({
@@ -87,6 +102,7 @@ const Paiements = () => {
     setFormLoading(true);
     setFormError('');
     setFormSuccess('');
+    setErreursChamps({});
     try {
       await api.post('/paiements/create/', form);
       setFormSuccess('Paiement effectué avec succès !');
@@ -96,8 +112,16 @@ const Paiements = () => {
         setShowModal(false);
         setFormSuccess('');
       }, 2000);
-    } catch {
-      setFormError('Erreur lors du paiement. Vérifiez les informations.');
+    } catch (err) {
+      const { champs, general } = extraireErreursChamps(err);
+      setErreursChamps(champs);
+      if (general) {
+        setFormError(general);
+      } else if (Object.keys(champs).length > 0) {
+        setFormError('Certaines informations sont invalides, voir ci-dessous.');
+      } else {
+        setFormError('Erreur lors du paiement. Vérifiez les informations.');
+      }
     } finally {
       setFormLoading(false);
     }
@@ -107,6 +131,7 @@ const Paiements = () => {
     setForm({ contrat: '', montant: '', methode: '', reference: '' });
     setFormError('');
     setFormSuccess('');
+    setErreursChamps({});
     setShowModal(true);
   };
 
@@ -157,7 +182,7 @@ const Paiements = () => {
             <p className="text-sm text-neutral-500">
               {isAdmin ? 'Total payé (tous clients, paiements validés)' : 'Total payé (paiements validés)'}
             </p>
-            <p className="text-2xl font-bold text-neutral-800">{totalPaye.toLocaleString()} FCFA</p>
+            <p className="text-2xl font-bold text-neutral-800">{formaterMontant(totalPaye)}</p>
           </div>
         </Card>
       )}
@@ -201,7 +226,7 @@ const Paiements = () => {
                 <p className="text-neutral-400 text-xs mt-1">
                   Contrat : {paiement.contrat?.numero_contrat}
                   {isAdmin && paiement.client?.user && (
-                    <> — {paiement.client.user.prenom} {paiement.client.user.nom}</>
+                    <>, {paiement.client.user.prenom} {paiement.client.user.nom}</>
                   )}
                 </p>
                 <p className="text-neutral-400 text-xs mt-1">
@@ -215,9 +240,9 @@ const Paiements = () => {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-primary-600">
-                  {Number(paiement.montant).toLocaleString()} FCFA
+                  {formaterMontant(paiement.montant)}
                 </p>
-                <p className="text-neutral-400 text-xs">Montant payé</p>
+                <p className="text-neutral-400 text-xs">{libelleMontant(paiement.statut)}</p>
                 {paiement.statut === 'VALIDE' && (
                   <button
                     onClick={() => handleDownloadRecu(paiement)}
@@ -283,6 +308,7 @@ const Paiements = () => {
                 name="contrat"
                 value={form.contrat}
                 onChange={handleChange}
+                error={erreursChamps.contrat}
                 required
               >
                 <option value="">Choisir un contrat</option>
@@ -293,17 +319,15 @@ const Paiements = () => {
                 ))}
               </Select>
 
-              <Input
+              <ChampVerrouille
                 id="montant"
-                label="Montant (FCFA)"
-                type="number"
-                name="montant"
-                value={form.montant}
-                onChange={handleChange}
+                label="Montant"
+                value={formaterMontant(form.montant)}
                 placeholder="Sélectionner un contrat"
-                hint="Montant automatiquement rempli depuis la prime du contrat"
-                className="bg-primary-50"
-                readOnly
+                mention="Fixé par le contrat"
+                icon={IconLock}
+                hint="Montant égal à la prime du contrat, non modifiable"
+                error={erreursChamps.montant}
               />
 
               <Select
@@ -312,6 +336,7 @@ const Paiements = () => {
                 name="methode"
                 value={form.methode}
                 onChange={handleChange}
+                error={erreursChamps.methode}
                 required
               >
                 <option value="">Choisir la méthode</option>
@@ -330,6 +355,7 @@ const Paiements = () => {
                   value={form.reference}
                   onChange={handleChange}
                   placeholder="Ex: 96000000"
+                  error={erreursChamps.reference}
                   required
                 />
               )}
@@ -343,6 +369,7 @@ const Paiements = () => {
                   value={form.reference}
                   onChange={handleChange}
                   placeholder="Référence du virement ou reçu"
+                  error={erreursChamps.reference}
                 />
               )}
 

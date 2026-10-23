@@ -33,6 +33,12 @@ def _formater_montant(montant):
     return f"{montant:,.0f}".replace(',', ' ') + ' FCFA'
 
 
+def _formater_date_heure(valeur):
+    """Date et heure en heure locale (TIME_ZONE, Africa/Niamey) : les
+    datetimes sont stockes en UTC (USE_TZ), strftime direct afficherait UTC."""
+    return timezone.localtime(valeur).strftime('%d/%m/%Y à %H:%M')
+
+
 def _entete(c, titre):
     """Bandeau de marque en haut de page. Renvoie le y ou commencer le corps."""
     largeur, hauteur = A4
@@ -65,7 +71,7 @@ def _pied_de_page(c, reference):
     c.setLineWidth(0.5)
     c.line(15 * mm, 17 * mm, largeur - 15 * mm, 17 * mm)
 
-    date_generation = timezone.now().strftime('%d/%m/%Y à %H:%M')
+    date_generation = _formater_date_heure(timezone.now())
     c.setFillColor(COULEUR_NEUTRE_CLAIR)
     c.setFont('Helvetica', 8)
     c.drawString(15 * mm, 12 * mm, f'Document généré automatiquement le {date_generation}')
@@ -95,7 +101,7 @@ def generer_attestation_contrat(contrat):
     client = contrat.client
     y -= 14 * mm
     _champ(c, 15 * mm, y, 'Client', f'{client.user.prenom} {client.user.nom}')
-    _champ(c, 110 * mm, y, 'CIN', client.cin or '—')
+    _champ(c, 110 * mm, y, 'CIN', client.cin or 'Non renseigné')
 
     y -= 16 * mm
     _champ(c, 15 * mm, y, 'Est titulaire du contrat n°', contrat.numero_contrat)
@@ -143,9 +149,8 @@ def generer_recu_paiement(paiement):
     _champ(c, 110 * mm, y, 'Méthode de paiement', paiement.get_methode_display())
 
     y -= 16 * mm
-    date_paiement = paiement.date_paiement.strftime('%d/%m/%Y à %H:%M')
-    _champ(c, 15 * mm, y, 'Date du paiement', date_paiement)
-    _champ(c, 110 * mm, y, 'Référence', paiement.reference or '—')
+    _champ(c, 15 * mm, y, 'Date du paiement', _formater_date_heure(paiement.date_paiement))
+    _champ(c, 110 * mm, y, 'Référence', paiement.reference or 'Non renseignée')
 
     y -= 26 * mm
     c.setFillColor(COULEUR_SECONDARY)
@@ -153,7 +158,7 @@ def generer_recu_paiement(paiement):
     c.drawCentredString(largeur / 2, y, _formater_montant(paiement.montant))
     c.setFillColor(COULEUR_NEUTRE_CLAIR)
     c.setFont('Helvetica', 9)
-    c.drawCentredString(largeur / 2, y - 6.5 * mm, f'Montant payé — statut : {paiement.get_statut_display()}')
+    c.drawCentredString(largeur / 2, y - 6.5 * mm, f'Montant payé, statut : {paiement.get_statut_display()}')
 
     _pied_de_page(c, paiement.numero_recu)
     c.showPage()

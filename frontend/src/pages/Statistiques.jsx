@@ -18,6 +18,7 @@ import api from '../services/api';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import Card from '../components/ui/Card';
 import { IconInbox } from '../components/ui/icons';
+import { formaterMontant } from '../utils/format';
 import {
   BRAND,
   CONTRAT_TYPE_COLORS,
@@ -32,7 +33,6 @@ const formatMois = (mois) => {
     .replace('.', '');
 };
 
-const formatFCFA = (valeur) => `${Number(valeur).toLocaleString('fr-FR')} FCFA`;
 const formatFCFACourt = (valeur) =>
   valeur >= 1000 ? `${Math.round(valeur / 1000)}k` : `${valeur}`;
 
@@ -138,7 +138,7 @@ const Statistiques = () => {
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <KpiCard label="Contrats" value={totalContrats} tone="orange" />
             <KpiCard label="Sinistres déclarés" value={totalSinistres} tone="amber" />
-            <KpiCard label="Total encaissé" value={formatFCFA(totalEncaisse)} tone="green" />
+            <KpiCard label="Total encaissé" value={formaterMontant(totalEncaisse)} tone="green" />
             <KpiCard label="Demandes en attente" value={demandesEnAttente} tone="amber" />
           </div>
 
@@ -267,7 +267,7 @@ const Statistiques = () => {
                   <Tooltip
                     contentStyle={TOOLTIP_STYLE}
                     cursor={{ fill: 'rgba(28,25,23,0.04)' }}
-                    formatter={(value) => [formatFCFA(value), 'Encaissé']}
+                    formatter={(value) => [formaterMontant(value), 'Encaissé']}
                   />
                   <Bar
                     dataKey="montant"

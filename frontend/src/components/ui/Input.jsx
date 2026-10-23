@@ -52,6 +52,28 @@ export function Input({ label, error, hint, id, required, icon: Icon, className 
   );
 }
 
+/** Valeur non modifiable présentée comme un champ verrouillé : fond grisé,
+ * cadenas, mention `mention`, ni flèches ni anneau de focus. `value` est
+ * déjà formatée pour l'affichage ; vide, on affiche `placeholder`. */
+export function ChampVerrouille({ label, error, hint, id, value, placeholder, mention, icon: Icon }) {
+  const bordure = error ? 'border-red-300' : 'border-neutral-200';
+  return (
+    <FieldShell label={label} error={error} hint={hint} id={id}>
+      <div className={`flex items-center gap-3 rounded-xl border ${bordure} bg-neutral-100 px-4 py-2.5 text-sm`}>
+        {Icon && <Icon className="h-4 w-4 flex-shrink-0 text-neutral-400" />}
+        <output
+          id={id}
+          aria-readonly="true"
+          className={`flex-1 ${value ? 'font-semibold text-neutral-700' : 'text-neutral-400'}`}
+        >
+          {value || placeholder}
+        </output>
+        {mention && <span className="text-xs text-neutral-500">{mention}</span>}
+      </div>
+    </FieldShell>
+  );
+}
+
 /** Liste déroulante au même habillage que Input. */
 export function Select({ label, error, hint, id, required, className = '', children, ...props }) {
   return (
