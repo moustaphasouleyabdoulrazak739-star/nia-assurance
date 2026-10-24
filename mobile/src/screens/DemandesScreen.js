@@ -102,7 +102,7 @@ export default function DemandesScreen({ navigation }) {
   );
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       {loading && (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.secondary} />

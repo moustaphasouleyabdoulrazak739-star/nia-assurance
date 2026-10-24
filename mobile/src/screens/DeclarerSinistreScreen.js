@@ -81,7 +81,7 @@ export default function DeclarerSinistreScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {contratsErreur ? <Text style={styles.error}>{contratsErreur}</Text> : null}
 
