@@ -9,6 +9,7 @@ import { estErreurReseau, messageErreurChargement, messageErreurEnvoi } from '..
 import {
   documentsPourType,
   extraireErreursDemande,
+  MESSAGE_PROFIL_INCOMPLET,
   TYPES_ASSURANCE,
   trouverDemandeEnregistree,
   validerDemande,
@@ -263,6 +264,15 @@ export default function NouvelleDemandeScreen({ navigation, route }) {
         {erreurGenerale ? (
           <View style={styles.erreurBox}>
             <Text style={styles.erreurTexte}>{erreurGenerale}</Text>
+            {erreurGenerale === MESSAGE_PROFIL_INCOMPLET ? (
+              <TouchableOpacity
+                style={styles.profilButton}
+                onPress={() => navigation.navigate('ProfilTab', { screen: 'Profil' })}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.retryButtonText}>Compléter mon profil</Text>
+              </TouchableOpacity>
+            ) : null}
             {envoiIncertain ? (
               <TouchableOpacity
                 style={styles.retryButton}
@@ -322,6 +332,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  profilButton: {
+    marginTop: 10,
+    alignSelf: 'flex-start',
+    justifyContent: 'center',
+    minHeight: 44,
+    backgroundColor: colors.card,
+    borderRadius: 10,
+    paddingHorizontal: 16,
   },
   retryButtonText: { color: colors.secondary, fontSize: 13, fontWeight: '700' },
   submit: {

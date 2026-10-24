@@ -14,7 +14,8 @@ import PaiementDetailScreen from '../screens/PaiementDetailScreen';
 import EffectuerPaiementScreen from '../screens/EffectuerPaiementScreen';
 import DemandesScreen from '../screens/DemandesScreen';
 import NouvelleDemandeScreen from '../screens/NouvelleDemandeScreen';
-import BientotDisponibleScreen from '../screens/BientotDisponibleScreen';
+import ProfilScreen from '../screens/ProfilScreen';
+import ChangerMotDePasseScreen from '../screens/ChangerMotDePasseScreen';
 import { colors } from '../theme/colors';
 
 const RootStack = createNativeStackNavigator();
@@ -148,13 +149,18 @@ function PaiementsPile() {
   );
 }
 
-// Onglet "ProfilTab", route "Profil" : écran provisoire "Bientôt disponible"
-// (qui porte la déconnexion). Phase suivante : remplacer seulement le
-// composant de cette route (et ajouter ici les écrans du profil).
+// Onglet "ProfilTab" : profil client (qui porte la déconnexion) et
+// changement de mot de passe. Route "Profil" aussi ouverte depuis le
+// formulaire de demande quand le serveur signale un profil incomplet.
 function ProfilPile() {
   return (
     <ProfilStack.Navigator>
-      <ProfilStack.Screen name="Profil" component={BientotDisponibleScreen} options={entete('Mon profil')} />
+      <ProfilStack.Screen name="Profil" component={ProfilScreen} options={entete('Mon profil')} />
+      <ProfilStack.Screen
+        name="ChangerMotDePasse"
+        component={ChangerMotDePasseScreen}
+        options={entete('Mot de passe')}
+      />
     </ProfilStack.Navigator>
   );
 }
