@@ -1,5 +1,8 @@
 from decimal import Decimal
+from unittest import mock
 
+from django.core.cache import cache
+from django.db import IntegrityError, connection, transaction
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -7,7 +10,12 @@ from users.models import User
 from clients.models import Client
 from contrats.models import Contrat
 from journal.models import JournalActivite
-from .models import Paiement
+from .models import (
+    CONTRAINTE_UN_PAIEMENT_EN_ATTENTE,
+    MESSAGE_PAIEMENT_DEJA_EN_ATTENTE,
+    Paiement,
+)
+from .views import PaiementCreateView
 
 
 def make_client(email='client@nia.ne'):
@@ -31,6 +39,18 @@ PAIEMENT_PAYLOAD = {
     'methode': 'MYNITA',
     'reference': '96000000',
 }
+
+
+class SansLimiteDeDebitMixin:
+    """Desactive le throttle 'paiement-create' (5/min) pour les classes qui
+    envoient plus de 5 requetes dans un meme test : elles verifient la
+    validation, pas la limitation de debit (testee par PaiementThrottleTests)."""
+
+    def setUp(self):
+        patcher = mock.patch.object(PaiementCreateView, 'throttle_classes', [])
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        super().setUp()
 
 
 class PaiementOwnershipTests(APITestCase):
@@ -100,12 +120,13 @@ class PaiementOwnershipTests(APITestCase):
         self.assertFalse(Paiement.objects.filter(numero_recu='REC-FAUX-0001').exists())
 
 
-class PaiementMontantTests(APITestCase):
+class PaiementMontantTests(SansLimiteDeDebitMixin, APITestCase):
     """Le backend ne fait jamais confiance au montant envoye : il doit etre
     egal a la prime du contrat (comparaison en Decimal), et c'est la prime
     calculee cote serveur qui est enregistree."""
 
     def setUp(self):
+        super().setUp()
         self.client_profile = make_client()
         self.contrat = make_contrat(self.client_profile)  # prime : 150000.00
         self.client.force_authenticate(user=self.client_profile.user)
@@ -181,11 +202,12 @@ class PaiementMontantTests(APITestCase):
         self.assertNotIn('150 000', str(response.data))
 
 
-class PaiementTelephoneTests(APITestCase):
+class PaiementTelephoneTests(SansLimiteDeDebitMixin, APITestCase):
     """MyNITA/AmanaTa : numero de telephone nigerien obligatoire dans
     `reference`, controle et normalise (+227XXXXXXXX) par le serveur."""
 
     def setUp(self):
+        super().setUp()
         self.client_profile = make_client()
         self.contrat = make_contrat(self.client_profile)
         self.client.force_authenticate(user=self.client_profile.user)
@@ -370,3 +392,158 @@ class PaiementJournalTests(APITestCase):
         response = self.client.patch(reverse('paiement_detail', args=[paiement.id]), {'statut': 'REMBOURSE'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(JournalActivite.objects.filter(action='PAIEMENT_REMBOURSE', paiement=paiement).exists())
+
+
+class PaiementDoublonTests(APITestCase):
+    """Au plus un paiement EN_ATTENTE par contrat : refus applicatif (400 sur
+    `contrat`), contrainte en base, et IntegrityError concurrente -> 400."""
+
+    def setUp(self):
+        cache.clear()  # compteur du throttle 'paiement-create'
+        self.client_profile = make_client()
+        self.contrat = make_contrat(self.client_profile)
+        self.client.force_authenticate(user=self.client_profile.user)
+
+    def tearDown(self):
+        cache.clear()
+
+    def payer(self, contrat=None):
+        payload = {**PAIEMENT_PAYLOAD, 'contrat': (contrat or self.contrat).id}
+        return self.client.post(reverse('paiement_create'), payload, format='json')
+
+    def creer_paiement(self, numero, statut='EN_ATTENTE'):
+        return Paiement.objects.create(
+            client=self.client_profile, contrat=self.contrat, statut=statut,
+            numero_recu=numero, montant='150000.00', methode='ESPECES',
+        )
+
+    def assertRefuseCommeDoublon(self, response):
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['contrat'], [MESSAGE_PAIEMENT_DEJA_EN_ATTENTE])
+
+    def test_second_paiement_en_attente_refuse(self):
+        self.assertEqual(self.payer().status_code, status.HTTP_201_CREATED)
+        self.assertRefuseCommeDoublon(self.payer())
+        self.assertEqual(Paiement.objects.filter(contrat=self.contrat).count(), 1)
+
+    def test_paiement_possible_apres_validation_du_precedent(self):
+        self.assertEqual(self.payer().status_code, status.HTTP_201_CREATED)
+        Paiement.objects.filter(contrat=self.contrat).update(statut='VALIDE')
+        self.assertEqual(self.payer().status_code, status.HTTP_201_CREATED)
+
+    def test_paiement_possible_apres_echec_du_precedent(self):
+        self.assertEqual(self.payer().status_code, status.HTTP_201_CREATED)
+        Paiement.objects.filter(contrat=self.contrat).update(statut='ECHOUE')
+        self.assertEqual(self.payer().status_code, status.HTTP_201_CREATED)
+
+    def test_autre_contrat_du_meme_client_non_bloque(self):
+        autre_contrat = make_contrat(self.client_profile, numero='CTR-2')
+        self.assertEqual(self.payer().status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.payer(autre_contrat).status_code, status.HTTP_201_CREATED)
+
+    def test_doublon_d_un_autre_client_jamais_revele(self):
+        """Le controle d'appartenance passe avant : pas de fuite sur l'etat
+        des paiements du contrat d'un autre client."""
+        self.assertEqual(self.payer().status_code, status.HTTP_201_CREATED)
+        attaquant = make_client('attaquant@nia.ne')
+        self.client.force_authenticate(user=attaquant.user)
+        response = self.payer()
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn(MESSAGE_PAIEMENT_DEJA_EN_ATTENTE, str(response.data))
+
+    def test_integrity_error_concurrente_transformee_en_400(self):
+        """Simule la course : la requete concurrente a insere son paiement
+        entre validate() et l'INSERT, la base leve l'IntegrityError."""
+        erreur = IntegrityError(
+            'duplicate key value violates unique constraint '
+            f'"{CONTRAINTE_UN_PAIEMENT_EN_ATTENTE}"'
+        )
+        with mock.patch.object(Paiement.objects, 'create', side_effect=erreur):
+            response = self.payer()
+        self.assertRefuseCommeDoublon(response)
+        self.assertFalse(Paiement.objects.exists())
+
+    def test_autre_integrity_error_non_deguisee_en_doublon(self):
+        erreur = IntegrityError('violation sans rapport')
+        with mock.patch.object(Paiement.objects, 'create', side_effect=erreur):
+            with self.assertRaises(IntegrityError):
+                self.payer()
+
+    def test_contrainte_appliquee_par_la_base(self):
+        self.creer_paiement('REC-A')
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                self.creer_paiement('REC-B')
+        # Hors EN_ATTENTE, plusieurs paiements par contrat restent permis.
+        self.creer_paiement('REC-C', 'VALIDE')
+        self.creer_paiement('REC-D', 'VALIDE')
+        self.creer_paiement('REC-E', 'ECHOUE')
+        self.assertEqual(Paiement.objects.filter(contrat=self.contrat).count(), 4)
+
+    def test_contrainte_presente_en_base(self):
+        with connection.cursor() as cursor:
+            contraintes = connection.introspection.get_constraints(
+                cursor, Paiement._meta.db_table,
+            )
+        self.assertIn(CONTRAINTE_UN_PAIEMENT_EN_ATTENTE, contraintes)
+        contrainte = contraintes[CONTRAINTE_UN_PAIEMENT_EN_ATTENTE]
+        self.assertTrue(contrainte['unique'])
+        self.assertEqual(contrainte['columns'], ['contrat_id'])
+
+    def test_admin_ne_peut_pas_remettre_en_attente_un_second_paiement(self):
+        """Cote compagnie : 400 clair, jamais une 500."""
+        self.creer_paiement('REC-A')
+        echoue = self.creer_paiement('REC-B', 'ECHOUE')
+        admin = User.objects.create_user(
+            email='admin@nia.ne', password='Secret123!', nom='Admin', prenom='X',
+            role='ADMIN', is_staff=True,
+        )
+        self.client.force_authenticate(user=admin)
+        response = self.client.patch(
+            reverse('paiement_detail', args=[echoue.id]), {'statut': 'EN_ATTENTE'},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['statut'], [MESSAGE_PAIEMENT_DEJA_EN_ATTENTE])
+        echoue.refresh_from_db()
+        self.assertEqual(echoue.statut, 'ECHOUE')
+
+
+class PaiementThrottleTests(APITestCase):
+    """Creation de paiement limitee a 5 requetes par minute et par
+    utilisateur (scope 'paiement-create')."""
+
+    def setUp(self):
+        # Cache local partage par toute la suite : vide avant et apres pour
+        # n'affecter aucun autre test.
+        cache.clear()
+        self.client_profile = make_client()
+        self.client.force_authenticate(user=self.client_profile.user)
+
+    def tearDown(self):
+        cache.clear()
+
+    def payer(self, contrat):
+        payload = {**PAIEMENT_PAYLOAD, 'contrat': contrat.id}
+        return self.client.post(reverse('paiement_create'), payload, format='json')
+
+    def test_sixieme_requete_en_une_minute_refusee_en_429(self):
+        contrats = [
+            make_contrat(self.client_profile, numero=f'CTR-T{i}') for i in range(6)
+        ]
+        for contrat in contrats[:5]:
+            self.assertEqual(self.payer(contrat).status_code, status.HTTP_201_CREATED)
+        response = self.payer(contrats[5])
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertIn('Retry-After', response)
+        self.assertFalse(Paiement.objects.filter(contrat=contrats[5]).exists())
+
+    def test_limite_propre_a_chaque_utilisateur(self):
+        contrat = make_contrat(self.client_profile, numero='CTR-T')
+        for _ in range(5):
+            self.payer(contrat)
+        self.assertEqual(self.payer(contrat).status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+        autre = make_client('autre@nia.ne')
+        contrat_autre = make_contrat(autre, numero='CTR-AUTRE')
+        self.client.force_authenticate(user=autre.user)
+        self.assertEqual(self.payer(contrat_autre).status_code, status.HTTP_201_CREATED)

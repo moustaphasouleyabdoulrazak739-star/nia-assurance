@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
@@ -89,7 +90,8 @@ class DemandeCreateView(generics.CreateAPIView):
 class DemandeResoumettreView(generics.CreateAPIView):
     """POST /api/demandes/<pk>/resoumettre/ — cree une NOUVELLE demande liee
     a celle-ci via demande_precedente. Uniquement possible si la demande
-    d'origine est REJETEE et appartient bien au client authentifie."""
+    d'origine est REJETEE, appartient bien au client authentifie et n'a
+    pas deja ete resoumise (une seule correction par demande rejetee)."""
 
     permission_classes = [IsAuthenticated]
     serializer_class = DemandeContratCreateSerializer
@@ -99,19 +101,28 @@ class DemandeResoumettreView(generics.CreateAPIView):
         if erreur:
             return erreur
 
-        try:
-            ancienne = DemandeContrat.objects.get(pk=kwargs['pk'], client=client)
-        except DemandeContrat.DoesNotExist:
-            return Response({'error': 'Demande introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+        # Verrou sur la demande d'origine : deux requetes simultanees ne
+        # peuvent pas creer chacune un renvoi, la seconde attend la fin de
+        # la premiere puis voit la resoumission deja enregistree.
+        with transaction.atomic():
+            try:
+                ancienne = DemandeContrat.objects.select_for_update().get(pk=kwargs['pk'], client=client)
+            except DemandeContrat.DoesNotExist:
+                return Response({'error': 'Demande introuvable.'}, status=status.HTTP_404_NOT_FOUND)
 
-        if ancienne.statut != 'REJETEE':
-            return Response({
-                'error': 'Seule une demande rejetée peut être resoumise.'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            if ancienne.statut != 'REJETEE':
+                return Response({
+                    'error': 'Seule une demande rejetée peut être resoumise.'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        demande = serializer.save(demande_precedente=ancienne)
+            if ancienne.resoumissions.exists():
+                return Response({
+                    'error': 'Cette demande a déjà été corrigée et renvoyée.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            demande = serializer.save(demande_precedente=ancienne)
         return Response({
             'demande': DemandeContratSerializer(demande, context={'request': request}).data,
             'message': 'Demande resoumise avec succès'

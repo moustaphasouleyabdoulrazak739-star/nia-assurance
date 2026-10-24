@@ -1,8 +1,13 @@
 import re
 from decimal import Decimal
 
+from django.db import IntegrityError, transaction
 from rest_framework import serializers
-from .models import Paiement
+from .models import (
+    CONTRAINTE_UN_PAIEMENT_EN_ATTENTE,
+    MESSAGE_PAIEMENT_DEJA_EN_ATTENTE,
+    Paiement,
+)
 from clients.serializers import ClientSerializer
 from contrats.serializers import ContratSerializer
 from nia_assurance.utils import generate_numero
@@ -57,6 +62,24 @@ def formater_fcfa(montant):
     return texte.replace(',', ' ') + ' FCFA'
 
 
+def a_un_paiement_en_attente(contrat, sauf=None):
+    paiements = Paiement.objects.filter(contrat=contrat, statut='EN_ATTENTE')
+    if sauf is not None:
+        paiements = paiements.exclude(pk=sauf.pk)
+    return paiements.exists()
+
+
+def est_doublon_en_attente(exc, contrat, sauf=None):
+    """Vrai si l'IntegrityError vient de la contrainte "un seul paiement
+    EN_ATTENTE par contrat". Si PostgreSQL signale d'abord une autre
+    contrainte (ex. numero_recu genere en double par la requete
+    concurrente), l'existence d'un paiement en attente tranche."""
+    return (
+        CONTRAINTE_UN_PAIEMENT_EN_ATTENTE in str(exc)
+        or a_un_paiement_en_attente(contrat, sauf=sauf)
+    )
+
+
 class PaiementCreateSerializer(serializers.ModelSerializer):
     # Le montant envoye ne sert que de confirmation du montant affiche au
     # client : il doit etre egal a la prime du contrat (comparaison en
@@ -92,6 +115,10 @@ class PaiementCreateSerializer(serializers.ModelSerializer):
                 'contrat': 'Ce contrat ne vous appartient pas'
             })
         erreurs = {}
+        # Apres le controle d'appartenance : on ne revele jamais l'etat des
+        # paiements du contrat d'un autre client.
+        if a_un_paiement_en_attente(contrat):
+            erreurs['contrat'] = MESSAGE_PAIEMENT_DEJA_EN_ATTENTE
         if attrs['montant'] != contrat.montant_prime:
             erreurs['montant'] = (
                 'Le montant doit être égal à la prime du contrat '
@@ -120,7 +147,19 @@ class PaiementCreateSerializer(serializers.ModelSerializer):
         # Jamais le montant recu : celui calcule cote serveur.
         validated_data['montant'] = validated_data['contrat'].montant_prime
         validated_data['numero_recu'] = generate_numero(Paiement, 'numero_recu', 'REC')
-        return super().create(validated_data)
+        try:
+            # Savepoint : l'IntegrityError n'invalide pas une transaction
+            # englobante, et la verification qui suit reste possible.
+            with transaction.atomic():
+                return super().create(validated_data)
+        except IntegrityError as exc:
+            # Deux requetes simultanees ont passe validate() : la contrainte
+            # en base a refuse la seconde. Meme 400 que le refus applicatif.
+            if est_doublon_en_attente(exc, validated_data['contrat']):
+                raise serializers.ValidationError({
+                    'contrat': [MESSAGE_PAIEMENT_DEJA_EN_ATTENTE]
+                })
+            raise
 
 
 class PaiementReviewSerializer(serializers.ModelSerializer):
@@ -131,3 +170,24 @@ class PaiementReviewSerializer(serializers.ModelSerializer):
         model = Paiement
         fields = ['id', 'statut']
         read_only_fields = ['id']
+
+    def validate_statut(self, statut):
+        # Repasser un paiement EN_ATTENTE alors qu'un autre l'est deja pour
+        # le meme contrat violerait la contrainte en base : 400, pas 500.
+        if (
+            statut == 'EN_ATTENTE' and self.instance is not None
+            and a_un_paiement_en_attente(self.instance.contrat, sauf=self.instance)
+        ):
+            raise serializers.ValidationError(MESSAGE_PAIEMENT_DEJA_EN_ATTENTE)
+        return statut
+
+    def update(self, instance, validated_data):
+        try:
+            with transaction.atomic():
+                return super().update(instance, validated_data)
+        except IntegrityError as exc:
+            if est_doublon_en_attente(exc, instance.contrat, sauf=instance):
+                raise serializers.ValidationError({
+                    'statut': [MESSAGE_PAIEMENT_DEJA_EN_ATTENTE]
+                })
+            raise
