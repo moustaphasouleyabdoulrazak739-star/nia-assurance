@@ -27,7 +27,7 @@ const CHAMPS_VIDES = { contrat: '', montant: '', methode: '', reference: '' };
 // est créé EN_ATTENTE (POST /api/paiements/create/) puis validé par un agent.
 // Liste limitée aux contrats ACTIF : le backend rejette les autres
 // (PaiementCreateSerializer.validate).
-export default function EffectuerPaiementScreen({ navigation }) {
+export default function EffectuerPaiementScreen({ navigation, route }) {
   const [contrats, setContrats] = useState([]);
   const [contratsChargement, setContratsChargement] = useState(true);
   const [contratsErreur, setContratsErreur] = useState('');
@@ -59,6 +59,21 @@ export default function EffectuerPaiementScreen({ navigation }) {
       }
     })();
   }, []);
+
+  // Contrat présélectionné (paramètre `contratId`, ex. bouton "Payer ma
+  // prime" de l'accueil), appliqué une fois les contrats chargés, puis à
+  // chaque nouvel id reçu (l'écran déjà ouvert reçoit alors de nouveaux
+  // paramètres). Ajustement pendant le rendu plutôt qu'un effet, comme le
+  // recommande React. Id absent des contrats actifs : rien n'est choisi.
+  const contratIdDemande = route?.params?.contratId;
+  const [preselectionTraitee, setPreselectionTraitee] = useState(null);
+  if (contratIdDemande != null && !contratsChargement && String(contratIdDemande) !== preselectionTraitee) {
+    setPreselectionTraitee(String(contratIdDemande));
+    const contrat = contrats.find((c) => String(c.id) === String(contratIdDemande));
+    if (contrat) {
+      setForm((prev) => ({ ...prev, contrat: contrat.id, montant: contrat.montant_prime }));
+    }
+  }
 
   const estMobileMoney = METHODES_MOBILE_MONEY.includes(form.methode);
 
@@ -129,7 +144,7 @@ export default function EffectuerPaiementScreen({ navigation }) {
     : 'Référence (optionnel)';
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Text style={styles.notice}>
           {
