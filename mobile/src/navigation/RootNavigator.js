@@ -79,7 +79,7 @@ function AccueilPile() {
         name="Demandes"
         component={DemandesScreen}
         options={({ navigation }) => ({
-          ...entete('Mes demandes de contrat'),
+          ...entete('Mes demandes'),
           headerRight: () => (
             <BoutonAjouter label="Nouvelle demande" onPress={() => navigation.navigate('NouvelleDemande')} />
           ),

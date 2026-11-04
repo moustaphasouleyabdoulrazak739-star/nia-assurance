@@ -338,7 +338,7 @@ export default function AccueilScreen({ navigation }) {
           accessibilityRole="button"
         >
           <Text style={styles.lienTexte} numberOfLines={1}>
-            Suivre mes demandes de contrat
+            Mes demandes
           </Text>
           <Ionicons name="chevron-forward" size={18} color={colors.primary} />
         </TouchableOpacity>
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   activiteTextes: { flex: 1, minWidth: 0 },
   activiteTitre: { fontSize: 14, fontWeight: '600', color: colors.text },
   activiteDetail: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  activiteDate: { fontSize: 12, color: colors.textLight, maxWidth: 92, flexShrink: 0 },
+  activiteDate: { fontSize: 12, color: colors.textLight, flexShrink: 0 },
 
   aide: {
     marginTop: 22,
