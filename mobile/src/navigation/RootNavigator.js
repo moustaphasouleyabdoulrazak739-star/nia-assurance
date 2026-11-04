@@ -10,6 +10,8 @@ import DeclarerSinistreScreen from '../screens/DeclarerSinistreScreen';
 import PaiementsScreen from '../screens/PaiementsScreen';
 import PaiementDetailScreen from '../screens/PaiementDetailScreen';
 import EffectuerPaiementScreen from '../screens/EffectuerPaiementScreen';
+import DemandesScreen from '../screens/DemandesScreen';
+import NouvelleDemandeScreen from '../screens/NouvelleDemandeScreen';
 import { colors } from '../theme/colors';
 
 const Stack = createNativeStackNavigator();
@@ -126,6 +128,37 @@ export default function RootNavigator() {
                 headerShown: true,
                 title: 'Effectuer un paiement',
                 headerStyle: { backgroundColor: colors.primary },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: '700' },
+              }}
+            />
+            <Stack.Screen
+              name="Demandes"
+              component={DemandesScreen}
+              options={({ navigation }) => ({
+                headerShown: true,
+                title: 'Mes demandes de contrat',
+                headerStyle: { backgroundColor: colors.secondary },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: '700' },
+                headerRight: () => (
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('NouvelleDemande')}
+                    style={styles.headerButton}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.headerButtonText}>{'+'}</Text>
+                  </TouchableOpacity>
+                ),
+              })}
+            />
+            <Stack.Screen
+              name="NouvelleDemande"
+              component={NouvelleDemandeScreen}
+              options={{
+                headerShown: true,
+                title: 'Demander un contrat',
+                headerStyle: { backgroundColor: colors.secondary },
                 headerTintColor: '#fff',
                 headerTitleStyle: { fontWeight: '700' },
               }}

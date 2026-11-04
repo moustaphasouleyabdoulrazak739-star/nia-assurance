@@ -47,6 +47,9 @@ const PAQUETS_ACCEPTES = new Set([
   'react-native',
   'uuid',
   'xcode',
+  // zod 3.x (GHSA-mrhx-c7xc-m3w5) : corrige seulement en 4.6.6, alors que
+  // @expo/cli exige ^3.25.76. Outillage seul (CLI, ESLint), voir SECURITY.md.
+  'zod',
 ]);
 
 function runNpmAudit() {

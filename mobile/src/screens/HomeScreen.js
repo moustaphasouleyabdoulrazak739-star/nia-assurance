@@ -12,6 +12,7 @@ const MENU_ITEMS = [
   { label: 'Mes contrats', route: 'Contrats' },
   { label: 'Mes sinistres', route: 'Sinistres' },
   { label: 'Mes paiements', route: 'Paiements' },
+  { label: 'Mes demandes de contrat', route: 'Demandes' },
 ];
 
 // Écran minimal : le seul but ici est de prouver que le JWT stocké au login

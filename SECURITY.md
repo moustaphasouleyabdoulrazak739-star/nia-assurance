@@ -43,6 +43,7 @@ ci-dessous.
 |---|---|---|---|---|
 | `expo`, `@expo/cli`, `@expo/config`, `@expo/config-plugins`, `@expo/inline-modules`, `@expo/local-build-cache-provider`, `@expo/metro`, `@expo/metro-config`, `@expo/prebuild-config`, `metro`, `metro-config`, `metro-file-map`, `metro-transform-worker`, `braces`, `micromatch`, `@react-native/community-cli-plugin`, `@react-native/virtualized-lists`, `react-native`, `@react-native-community/datetimepicker`, `uuid`, `xcode`, `expo-sharing` | élevée | Corrigé uniquement par Expo 44 (changement majeur de SDK, non testé avec le code actuel). Tourne côté outillage de développement (Metro, CLI) au moment du build, jamais dans l'app installée sur le téléphone. | 2026-10-09 | Avant la migration vers Expo SDK 44+. |
 | `@expo/code-signing-certificates`, `node-forge` | élevée | Même chaîne Expo 44. `node-forge` sert à la signature de code pour les mises à jour OTA, pas utilisé par ce projet (pas de canal OTA configuré). | 2026-10-09 | Idem. |
+| `zod` (GHSA-mrhx-c7xc-m3w5, épuisement mémoire sur des collections surdimensionnées) | élevée | Corrigé uniquement en zod 4.6.6, alors que `@expo/cli` 57 exige `zod ^3.25.76` (aucune version 3.x corrigée). Utilisé seulement par l'outillage (Expo CLI, `eslint-plugin-react-hooks`) sur des données locales du développeur, jamais embarqué dans l'app ni exposé au réseau. | 2026-10-24 | Dès qu'Expo publie un `@expo/cli` compatible zod 4. |
 
 `shell-quote` (critique), `query-string` et `decode-uri-component`,
 présents dans l'audit initial, ont été corrigés par `npm audit fix` (sans

@@ -16,8 +16,8 @@ export const DELAI_REQUETE_MS = 15000;
 // la volée côté serveur, plus long qu'une simple lecture JSON.
 export const DELAI_TELECHARGEMENT_MS = 30000;
 
-// Réservé aux envois de pièces jointes (écran des demandes de contrat, à
-// venir) — pas encore utilisé.
+// Réservé aux envois de pièces jointes (demandes de contrat, cf.
+// api/demandes.js).
 export const DELAI_ENVOI_FICHIERS_MS = 120000;
 
 export const CODE_DELAI_DEPASSE = 'ETIMEDOUT';
