@@ -165,7 +165,7 @@ export default function Dashboard() {
             <BackgroundPattern className="text-white/[0.08]" />
             <div className="relative">
               <h2 className="font-display text-xl font-bold mb-1">
-                Bienvenue, {user?.prenom} 👋
+                Bienvenue, {user?.prenom}
               </h2>
               <p className="text-white/85 text-sm">
                 {isAdmin

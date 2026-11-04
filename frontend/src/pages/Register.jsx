@@ -6,7 +6,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import BackgroundPattern from "../components/ui/BackgroundPattern";
 import { Input } from "../components/ui/Input";
-import { IconMail, IconLock, IconCheckCircle } from "../components/ui/icons";
+import { IconMail, IconLock } from "../components/ui/icons";
 
 export default function Register() {
   const { login } = useAuth();
@@ -115,10 +115,7 @@ export default function Register() {
             />
           </div>
           <h1 className="font-display text-2xl font-bold text-neutral-800">Nia Assurance</h1>
-          <div className="mt-1.5 flex items-center justify-center gap-1.5 text-sm text-neutral-500">
-            <IconCheckCircle className="h-4 w-4 text-secondary-600" />
-            Créer votre compte
-          </div>
+          <p className="mt-1.5 text-sm text-neutral-500">Créer votre compte</p>
         </div>
 
         <Card padding="lg" className="shadow-card-hover">

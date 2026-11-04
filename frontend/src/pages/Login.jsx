@@ -5,7 +5,7 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import BackgroundPattern from '../components/ui/BackgroundPattern';
 import { Input } from '../components/ui/Input';
-import { IconShield, IconFileText, IconCreditCard, IconMail, IconLock, IconCheckCircle } from '../components/ui/icons';
+import { IconShield, IconFileText, IconCreditCard, IconMail, IconLock } from '../components/ui/icons';
 import { messageErreurConnexion } from '../utils/loginErrors';
 import heroImage from '../assets/login-hero.jpg';
 
@@ -86,13 +86,6 @@ const Login = () => {
               </li>
             ))}
           </ul>
-        </div>
-
-        <div className="relative z-10 flex items-center gap-2 text-xs text-white/80">
-          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-secondary-500">
-            <IconCheckCircle className="h-3.5 w-3.5 text-white" />
-          </span>
-          Protection conforme aux normes du secteur
         </div>
       </div>
 
