@@ -206,14 +206,14 @@ const Profil = () => {
               <div>
                 <p className="text-sm text-neutral-500">Contrats actifs</p>
                 <p className="text-2xl font-bold text-neutral-800">
-                  {contratsActifs === null ? '—' : contratsActifs}
+                  {contratsActifs === null ? 'Indisponible' : contratsActifs}
                 </p>
               </div>
             </Card>
             <Card>
               <div>
                 <p className="text-sm text-neutral-500">Membre depuis</p>
-                <p className="text-lg font-bold text-neutral-800">{membreDepuis || '—'}</p>
+                <p className="text-lg font-bold text-neutral-800">{membreDepuis || 'Non renseigné'}</p>
               </div>
             </Card>
           </div>
@@ -260,7 +260,7 @@ const Profil = () => {
                       className="hidden"
                     />
                   </label>
-                  <p className="text-neutral-400 text-xs mt-2">JPG, PNG — Max 2MB</p>
+                  <p className="text-neutral-400 text-xs mt-2">JPG ou PNG, 2 Mo maximum</p>
                 </div>
               </div>
             </Card>
@@ -279,7 +279,7 @@ const Profil = () => {
                   value={user?.email || ''}
                   readOnly
                   className="bg-neutral-50 text-neutral-400"
-                  hint="Identifiant de connexion — contactez la compagnie pour le modifier"
+                  hint="Identifiant de connexion : contactez la compagnie pour le modifier."
                 />
 
                 <Input

@@ -238,7 +238,7 @@ const Sinistres = () => {
                 <p className="text-neutral-400 text-xs mt-1">
                   Contrat : {sinistre.contrat?.numero_contrat}
                   {isAdmin && sinistre.contrat?.client?.user && (
-                    <> — {sinistre.contrat.client.user.prenom} {sinistre.contrat.client.user.nom}</>
+                    <>, {sinistre.contrat.client.user.prenom} {sinistre.contrat.client.user.nom}</>
                   )}
                 </p>
                 {sinistre.description && (

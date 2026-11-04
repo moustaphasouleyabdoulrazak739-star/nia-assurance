@@ -182,7 +182,7 @@ function VueClient({ demandes, loading, error, onRefresh }) {
                   accept=".pdf,.jpg,.jpeg,.png"
                   label={doc.label}
                   required={doc.requis === true}
-                  hint={doc.requis === 'un_de' ? 'Ou le document suivant, au moins un des deux' : 'PDF, JPG ou PNG — 5 Mo max'}
+                  hint={doc.requis === 'un_de' ? 'Ou le document suivant, au moins un des deux' : 'PDF, JPG ou PNG, 5 Mo maximum'}
                   onChange={(e) => handleFileChange(doc.champ, e.target.files[0])}
                 />
               ))}
@@ -408,8 +408,8 @@ function VueCompagnie({ demandes, loading, error, filtre, setFiltre, onRefresh }
               <Card padding="sm" className="bg-neutral-50 text-sm text-neutral-600">
                 <p>
                   <strong>Client :</strong> {selectedDemande.client?.user?.prenom} {selectedDemande.client?.user?.nom}
-                  {' — '}{selectedDemande.client?.user?.email}
                 </p>
+                <p><strong>Email :</strong> {selectedDemande.client?.user?.email}</p>
                 <p><strong>Type d'assurance :</strong> {selectedDemande.type_assurance_display}</p>
                 <p>
                   <strong>Envoyée le :</strong>{' '}

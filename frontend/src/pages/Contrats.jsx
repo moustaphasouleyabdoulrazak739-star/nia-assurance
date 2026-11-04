@@ -343,7 +343,7 @@ const Contrats = () => {
                 {clients.map(c => (
                   <option key={c.id} value={c.id}>
                     {c.user?.prenom} {c.user?.nom}
-                    {c.profil_complet ? ` — ${c.cin}` : ' — profil incomplet'}
+                    {c.profil_complet ? ` (CIN ${c.cin})` : ' (profil incomplet)'}
                   </option>
                 ))}
               </Select>

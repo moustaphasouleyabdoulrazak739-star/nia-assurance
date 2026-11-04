@@ -203,7 +203,7 @@ export default function Register() {
         </Card>
 
         <p className="text-center text-xs text-neutral-400 mt-6">
-          © {new Date().getFullYear()} Nia Assurance — Tous droits réservés
+          © {new Date().getFullYear()} NIA Assurance. Tous droits réservés.
         </p>
       </div>
     </div>
