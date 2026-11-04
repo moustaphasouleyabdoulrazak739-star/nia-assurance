@@ -50,6 +50,27 @@ const PAQUETS_ACCEPTES = new Set([
   // zod 3.x (GHSA-mrhx-c7xc-m3w5) : corrige seulement en 4.6.6, alors que
   // @expo/cli exige ^3.25.76. Outillage seul (CLI, ESLint), voir SECURITY.md.
   'zod',
+  // 2026-11-04 : outillage de lint et de build (eslint, typescript-eslint,
+  // minimatch, glob, deepmerge, @expo/fingerprint). Seule correction
+  // proposee par npm = retour en arriere majeur (eslint 4, Expo 51),
+  // inapplicable. Jamais embarque dans l'app, voir SECURITY.md.
+  '@eslint-community/eslint-utils',
+  '@eslint/config-array',
+  '@eslint/eslintrc',
+  '@expo/fingerprint',
+  '@typescript-eslint/eslint-plugin',
+  '@typescript-eslint/parser',
+  '@typescript-eslint/type-utils',
+  '@typescript-eslint/typescript-estree',
+  '@typescript-eslint/utils',
+  'deepmerge',
+  'eslint',
+  'eslint-config-expo',
+  'eslint-plugin-expo',
+  'eslint-plugin-import',
+  'eslint-plugin-react',
+  'glob',
+  'minimatch',
 ]);
 
 function runNpmAudit() {
