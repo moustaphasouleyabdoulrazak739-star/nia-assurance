@@ -84,7 +84,7 @@ export default function PaiementDetailScreen({ route }) {
   ].filter((ligne) => ligne.valeur);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         refreshControl={

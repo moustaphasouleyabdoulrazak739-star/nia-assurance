@@ -34,7 +34,8 @@
           "cameraPermission": "NIA Assurance utilise l'appareil photo pour photographier les pièces de vos demandes de contrat.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-font"
     ]
   }
 }

@@ -162,14 +162,13 @@ function enTexte(valeur) {
   return String(valeur ?? '');
 }
 
-// TEMPORAIRE : en attendant l'écran Profil mobile. Le serveur
-// (demandes/views.py, _get_client_ou_erreur) refuse une demande si le profil
-// client est incomplet, avec un message qui renvoie vers « Mon profil », un
-// écran qui n'existe que sur le web. Pas de code d'erreur dédié : on
-// reconnaît ce cas à son texte et on oriente vers l'espace client web. À
-// retirer (ou à faire pointer vers l'écran mobile) quand celui-ci existera.
+// Le serveur (demandes/views.py, _get_client_ou_erreur) refuse une demande
+// si le profil client est incomplet, avec un message qui renvoie vers « Mon
+// profil » du web. Pas de code d'erreur dédié : on reconnaît ce cas à son
+// texte et on oriente vers l'onglet Profil (NouvelleDemandeScreen affiche
+// alors un bouton qui l'ouvre).
 export const MESSAGE_PROFIL_INCOMPLET =
-  "Votre profil est incomplet. Complétez-le depuis l'espace client web, puis renvoyez votre demande.";
+  "Votre profil est incomplet. Complétez-le dans l'onglet Profil, puis renvoyez votre demande.";
 
 export function estMessageProfilIncomplet(texte) {
   const t = String(texte ?? '').toLowerCase();

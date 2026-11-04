@@ -30,4 +30,9 @@ export const colors = {
   infoSoft: '#E0F2FE', // sky-100
   neutral: '#57534E', // neutral-600
   neutralSoft: '#F5F5F4', // neutral-100
+
+  // Accueil et barre d'onglets (maquette validée) : orange plus soutenu que
+  // `primary` pour garder un bon contraste avec le texte blanc de l'en-tête.
+  accueilHeader: '#C44704',
+  tabInactive: '#5B524C',
 };
