@@ -8,7 +8,7 @@ import Badge from '../components/ui/Badge';
 import { Select, Textarea, Input } from '../components/ui/Input';
 import { SINISTRE_STATUS_VARIANTS } from '../components/ui/statusVariants';
 import { telechargerFichier, extraireErreurTelechargement } from '../utils/downloadPdf';
-import { formaterMontant } from '../utils/format';
+import { formaterDate, formaterMontant } from '../utils/format';
 import { IconClose, IconDownload, IconInbox } from '../components/ui/icons';
 
 const ETAPES_SINISTRE = ['Déclaré', 'En cours', 'Traité'];
@@ -228,12 +228,12 @@ const Sinistres = () => {
                     {sinistre.numero_sinistre}
                   </h3>
                   <Badge variant={SINISTRE_STATUS_VARIANTS[sinistre.statut] || 'neutral'}>
-                    {sinistre.statut}
+                    {sinistre.statut_display || sinistre.statut}
                   </Badge>
                 </div>
-                <p className="text-neutral-500 text-sm">{sinistre.type_sinistre}</p>
+                <p className="text-neutral-500 text-sm">{sinistre.type_sinistre_display || sinistre.type_sinistre}</p>
                 <p className="text-neutral-400 text-xs mt-1">
-                  Date sinistre : {sinistre.date_sinistre}
+                  Date du sinistre : {formaterDate(sinistre.date_sinistre)}
                 </p>
                 <p className="text-neutral-400 text-xs mt-1">
                   Contrat : {sinistre.contrat?.numero_contrat}
@@ -426,7 +426,7 @@ const Sinistres = () => {
               )}
 
               <Card padding="sm" className="bg-neutral-50 text-sm text-neutral-600">
-                <p><strong>Type :</strong> {reviewTarget.type_sinistre}</p>
+                <p><strong>Type :</strong> {reviewTarget.type_sinistre_display || reviewTarget.type_sinistre}</p>
                 <p><strong>Montant réclamé :</strong> {formaterMontant(reviewTarget.montant_reclame)}</p>
                 {reviewTarget.description && <p><strong>Description :</strong> {reviewTarget.description}</p>}
               </Card>

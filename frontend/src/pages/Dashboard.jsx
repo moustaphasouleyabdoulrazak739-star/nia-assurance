@@ -7,7 +7,6 @@ import Card from "../components/ui/Card";
 import { estEcheanceProche } from "../utils/dates";
 import { formaterMontant } from "../utils/format";
 import {
-  IconFileText,
   IconAlertTriangle,
   IconCreditCard,
   IconClipboardList,
@@ -94,12 +93,17 @@ export default function Dashboard() {
     },
   ];
 
-  const quickActions = [
-    { label: isAdmin ? "Gérer les contrats" : "Mes contrats", icon: IconFileText, to: "/contrats" },
-    { label: isAdmin ? "Sinistres à traiter" : "Déclarer un sinistre", icon: IconAlertTriangle, to: "/sinistres" },
-    { label: isAdmin ? "Suivi paiements" : "Effectuer un paiement", icon: IconCreditCard, to: "/paiements" },
-    { label: isAdmin ? "Demandes à traiter" : "Nouvelle demande de contrat", icon: IconClipboardList, to: "/demandes" },
-  ];
+  // Seulement les actions qui ne sont pas deja a un clic dans le menu
+  // lateral sous la forme d'une simple liste.
+  const quickActions = isAdmin
+    ? [
+        { label: "Demandes à traiter", icon: IconClipboardList, to: "/demandes" },
+        { label: "Sinistres à traiter", icon: IconAlertTriangle, to: "/sinistres" },
+      ]
+    : [
+        { label: "Déclarer un sinistre", icon: IconAlertTriangle, to: "/sinistres" },
+        { label: "Payer une prime", icon: IconCreditCard, to: "/paiements" },
+      ];
 
   const echeanceTexte = (() => {
     const n = contratsEcheanceProche.length;
@@ -136,7 +140,7 @@ export default function Dashboard() {
       {/* Actions rapides */}
       <Card>
         <h3 className="font-bold text-neutral-800 mb-4">Actions rapides</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {quickActions.map(({ label, icon: Icon, to }) => (
             <Card
               key={to}

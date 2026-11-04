@@ -109,7 +109,7 @@ export default function Register() {
             alt="NIA Assurance"
             className="mx-auto mb-4 h-16 w-16 object-contain"
           />
-          <h1 className="font-display text-2xl font-bold text-neutral-800">Nia Assurance</h1>
+          <h1 className="font-display text-2xl font-bold text-neutral-800">NIA Assurance</h1>
           <p className="mt-1.5 text-sm text-neutral-500">Créer votre compte</p>
         </div>
 
@@ -149,7 +149,7 @@ export default function Register() {
               icon={IconMail}
               value={formData.email}
               onChange={handleChange}
-              placeholder="you@example.com"
+              placeholder="nom@exemple.com"
               error={errors.email}
             />
             <Input

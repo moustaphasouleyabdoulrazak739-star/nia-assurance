@@ -1,4 +1,4 @@
-import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -63,7 +63,7 @@ function BoutonAjouter({ onPress, label }) {
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Text style={styles.headerButtonText}>{'+'}</Text>
+      <Ionicons name="add" size={26} color="#fff" />
     </TouchableOpacity>
   );
 }
@@ -246,6 +246,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerButtonText: { color: '#fff', fontSize: 22, fontWeight: '700' },
   tabLabel: { fontSize: 11, fontWeight: '600' },
 });

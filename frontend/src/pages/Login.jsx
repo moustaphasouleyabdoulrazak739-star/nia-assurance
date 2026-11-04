@@ -52,7 +52,7 @@ const Login = () => {
             alt="NIA Assurance"
             className="h-20 w-20 rounded-lg bg-white p-2 object-contain"
           />
-          <span className="text-xl font-bold tracking-wide text-white">NIA ASSURANCE</span>
+          <span className="text-xl font-bold text-white">NIA Assurance</span>
         </div>
       </div>
 
@@ -63,7 +63,7 @@ const Login = () => {
           {/* Logo mobile */}
           <div className="text-center mb-8 lg:hidden">
             <img src="/logo-nia.png" alt="NIA Assurance" className="h-16 w-16 mx-auto mb-3 object-contain" />
-            <span className="text-xl font-bold text-neutral-800">NIA ASSURANCE</span>
+            <span className="text-xl font-bold text-neutral-800">NIA Assurance</span>
           </div>
 
           <h2 className="font-display text-3xl font-bold text-neutral-800 mb-10">Connexion</h2>

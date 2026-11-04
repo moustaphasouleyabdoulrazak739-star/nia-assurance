@@ -7,11 +7,11 @@ const VARIANTS = {
   brand: 'bg-primary-100 text-primary-700',
 };
 
-/** Pastille de statut — variant: success | warning | danger | info | neutral | brand */
+/** Etiquette de statut, coins peu arrondis. variant: success | warning | danger | info | neutral | brand */
 export default function Badge({ variant = 'neutral', className = '', children }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${VARIANTS[variant]} ${className}`}
     >
       {children}
     </span>

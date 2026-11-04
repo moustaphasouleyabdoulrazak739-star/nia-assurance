@@ -16,6 +16,12 @@ function formatAAAAMMJJ(date) {
   return `${annee}-${mois}-${jour}`;
 }
 
+// Affichage seulement : la valeur envoyée au serveur reste AAAA-MM-JJ.
+function enFormatFrancais(valeur) {
+  const jour = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(valeur));
+  return jour ? `${jour[3]}/${jour[2]}/${jour[1]}` : valeur;
+}
+
 function parseAAAAMMJJ(valeur) {
   if (!valeur) return new Date();
   const [annee, mois, jour] = valeur.split('-').map(Number);
@@ -59,7 +65,7 @@ export default function DateField({ label, value, onChange, maximumDate, error }
         onPress={ouvrir}
         activeOpacity={0.7}
       >
-        <Text style={value ? styles.value : styles.placeholder}>{value || 'AAAA-MM-JJ'}</Text>
+        <Text style={value ? styles.value : styles.placeholder}>{value ? enFormatFrancais(value) : 'jj/mm/aaaa'}</Text>
       </TouchableOpacity>
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}

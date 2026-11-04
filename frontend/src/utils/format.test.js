@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formaterMontant, formaterNombre } from './format';
+import { formaterDate, formaterMontant, formaterNombre } from './format';
 
 describe('formaterMontant', () => {
   it('zéro et petits montants sans séparateur', () => {
@@ -42,5 +42,18 @@ describe('formaterNombre', () => {
   it('sans unité', () => {
     expect(formaterNombre(1234567)).toBe('1 234 567');
     expect(formaterNombre(null)).toBe('');
+  });
+});
+
+describe('formaterDate', () => {
+  it('date seule AAAA-MM-JJ en jj/mm/aaaa, sans décalage de fuseau', () => {
+    expect(formaterDate('2026-03-05')).toBe('05/03/2026');
+    expect(formaterDate('2026-01-01')).toBe('01/01/2026');
+  });
+
+  it('vide ou illisible donne une chaîne vide', () => {
+    expect(formaterDate('')).toBe('');
+    expect(formaterDate(null)).toBe('');
+    expect(formaterDate('pas une date')).toBe('');
   });
 });

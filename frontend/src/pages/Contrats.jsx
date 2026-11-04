@@ -8,11 +8,18 @@ import Badge from '../components/ui/Badge';
 import { Select, Textarea, Input } from '../components/ui/Input';
 import { CONTRAT_STATUS_VARIANTS } from '../components/ui/statusVariants';
 import { estEcheanceProche } from '../utils/dates';
-import { formaterMontant } from '../utils/format';
+import { formaterDate, formaterMontant } from '../utils/format';
 import { telechargerPdf, telechargerFichier, extraireErreurTelechargement } from '../utils/downloadPdf';
 import { IconClose, IconDownload, IconInbox, IconClock } from '../components/ui/icons';
 
 const FILTRES = ['TOUS', 'ACTIF', 'EXPIRE', 'SUSPENDU', 'RESILIE'];
+const FILTRE_LABELS = {
+  TOUS: 'Tous',
+  ACTIF: 'Actifs',
+  EXPIRE: 'Expirés',
+  SUSPENDU: 'Suspendus',
+  RESILIE: 'Résiliés',
+};
 const TYPES_FILTRE = [
   { value: 'TOUS', label: 'Tous les types' },
   { value: 'AUTO', label: 'Assurance Auto' },
@@ -186,7 +193,7 @@ const Contrats = () => {
                 : 'border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
             }`}
           >
-            {f}
+            {FILTRE_LABELS[f]}
           </button>
         ))}
         <select
@@ -244,11 +251,11 @@ const Contrats = () => {
                 )}
                 <p className="text-neutral-500 text-sm">{contrat.type_assurance_display || contrat.type_assurance}</p>
                 <p className="text-neutral-400 text-xs mt-1">
-                  Du {contrat.date_debut} au {contrat.date_fin}
+                  Du {formaterDate(contrat.date_debut)} au {formaterDate(contrat.date_fin)}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <Badge variant={CONTRAT_STATUS_VARIANTS[contrat.statut] || 'neutral'}>
-                    {contrat.statut}
+                    {contrat.statut_display || contrat.statut}
                   </Badge>
                   {estEcheanceProche(contrat) && (
                     <Badge variant="warning" className="inline-flex items-center gap-1">

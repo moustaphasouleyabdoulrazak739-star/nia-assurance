@@ -229,7 +229,7 @@ const Paiements = () => {
                     {paiement.numero_recu}
                   </h3>
                   <Badge variant={PAIEMENT_STATUS_VARIANTS[paiement.statut] || 'neutral'}>
-                    {paiement.statut}
+                    {paiement.statut_display || paiement.statut}
                   </Badge>
                 </div>
                 <p className="text-neutral-500 text-sm">

@@ -17,6 +17,20 @@ export function formaterNombre(valeur) {
   return nombre < 0 && texte !== '0' ? `-${texte}` : texte;
 }
 
+/**
+ * '2026-03-05' -> '05/03/2026'. Une date seule (DateField Django) est
+ * reformatee sans passer par new Date(), qui la lirait en UTC et pourrait
+ * afficher la veille. Une date-heure est affichee a la date locale.
+ * '' si la valeur est vide ou illisible.
+ */
+export function formaterDate(valeur) {
+  if (!valeur) return '';
+  const jour = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(valeur));
+  if (jour) return `${jour[3]}/${jour[2]}/${jour[1]}`;
+  const date = new Date(valeur);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('fr-FR');
+}
+
 /** 9000 ou '9000.00' -> '9 000 FCFA'. '' si la valeur n'est pas un nombre. */
 export function formaterMontant(valeur) {
   const texte = formaterNombre(valeur);

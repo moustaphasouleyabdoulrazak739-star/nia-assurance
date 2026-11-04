@@ -140,7 +140,7 @@ function VueClient({ demandes, loading, error, onRefresh }) {
 
   return (
     <DashboardLayout
-      title="Demander un contrat"
+      title="Demandes de contrat"
     >
       <Card ref={formRef} className="mb-6">
         <h3 className="font-bold text-neutral-800 mb-1">
