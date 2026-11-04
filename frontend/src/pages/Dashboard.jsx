@@ -15,12 +15,7 @@ import {
   IconClock,
 } from "../components/ui/icons";
 
-function StatCard({ icon: Icon, label, value, tone }) {
-  const TONES = {
-    primary: "bg-primary-50 text-primary-600",
-    secondary: "bg-secondary-50 text-secondary-700",
-    amber: "bg-amber-50 text-amber-600",
-  };
+function StatCard({ label, value, tone }) {
   // Bordure gauche colorée : distingue au premier coup d'œil les cards
   // "info" (statistiques) des cards "action" (Actions rapides ci-dessous,
   // qui restent volontairement neutres).
@@ -30,29 +25,21 @@ function StatCard({ icon: Icon, label, value, tone }) {
     amber: "border-l-4 border-amber-500",
   };
   return (
-    <Card hoverable className={`flex items-center gap-4 ${BORDURES[tone]}`}>
-      <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${TONES[tone]}`}>
-        <Icon className="h-6 w-6" />
-      </div>
-      <div>
-        <p className="text-sm text-neutral-500">{label}</p>
-        <p className="text-2xl font-bold text-neutral-800">{value}</p>
-      </div>
+    <Card hoverable className={BORDURES[tone]}>
+      <p className="text-sm text-neutral-500">{label}</p>
+      <p className="text-2xl font-bold text-neutral-800">{value}</p>
     </Card>
   );
 }
 
-function ActiviteRow({ icon: Icon, label, value, to }) {
+function ActiviteRow({ label, value, to }) {
   const navigate = useNavigate();
   return (
     <button
       type="button"
       onClick={() => navigate(to)}
-      className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition hover:bg-neutral-50"
+      className="flex w-full items-center rounded-xl p-3 text-left transition hover:bg-neutral-50"
     >
-      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500">
-        <Icon className="h-5 w-5" />
-      </span>
       <div className="min-w-0 flex-1">
         <p className="text-xs text-neutral-400">{label}</p>
         <p className="truncate text-sm font-medium text-neutral-700">{value}</p>
@@ -108,19 +95,16 @@ export default function Dashboard() {
 
   const statCards = [
     {
-      icon: IconFileText,
       label: isAdmin ? "Contrats actifs (tous clients)" : "Mes contrats actifs",
       value: stats.contratsActifs,
       tone: "primary",
     },
     {
-      icon: IconAlertTriangle,
       label: isAdmin ? "Sinistres en attente" : "Mes sinistres en attente",
       value: stats.sinistresEnAttente,
       tone: sinistresTone,
     },
     {
-      icon: IconCreditCard,
       label: isAdmin ? "Paiements validés" : "Mes paiements validés",
       value: stats.paiementsValides,
       tone: "secondary",
@@ -203,9 +187,7 @@ export default function Dashboard() {
                   onClick={() => navigate(to)}
                   className="group flex flex-col items-center gap-2 text-center"
                 >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition group-hover:bg-primary-100">
-                    <Icon className="h-5 w-5" />
-                  </span>
+                  <Icon className="h-5 w-5 text-primary-600" />
                   <span className="text-sm font-medium text-neutral-700">
                     {label}
                   </span>
@@ -219,7 +201,6 @@ export default function Dashboard() {
             <h3 className="font-bold text-neutral-800 mb-2">Dernière activité</h3>
             <div className="space-y-1">
               <ActiviteRow
-                icon={IconAlertTriangle}
                 label="Dernier sinistre déclaré"
                 value={
                   derniereActivite.sinistre
@@ -229,7 +210,6 @@ export default function Dashboard() {
                 to="/sinistres"
               />
               <ActiviteRow
-                icon={IconCreditCard}
                 label="Dernier paiement"
                 value={
                   derniereActivite.paiement
@@ -239,7 +219,6 @@ export default function Dashboard() {
                 to="/paiements"
               />
               <ActiviteRow
-                icon={IconClipboardList}
                 label="Dernière demande de contrat"
                 value={
                   derniereActivite.demande

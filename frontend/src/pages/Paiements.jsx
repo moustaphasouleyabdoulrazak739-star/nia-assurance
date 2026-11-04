@@ -16,7 +16,7 @@ import {
   marquerContratEnAttente,
   messageTropDeTentatives,
 } from '../utils/paiements';
-import { IconClose, IconInbox, IconCreditCard, IconDownload, IconLock } from '../components/ui/icons';
+import { IconClose, IconInbox, IconDownload, IconLock } from '../components/ui/icons';
 
 const METHODE_LABELS = {
   MYNITA: 'MyNITA',
@@ -190,10 +190,7 @@ const Paiements = () => {
       )}
 
       {!loading && !error && paiements.length > 0 && (
-        <Card hoverable className="mb-6 flex items-center gap-4">
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-secondary-50 text-secondary-700">
-            <IconCreditCard className="h-6 w-6" />
-          </div>
+        <Card hoverable className="mb-6">
           <div>
             <p className="text-sm text-neutral-500">
               {isAdmin ? 'Total payé (tous clients, paiements validés)' : 'Total payé (paiements validés)'}

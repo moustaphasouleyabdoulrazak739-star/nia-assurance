@@ -5,7 +5,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { JOURNAL_ACTION_VARIANTS } from '../components/ui/statusVariants';
-import { IconInbox, IconListBullet } from '../components/ui/icons';
+import { IconInbox } from '../components/ui/icons';
 
 const Journal = () => {
   const [entrees, setEntrees] = useState([]);
@@ -74,11 +74,8 @@ const Journal = () => {
       {entrees.length > 0 && (
         <div className="space-y-3">
           {entrees.map((entree) => (
-            <Card key={entree.id} className="flex items-start gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500">
-                <IconListBullet className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
+            <Card key={entree.id}>
+              <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium text-neutral-800">{entree.utilisateur_nom}</span>
                   <Badge variant={JOURNAL_ACTION_VARIANTS[entree.action] || 'neutral'}>

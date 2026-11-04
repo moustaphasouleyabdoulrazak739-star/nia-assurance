@@ -6,7 +6,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { Input, Select, Textarea } from '../components/ui/Input';
 import { obtenirApercuFichier } from '../utils/downloadPdf';
-import { IconFileText, IconClock, IconLock, IconPhone } from '../components/ui/icons';
+import { IconLock, IconPhone } from '../components/ui/icons';
 
 function extraireMessageErreur(err, messageParDefaut) {
   const data = err.response?.data;
@@ -202,10 +202,7 @@ const Profil = () => {
 
           {/* Récapitulatif */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Card className="flex items-center gap-4">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
-                <IconFileText className="h-6 w-6" />
-              </div>
+            <Card>
               <div>
                 <p className="text-sm text-neutral-500">Contrats actifs</p>
                 <p className="text-2xl font-bold text-neutral-800">
@@ -213,10 +210,7 @@ const Profil = () => {
                 </p>
               </div>
             </Card>
-            <Card className="flex items-center gap-4">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-secondary-50 text-secondary-700">
-                <IconClock className="h-6 w-6" />
-              </div>
+            <Card>
               <div>
                 <p className="text-sm text-neutral-500">Membre depuis</p>
                 <p className="text-lg font-bold text-neutral-800">{membreDepuis || '—'}</p>

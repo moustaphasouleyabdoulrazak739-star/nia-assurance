@@ -107,13 +107,11 @@ export default function Register() {
 
       <div className="relative w-full max-w-lg">
         <div className="text-center mb-10">
-          <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-2xl bg-primary-50 shadow-md">
-            <img
-              src="/logo-nia.png"
-              alt="NIA Assurance"
-              className="h-16 w-16 object-contain"
-            />
-          </div>
+          <img
+            src="/logo-nia.png"
+            alt="NIA Assurance"
+            className="mx-auto mb-4 h-16 w-16 object-contain"
+          />
           <h1 className="font-display text-2xl font-bold text-neutral-800">Nia Assurance</h1>
           <p className="mt-1.5 text-sm text-neutral-500">Créer votre compte</p>
         </div>
