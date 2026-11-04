@@ -4,7 +4,6 @@ import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import Card from "../components/ui/Card";
-import BackgroundPattern from "../components/ui/BackgroundPattern";
 import { estEcheanceProche } from "../utils/dates";
 import { formaterMontant } from "../utils/format";
 import {
@@ -15,17 +14,9 @@ import {
   IconClock,
 } from "../components/ui/icons";
 
-function StatCard({ label, value, tone }) {
-  // Bordure gauche colorée : distingue au premier coup d'œil les cards
-  // "info" (statistiques) des cards "action" (Actions rapides ci-dessous,
-  // qui restent volontairement neutres).
-  const BORDURES = {
-    primary: "border-l-4 border-primary-600",
-    secondary: "border-l-4 border-secondary-600",
-    amber: "border-l-4 border-amber-500",
-  };
+function StatCard({ label, value }) {
   return (
-    <Card hoverable className={BORDURES[tone]}>
+    <Card>
       <p className="text-sm text-neutral-500">{label}</p>
       <p className="text-2xl font-bold text-neutral-800">{value}</p>
     </Card>
@@ -38,7 +29,7 @@ function ActiviteRow({ label, value, to }) {
     <button
       type="button"
       onClick={() => navigate(to)}
-      className="flex w-full items-center rounded-xl p-3 text-left transition hover:bg-neutral-50"
+      className="flex w-full items-center rounded-lg p-3 text-left transition hover:bg-neutral-50"
     >
       <div className="min-w-0 flex-1">
         <p className="text-xs text-neutral-400">{label}</p>
@@ -88,26 +79,18 @@ export default function Dashboard() {
     fetchDashboard();
   }, []);
 
-  const sinistresEnAttenteValue = stats.sinistresEnAttente;
-  const sinistresTone = typeof sinistresEnAttenteValue === 'number' && sinistresEnAttenteValue > 0
-    ? 'amber'
-    : 'secondary';
-
   const statCards = [
     {
       label: isAdmin ? "Contrats actifs (tous clients)" : "Mes contrats actifs",
       value: stats.contratsActifs,
-      tone: "primary",
     },
     {
       label: isAdmin ? "Sinistres en attente" : "Mes sinistres en attente",
       value: stats.sinistresEnAttente,
-      tone: sinistresTone,
     },
     {
       label: isAdmin ? "Paiements validés" : "Mes paiements validés",
       value: stats.paiementsValides,
-      tone: "secondary",
     },
   ];
 
@@ -133,104 +116,79 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout
-      title="Accueil"
+      title={user?.prenom ? `Bienvenue, ${user.prenom}` : "Accueil"}
       subtitle={isAdmin ? "Vue d'ensemble de l'espace compagnie" : "Vue d'ensemble de votre espace"}
     >
-      {/* Motif de marque tres discret derriere toute la zone de contenu.
-          Le motif est en position absolute (z-index:auto) : sans le wrapper
-          "relative z-10" ci-dessous, l'ordre de peinture CSS le ferait
-          passer AU-DESSUS des cards non positionnees, pas derriere. */}
-      <div className="relative">
-        <BackgroundPattern className="text-neutral-900/[0.03]" />
+      {/* Bandeau échéance */}
+      {echeanceTexte && (
+        <Card padding="sm" className="mb-6 flex items-center gap-3 border border-amber-100 bg-amber-50">
+          <IconClock className="h-5 w-5 flex-shrink-0 text-amber-600" />
+          <p className="text-sm text-amber-800">{echeanceTexte}</p>
+        </Card>
+      )}
 
-        <div className="relative z-10">
-          {/* Bienvenue */}
-          <div className="relative overflow-hidden rounded-2xl bg-primary-600 p-6 mb-6 text-white">
-            <BackgroundPattern className="text-white/[0.08]" />
-            <div className="relative">
-              <h2 className="font-display text-xl font-bold mb-1">
-                Bienvenue, {user?.prenom}
-              </h2>
-              <p className="text-white/85 text-sm">
-                {isAdmin
-                  ? "Gérez les contrats, sinistres et paiements de vos clients."
-                  : "Gérez vos assurances facilement depuis votre espace personnel."}
-              </p>
-            </div>
-          </div>
-
-          {/* Bandeau échéance */}
-          {echeanceTexte && (
-            <Card padding="sm" className="mb-6 flex items-center gap-3 border border-amber-100 bg-amber-50">
-              <IconClock className="h-5 w-5 flex-shrink-0 text-amber-600" />
-              <p className="text-sm text-amber-800">{echeanceTexte}</p>
-            </Card>
-          )}
-
-          {/* Statistiques */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            {statCards.map((s) => (
-              <StatCard key={s.label} {...s} />
-            ))}
-          </div>
-
-          {/* Actions rapides */}
-          <Card>
-            <h3 className="font-bold text-neutral-800 mb-4">Actions rapides</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {quickActions.map(({ label, icon: Icon, to }) => (
-                <Card
-                  key={to}
-                  as="button"
-                  type="button"
-                  hoverable
-                  onClick={() => navigate(to)}
-                  className="group flex flex-col items-center gap-2 text-center"
-                >
-                  <Icon className="h-5 w-5 text-primary-600" />
-                  <span className="text-sm font-medium text-neutral-700">
-                    {label}
-                  </span>
-                </Card>
-              ))}
-            </div>
-          </Card>
-
-          {/* Dernière activité */}
-          <Card className="mt-6">
-            <h3 className="font-bold text-neutral-800 mb-2">Dernière activité</h3>
-            <div className="space-y-1">
-              <ActiviteRow
-                label="Dernier sinistre déclaré"
-                value={
-                  derniereActivite.sinistre
-                    ? `${derniereActivite.sinistre.numero_sinistre}, ${derniereActivite.sinistre.statut_display}`
-                    : 'Aucun sinistre déclaré'
-                }
-                to="/sinistres"
-              />
-              <ActiviteRow
-                label="Dernier paiement"
-                value={
-                  derniereActivite.paiement
-                    ? `${formaterMontant(derniereActivite.paiement.montant)}, ${derniereActivite.paiement.statut_display}`
-                    : 'Aucun paiement effectué'
-                }
-                to="/paiements"
-              />
-              <ActiviteRow
-                label="Dernière demande de contrat"
-                value={
-                  derniereActivite.demande
-                    ? `${derniereActivite.demande.type_assurance_display}, ${derniereActivite.demande.statut_display}`
-                    : 'Aucune demande envoyée'
-                }
-                to="/demandes"
-              />
-            </div>
-          </Card>
-        </div>
+      {/* Statistiques */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        {statCards.map((s) => (
+          <StatCard key={s.label} {...s} />
+        ))}
       </div>
+
+      {/* Actions rapides */}
+      <Card>
+        <h3 className="font-bold text-neutral-800 mb-4">Actions rapides</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {quickActions.map(({ label, icon: Icon, to }) => (
+            <Card
+              key={to}
+              as="button"
+              type="button"
+              hoverable
+              onClick={() => navigate(to)}
+              className="group flex flex-col items-center gap-2 text-center"
+            >
+              <Icon className="h-5 w-5 text-primary-600" />
+              <span className="text-sm font-medium text-neutral-700">
+                {label}
+              </span>
+            </Card>
+          ))}
+        </div>
+      </Card>
+
+      {/* Dernière activité */}
+      <Card className="mt-6">
+        <h3 className="font-bold text-neutral-800 mb-2">Dernière activité</h3>
+        <div className="space-y-1">
+          <ActiviteRow
+            label="Dernier sinistre déclaré"
+            value={
+              derniereActivite.sinistre
+                ? `${derniereActivite.sinistre.numero_sinistre}, ${derniereActivite.sinistre.statut_display}`
+                : 'Aucun sinistre déclaré'
+            }
+            to="/sinistres"
+          />
+          <ActiviteRow
+            label="Dernier paiement"
+            value={
+              derniereActivite.paiement
+                ? `${formaterMontant(derniereActivite.paiement.montant)}, ${derniereActivite.paiement.statut_display}`
+                : 'Aucun paiement effectué'
+            }
+            to="/paiements"
+          />
+          <ActiviteRow
+            label="Dernière demande de contrat"
+            value={
+              derniereActivite.demande
+                ? `${derniereActivite.demande.type_assurance_display}, ${derniereActivite.demande.statut_display}`
+                : 'Aucune demande envoyée'
+            }
+            to="/demandes"
+          />
+        </div>
+      </Card>
     </DashboardLayout>
   );
 }

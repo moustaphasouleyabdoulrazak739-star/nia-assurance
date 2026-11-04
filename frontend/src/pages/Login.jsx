@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
-import BackgroundPattern from '../components/ui/BackgroundPattern';
 import { Input } from '../components/ui/Input';
 import { IconShield, IconFileText, IconCreditCard, IconMail, IconLock } from '../components/ui/icons';
 import { messageErreurConnexion } from '../utils/loginErrors';
@@ -50,16 +49,14 @@ const Login = () => {
           aria-hidden="true"
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
-        {/* Overlay degrade de marque : garde l'identite orange tout en
-            laissant deviner la photo (humanite) plutot que de la masquer. */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/80 via-primary-700/40 to-primary-700/20" />
-        <BackgroundPattern className="text-white/[0.05]" />
+        {/* Voile uni pour la lisibilite du texte blanc sur la photo. */}
+        <div className="absolute inset-0 bg-neutral-900/55" />
 
         <div className="relative z-10 flex items-center gap-3">
           <img
             src="/logo-nia.png"
             alt="NIA Assurance"
-            className="h-20 w-20 rounded-2xl bg-white/95 p-2 object-contain shadow-xl"
+            className="h-20 w-20 rounded-lg bg-white p-2 object-contain"
           />
           <span className="text-xl font-bold tracking-wide text-white">NIA ASSURANCE</span>
         </div>
@@ -77,7 +74,7 @@ const Login = () => {
             {highlights.map(({ icon: Icon, text }) => (
               <li
                 key={text}
-                className="flex items-center gap-3 rounded-xl bg-black/25 px-4 py-3 backdrop-blur-sm"
+                className="flex items-center gap-3"
               >
                 <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/30">
                   <Icon className="h-4 w-4" />
@@ -91,8 +88,6 @@ const Login = () => {
 
       {/* Panneau droit — formulaire, centré verticalement */}
       <div className="relative flex w-full min-w-0 flex-1 items-center justify-center overflow-hidden bg-white px-8 py-12">
-        <BackgroundPattern className="hidden text-neutral-900/[0.025] lg:block" />
-
         <div className="relative w-full min-w-0 max-w-md">
 
           {/* Logo mobile */}
@@ -149,7 +144,6 @@ const Login = () => {
               size="lg"
               fullWidth
               loading={loading}
-              className="shadow-lg shadow-primary-600/25 hover:shadow-xl hover:shadow-primary-700/30 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md"
             >
               {loading ? 'Connexion...' : 'Se connecter'}
             </Button>

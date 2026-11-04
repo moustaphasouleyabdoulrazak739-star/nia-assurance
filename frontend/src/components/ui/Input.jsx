@@ -1,5 +1,5 @@
 const fieldBase =
-  'w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-neutral-800 placeholder:text-neutral-400 transition focus:outline-none focus:ring-4 disabled:bg-neutral-50 disabled:text-neutral-400';
+  'w-full rounded-lg border bg-white px-4 py-2.5 text-sm text-neutral-800 placeholder:text-neutral-400 transition focus:outline-none focus:ring-4 disabled:bg-neutral-50 disabled:text-neutral-400';
 
 const fieldState = (error) =>
   error
@@ -59,7 +59,7 @@ export function ChampVerrouille({ label, error, hint, id, value, placeholder, me
   const bordure = error ? 'border-red-300' : 'border-neutral-200';
   return (
     <FieldShell label={label} error={error} hint={hint} id={id}>
-      <div className={`flex items-center gap-3 rounded-xl border ${bordure} bg-neutral-100 px-4 py-2.5 text-sm`}>
+      <div className={`flex items-center gap-3 rounded-lg border ${bordure} bg-neutral-100 px-4 py-2.5 text-sm`}>
         {Icon && <Icon className="h-4 w-4 flex-shrink-0 text-neutral-400" />}
         <output
           id={id}

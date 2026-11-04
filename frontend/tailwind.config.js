@@ -54,13 +54,10 @@ export default {
           900: '#1C1917',
         },
       },
+      // Ombre reservee aux elements superposes (modales, menu mobile) : les
+      // cartes sont delimitees par une bordure fine, pas par une ombre.
       boxShadow: {
-        card: '0 1px 3px rgba(28, 25, 23, 0.06), 0 6px 20px -6px rgba(28, 25, 23, 0.10)',
-        'card-hover': '0 4px 10px rgba(28, 25, 23, 0.08), 0 18px 34px -10px rgba(28, 25, 23, 0.16)',
-      },
-      borderRadius: {
-        xl: '1rem',
-        '2xl': '1.5rem',
+        overlay: '0 10px 30px -10px rgba(28, 25, 23, 0.25)',
       },
     },
   },

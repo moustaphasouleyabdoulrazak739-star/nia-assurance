@@ -64,14 +64,9 @@ function ChartCard({ title, hint, vide, children }) {
   );
 }
 
-function KpiCard({ label, value, tone }) {
-  const TONES = {
-    orange: 'border-l-4 border-primary-600',
-    green: 'border-l-4 border-secondary-700',
-    amber: 'border-l-4 border-amber-500',
-  };
+function KpiCard({ label, value }) {
   return (
-    <Card padding="sm" className={TONES[tone]}>
+    <Card padding="sm">
       <p className="text-xs text-neutral-500">{label}</p>
       <p className="mt-1 text-2xl font-bold text-neutral-800">{value}</p>
     </Card>
@@ -136,10 +131,10 @@ const Statistiques = () => {
         <div className="space-y-6">
           {/* Indicateurs clés */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <KpiCard label="Contrats" value={totalContrats} tone="orange" />
-            <KpiCard label="Sinistres déclarés" value={totalSinistres} tone="amber" />
-            <KpiCard label="Total encaissé" value={formaterMontant(totalEncaisse)} tone="green" />
-            <KpiCard label="Demandes en attente" value={demandesEnAttente} tone="amber" />
+            <KpiCard label="Contrats" value={totalContrats} />
+            <KpiCard label="Sinistres déclarés" value={totalSinistres} />
+            <KpiCard label="Total encaissé" value={formaterMontant(totalEncaisse)} />
+            <KpiCard label="Demandes en attente" value={demandesEnAttente} />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">

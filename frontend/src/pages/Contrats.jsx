@@ -181,10 +181,10 @@ const Contrats = () => {
           <button
             key={f}
             onClick={() => setFiltre(f)}
-            className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
               filtre === f
                 ? 'bg-primary-600 text-white'
-                : 'bg-white text-neutral-600 shadow-card hover:bg-neutral-50'
+                : 'border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
             }`}
           >
             {f}
@@ -193,7 +193,7 @@ const Contrats = () => {
         <select
           value={filtreType}
           onChange={(e) => setFiltreType(e.target.value)}
-          className="ml-auto rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-600 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+          className="ml-auto rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-600 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
         >
           {TYPES_FILTRE.map((t) => (
             <option key={t.value} value={t.value}>{t.label}</option>
@@ -232,7 +232,7 @@ const Contrats = () => {
 
       <div className="grid gap-4">
         {contratsFiltres.map(contrat => (
-          <Card key={contrat.id} hoverable>
+          <Card key={contrat.id}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="font-bold text-neutral-800 text-lg">
@@ -302,15 +302,15 @@ const Contrats = () => {
       {/* Modal création / édition */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 p-4">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-card-hover">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white shadow-overlay">
 
-            <div className="flex items-center justify-between rounded-t-2xl bg-primary-600 px-6 py-4">
-              <h3 className="text-lg font-bold text-white">
+            <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
+              <h3 className="text-lg font-bold text-neutral-800">
                 {editingId ? 'Modifier le contrat' : 'Nouveau contrat'}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="rounded-lg p-1 text-white/80 hover:bg-white/10 hover:text-white"
+                className="rounded-lg p-1 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
                 aria-label="Fermer"
               >
                 <IconClose className="h-5 w-5" />

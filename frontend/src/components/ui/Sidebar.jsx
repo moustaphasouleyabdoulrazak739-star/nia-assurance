@@ -62,7 +62,7 @@ export default function Sidebar({ open, onClose, user, onLogout }) {
   return (
     <>
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-white shadow-card transition-transform duration-300 lg:static lg:translate-x-0 lg:shadow-none lg:border-r lg:border-neutral-100 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-white shadow-overlay transition-transform duration-300 lg:static lg:translate-x-0 lg:shadow-none lg:border-r lg:border-neutral-100 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -83,7 +83,7 @@ export default function Sidebar({ open, onClose, user, onLogout }) {
                 to={to}
                 onClick={onClose}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition ${
+                  `flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
                     isActive
                       ? 'bg-primary-50 text-primary-700'
                       : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800'
@@ -105,7 +105,7 @@ export default function Sidebar({ open, onClose, user, onLogout }) {
         <div className="border-t border-neutral-100 p-4">
           <button
             onClick={onLogout}
-            className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-red-500 transition hover:bg-red-50"
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-red-500 transition hover:bg-red-50"
           >
             <IconLogout className="h-5 w-5" />
             Déconnexion

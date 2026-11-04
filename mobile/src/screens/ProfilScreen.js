@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
   bandeauTexte: { fontSize: 13, color: colors.warning, marginTop: 4 },
   carte: {
     backgroundColor: colors.card,
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,

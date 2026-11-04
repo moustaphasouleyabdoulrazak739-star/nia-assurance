@@ -397,13 +397,8 @@ export default function AccueilScreen({ navigation }) {
   );
 }
 
-const ombre = {
-  shadowColor: colors.text,
-  shadowOpacity: 0.06,
-  shadowRadius: 12,
-  shadowOffset: { width: 0, height: 4 },
-  elevation: 2,
-};
+// Cartes delimitees par une bordure fine, sans ombre.
+const bordure = { borderWidth: 1, borderColor: colors.border };
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
@@ -430,9 +425,7 @@ const styles = StyleSheet.create({
   entete: {
     backgroundColor: colors.accueilHeader,
     paddingHorizontal: 20,
-    paddingBottom: 60,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    paddingBottom: 20,
   },
   enteteLigne: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   logoFond: {
@@ -449,16 +442,16 @@ const styles = StyleSheet.create({
   nom: { color: '#fff', fontSize: 22, fontFamily: policesTitres.gras, flexShrink: 1 },
   sousTitre: { color: '#fff', fontSize: 13, opacity: 0.9, marginTop: 12 },
 
-  cartes: { flexDirection: 'row', gap: 8, marginTop: -40 },
+  cartes: { flexDirection: 'row', gap: 8, marginTop: 16 },
   carte: {
     flex: 1,
     minWidth: 0,
     minHeight: 96,
     backgroundColor: colors.card,
-    borderRadius: 16,
+    borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 10,
-    ...ombre,
+    ...bordure,
   },
   carteValeur: { fontSize: 22, fontWeight: '800', color: colors.text, marginTop: 6 },
   carteLibelle: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
@@ -478,7 +471,7 @@ const styles = StyleSheet.create({
   echeance: {
     marginTop: 14,
     backgroundColor: colors.primarySoft,
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.primaryLight,
     padding: 16,
@@ -515,10 +508,10 @@ const styles = StyleSheet.create({
     width: '48.5%',
     minHeight: 96,
     backgroundColor: colors.card,
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 14,
     justifyContent: 'space-between',
-    ...ombre,
+    ...bordure,
   },
   actionIcone: { height: 24, justifyContent: 'center' },
   actionLibelle: { fontSize: 14, fontWeight: '600', color: colors.text, marginTop: 10 },
@@ -532,7 +525,7 @@ const styles = StyleSheet.create({
   },
   lienTexte: { flex: 1, color: colors.accueilHeader, fontSize: 14, fontWeight: '700' },
 
-  bloc: { backgroundColor: colors.card, borderRadius: 16, paddingHorizontal: 14, ...ombre },
+  bloc: { backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 14, ...bordure },
   vide: { color: colors.textMuted, fontSize: 14, paddingVertical: 16, textAlign: 'center' },
   activite: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingVertical: 10 },
   activiteSeparee: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
@@ -545,7 +538,7 @@ const styles = StyleSheet.create({
   aide: {
     marginTop: 22,
     backgroundColor: colors.secondarySoft,
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',

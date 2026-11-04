@@ -152,14 +152,11 @@ const styles = StyleSheet.create({
   list: { padding: 16, paddingBottom: 32, flexGrow: 1 },
   card: {
     backgroundColor: colors.card,
-    borderRadius: 20,
+    borderRadius: 12,
     padding: 18,
     marginBottom: 14,
-    shadowColor: colors.text,
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   cardHeader: {
     flexDirection: 'row',

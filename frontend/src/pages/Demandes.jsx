@@ -218,7 +218,7 @@ function VueClient({ demandes, loading, error, onRefresh }) {
 
         <div className="space-y-3">
           {demandes.map((demande) => (
-            <div key={demande.id} className="rounded-xl border border-neutral-100 p-4">
+            <div key={demande.id} className="rounded-lg border border-neutral-100 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-3 flex-wrap">
@@ -336,8 +336,8 @@ function VueCompagnie({ demandes, loading, error, filtre, setFiltre, onRefresh }
           <button
             key={f}
             onClick={() => setFiltre(f)}
-            className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
-              filtre === f ? 'bg-primary-600 text-white' : 'bg-white text-neutral-600 shadow-card hover:bg-neutral-50'
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+              filtre === f ? 'bg-primary-600 text-white' : 'border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
             }`}
           >
             {FILTRE_LABELS[f]}
@@ -362,7 +362,7 @@ function VueCompagnie({ demandes, loading, error, filtre, setFiltre, onRefresh }
 
       <div className="grid gap-4">
         {demandes.map((demande) => (
-          <Card key={demande.id} hoverable>
+          <Card key={demande.id}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-1 flex-wrap">
@@ -389,12 +389,12 @@ function VueCompagnie({ demandes, loading, error, filtre, setFiltre, onRefresh }
 
       {selectedDemande && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 p-4">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-card-hover">
-            <div className="flex items-center justify-between rounded-t-2xl bg-primary-600 px-6 py-4">
-              <h3 className="text-lg font-bold text-white">Demande {selectedDemande.numero_demande}</h3>
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white shadow-overlay">
+            <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
+              <h3 className="text-lg font-bold text-neutral-800">Demande {selectedDemande.numero_demande}</h3>
               <button
                 onClick={closeDetail}
-                className="rounded-lg p-1 text-white/80 hover:bg-white/10 hover:text-white"
+                className="rounded-lg p-1 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
                 aria-label="Fermer"
               >
                 <IconClose className="h-5 w-5" />

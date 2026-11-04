@@ -4,7 +4,6 @@ import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import BackgroundPattern from "../components/ui/BackgroundPattern";
 import { Input } from "../components/ui/Input";
 import { IconMail, IconLock } from "../components/ui/icons";
 
@@ -102,10 +101,8 @@ export default function Register() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-neutral-50 flex items-center justify-center px-4 py-12">
-      <BackgroundPattern className="text-neutral-900/[0.02]" />
-
-      <div className="relative w-full max-w-lg">
+    <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-lg">
         <div className="text-center mb-10">
           <img
             src="/logo-nia.png"
@@ -116,7 +113,7 @@ export default function Register() {
           <p className="mt-1.5 text-sm text-neutral-500">Créer votre compte</p>
         </div>
 
-        <Card padding="lg" className="shadow-card-hover">
+        <Card padding="lg">
           {globalError && (
             <div className="mb-5 p-3 bg-red-50 rounded-lg text-red-600 text-sm">
               {globalError}
@@ -191,7 +188,7 @@ export default function Register() {
               type="submit"
               fullWidth
               loading={loading}
-              className="mt-2 shadow-lg shadow-primary-600/25 hover:shadow-xl hover:shadow-primary-700/30 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md"
+              className="mt-2"
             >
               {loading ? "Création du compte..." : "Créer mon compte"}
             </Button>

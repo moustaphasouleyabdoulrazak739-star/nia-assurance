@@ -139,13 +139,10 @@ const styles = StyleSheet.create({
   },
   form: {
     backgroundColor: colors.card,
-    borderRadius: 20,
+    borderRadius: 12,
     padding: 20,
-    shadowColor: colors.text,
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   label: {
     fontSize: 13,

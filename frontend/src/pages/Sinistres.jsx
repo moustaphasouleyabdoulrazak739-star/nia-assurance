@@ -221,7 +221,7 @@ const Sinistres = () => {
 
       <div className="grid gap-4">
         {sinistres.map(sinistre => (
-          <Card key={sinistre.id} hoverable>
+          <Card key={sinistre.id}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-2 flex-wrap">
@@ -290,13 +290,13 @@ const Sinistres = () => {
       {/* Modal déclaration (client) */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white shadow-card-hover">
+          <div className="w-full max-w-lg rounded-lg bg-white shadow-overlay">
 
-            <div className="flex items-center justify-between rounded-t-2xl bg-secondary-700 px-6 py-4">
-              <h3 className="text-lg font-bold text-white">Déclarer un sinistre</h3>
+            <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
+              <h3 className="text-lg font-bold text-neutral-800">Déclarer un sinistre</h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="rounded-lg p-1 text-white/80 hover:bg-white/10 hover:text-white"
+                className="rounded-lg p-1 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
                 aria-label="Fermer"
               >
                 <IconClose className="h-5 w-5" />
@@ -405,13 +405,13 @@ const Sinistres = () => {
       {/* Modal traitement (compagnie) */}
       {reviewTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white shadow-card-hover">
+          <div className="w-full max-w-lg rounded-lg bg-white shadow-overlay">
 
-            <div className="flex items-center justify-between rounded-t-2xl bg-primary-600 px-6 py-4">
-              <h3 className="text-lg font-bold text-white">Traiter le sinistre {reviewTarget.numero_sinistre}</h3>
+            <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
+              <h3 className="text-lg font-bold text-neutral-800">Traiter le sinistre {reviewTarget.numero_sinistre}</h3>
               <button
                 onClick={() => setReviewTarget(null)}
-                className="rounded-lg p-1 text-white/80 hover:bg-white/10 hover:text-white"
+                className="rounded-lg p-1 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
                 aria-label="Fermer"
               >
                 <IconClose className="h-5 w-5" />

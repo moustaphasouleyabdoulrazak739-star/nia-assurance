@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   intro: { fontSize: 13, color: colors.textMuted, marginBottom: 14 },
   carte: {
     backgroundColor: colors.card,
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,

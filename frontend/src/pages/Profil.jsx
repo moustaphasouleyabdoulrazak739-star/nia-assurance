@@ -251,7 +251,7 @@ const Profil = () => {
                   )}
                 </div>
                 <div>
-                  <label className="inline-block cursor-pointer rounded-xl bg-primary-600 px-4 py-2.5 font-medium text-white transition hover:bg-primary-700">
+                  <label className="inline-block cursor-pointer rounded-lg bg-primary-600 px-4 py-2.5 font-medium text-white transition hover:bg-primary-700">
                     Changer la photo
                     <input
                       type="file"

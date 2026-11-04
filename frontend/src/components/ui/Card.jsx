@@ -7,28 +7,26 @@ const PADDINGS = {
   lg: 'p-8',
 };
 
-const ACCENTS = {
-  primary: 'border-l-4 border-primary-600',
-  secondary: 'border-l-4 border-secondary-700',
-  none: '',
-};
+// Une couleur de bordure passée par className (ex. border-red-100 sur une
+// carte d'alerte) remplace la bordure neutre au lieu d'entrer en conflit.
+const COULEUR_BORDURE = /(^|\s)border-[a-z]+-\d{2,3}(\s|$)/;
 
 /**
- * Carte de contenu — fond blanc, ombre douce, pas de bordure dure.
- * accent: applique un liseré de couleur de marque à gauche (à utiliser avec parcimonie).
+ * Carte de contenu : fond blanc, bordure fine, sans ombre.
+ * hoverable : uniquement pour une carte cliquable (bordure plus marquée au survol).
  */
 const Card = forwardRef(function Card(
-  { as: Tag = 'div', padding = 'md', accent = 'none', hoverable = false, className = '', children, ...props },
+  { as: Tag = 'div', padding = 'md', hoverable = false, className = '', children, ...props },
   ref
 ) {
   return (
     <Tag
       ref={ref}
       className={[
-        'bg-white rounded-2xl shadow-card',
-        hoverable ? 'transition-shadow duration-200 hover:shadow-card-hover' : '',
+        'bg-white rounded-lg border',
+        COULEUR_BORDURE.test(className) ? '' : 'border-neutral-200',
+        hoverable ? 'transition-colors duration-150 hover:border-neutral-400' : '',
         PADDINGS[padding],
-        ACCENTS[accent],
         className,
       ].join(' ')}
       {...props}

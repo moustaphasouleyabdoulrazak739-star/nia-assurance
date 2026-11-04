@@ -43,7 +43,7 @@ const Button = forwardRef(function Button(
       type={type}
       disabled={disabled || loading}
       className={[
-        'inline-flex items-center justify-center rounded-xl font-semibold',
+        'inline-flex items-center justify-center rounded-lg font-semibold',
         'transition-[color,background-color,border-color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-4',
         'disabled:cursor-not-allowed',
         VARIANTS[variant],
