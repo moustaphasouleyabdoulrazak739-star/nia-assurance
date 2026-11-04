@@ -160,12 +160,12 @@ const styles = StyleSheet.create({
   retryButtonText: { color: colors.primary, fontSize: 13, fontWeight: '700' },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', marginBottom: 16 },
   emptyButton: {
-    backgroundColor: colors.secondarySoft,
+    backgroundColor: colors.primarySoft,
     borderRadius: 12,
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
-  emptyButtonText: { color: colors.secondary, fontSize: 14, fontWeight: '700' },
+  emptyButtonText: { color: colors.primary, fontSize: 14, fontWeight: '700' },
   list: { padding: 16, paddingBottom: 32, flexGrow: 1 },
   card: {
     backgroundColor: colors.card,
@@ -198,10 +198,10 @@ const styles = StyleSheet.create({
   montantLabel: { fontSize: 11, color: colors.textLight, marginTop: 1 },
   commentaireBox: {
     marginTop: 10,
-    backgroundColor: colors.secondarySoft,
+    backgroundColor: colors.neutralSoft,
     borderRadius: 10,
     padding: 10,
   },
-  commentaireLabel: { fontSize: 11, fontWeight: '700', color: colors.secondary },
-  commentaireTexte: { fontSize: 13, color: colors.secondary, marginTop: 2 },
+  commentaireLabel: { fontSize: 11, fontWeight: '700', color: colors.textMuted },
+  commentaireTexte: { fontSize: 13, color: colors.text, marginTop: 2 },
 });

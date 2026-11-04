@@ -267,7 +267,7 @@ const Contrats = () => {
                     <button
                       onClick={() => handleDownloadAttestation(contrat)}
                       disabled={attestationEnCoursId === contrat.id}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:border-primary-300 hover:text-primary-700 disabled:opacity-50"
                     >
                       <IconDownload className="h-3.5 w-3.5" />
                       {attestationEnCoursId === contrat.id ? 'Génération...' : "Télécharger l'attestation"}
@@ -277,7 +277,7 @@ const Contrats = () => {
                     <button
                       onClick={() => handleDownloadDocument(contrat)}
                       disabled={documentEnCoursId === contrat.id}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:border-primary-300 hover:text-primary-700 disabled:opacity-50"
                     >
                       <IconDownload className="h-3.5 w-3.5" />
                       {documentEnCoursId === contrat.id ? 'Téléchargement...' : 'Télécharger le document'}

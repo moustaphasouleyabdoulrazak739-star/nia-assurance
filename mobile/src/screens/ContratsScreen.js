@@ -99,7 +99,7 @@ export default function ContratsScreen() {
             activeOpacity={0.8}
           >
             {enCoursDeTelechargement ? (
-              <ActivityIndicator color={colors.secondary} size="small" />
+              <ActivityIndicator color={colors.primary} size="small" />
             ) : (
               <Text style={styles.downloadButtonText}>{"Télécharger l'attestation"}</Text>
             )}
@@ -200,11 +200,11 @@ const styles = StyleSheet.create({
   },
   downloadButton: {
     marginTop: 14,
-    backgroundColor: colors.secondarySoft,
+    backgroundColor: colors.primarySoft,
     borderRadius: 12,
     paddingVertical: 10,
     alignItems: 'center',
   },
   downloadButtonDisabled: { opacity: 0.7 },
-  downloadButtonText: { color: colors.secondary, fontSize: 13, fontWeight: '700' },
+  downloadButtonText: { color: colors.primary, fontSize: 13, fontWeight: '700' },
 });

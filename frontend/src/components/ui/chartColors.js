@@ -3,7 +3,7 @@
 // de la librairie. Centralisé ici comme statusVariants.js pour les badges.
 
 export const BRAND = {
-  orange: '#DF5105', // primary-600 (couleur exacte du logo)
+  orange: '#C44704', // primary-600, orange de marque
   orangeLight: '#F18850', // primary-400
   green: '#027901', // secondary-700 (couleur exacte du logo)
   greenLight: '#4BCF4A', // secondary-400

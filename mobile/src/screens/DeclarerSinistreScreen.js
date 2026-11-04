@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   fieldError: { color: colors.danger, fontSize: 12, marginTop: 4 },
   submit: {
     marginTop: 24,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',

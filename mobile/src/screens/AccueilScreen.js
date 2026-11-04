@@ -133,7 +133,7 @@ export default function AccueilScreen({ navigation }) {
     return (
       <View style={styles.centered}>
         {statutBar}
-        <ActivityIndicator size="large" color={colors.accueilHeader} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -145,7 +145,7 @@ export default function AccueilScreen({ navigation }) {
         <Text style={styles.erreurTexte}>{donnees.erreur}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={reessayer} activeOpacity={0.8} disabled={loading}>
           {loading ? (
-            <ActivityIndicator color={colors.accueilHeader} />
+            <ActivityIndicator color={colors.primary} />
           ) : (
             <Text style={styles.retryButtonText}>Réessayer</Text>
           )}
@@ -228,7 +228,7 @@ export default function AccueilScreen({ navigation }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[colors.accueilHeader]}
+            colors={[colors.primary]}
             tintColor="#fff"
             progressViewOffset={insets.top}
           />
@@ -258,7 +258,7 @@ export default function AccueilScreen({ navigation }) {
               accessibilityRole="button"
               accessibilityLabel={`${carte.libelle} : ${valeurCarte(carte.valeur)}`}
             >
-              <Ionicons name={carte.icone} size={20} color={colors.accueilHeader} />
+              <Ionicons name={carte.icone} size={20} color={colors.primary} />
               <Text style={styles.carteValeur} numberOfLines={1}>
                 {valeurCarte(carte.valeur)}
               </Text>
@@ -283,7 +283,7 @@ export default function AccueilScreen({ navigation }) {
         {echeances.map(({ contrat, jours, paiementEnAttente }) => (
           <View key={contrat.id} style={[styles.echeance, styles.marges]}>
             <View style={styles.echeanceTete}>
-              <Ionicons name="alarm-outline" size={22} color={colors.accueilHeader} />
+              <Ionicons name="alarm-outline" size={22} color={colors.primary} />
               <Text style={styles.echeanceTitre} numberOfLines={1}>
                 {titreEcheance(jours)}
               </Text>
@@ -323,7 +323,7 @@ export default function AccueilScreen({ navigation }) {
               accessibilityRole="button"
             >
               <View style={styles.actionIcone}>
-                <Ionicons name={action.icone} size={24} color={colors.accueilHeader} />
+                <Ionicons name={action.icone} size={24} color={colors.primary} />
               </View>
               <Text style={styles.actionLibelle} numberOfLines={2}>
                 {action.libelle}
@@ -340,7 +340,7 @@ export default function AccueilScreen({ navigation }) {
           <Text style={styles.lienTexte} numberOfLines={1}>
             Suivre mes demandes de contrat
           </Text>
-          <Ionicons name="chevron-forward" size={18} color={colors.accueilHeader} />
+          <Ionicons name="chevron-forward" size={18} color={colors.primary} />
         </TouchableOpacity>
 
         <Text style={[styles.sectionTitre, styles.marges]}>Activité récente</Text>
@@ -359,7 +359,7 @@ export default function AccueilScreen({ navigation }) {
                 accessibilityRole="button"
               >
                 <View style={styles.activiteIcone}>
-                  <Ionicons name={ICONES_ACTIVITE[activite.type]} size={20} color={colors.accueilHeader} />
+                  <Ionicons name={ICONES_ACTIVITE[activite.type]} size={20} color={colors.primary} />
                 </View>
                 <View style={styles.activiteTextes}>
                   <Text style={styles.activiteTitre} numberOfLines={1}>
@@ -417,10 +417,10 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryButtonText: { color: colors.accueilHeader, fontSize: 13, fontWeight: '700' },
+  retryButtonText: { color: colors.primary, fontSize: 13, fontWeight: '700' },
 
   entete: {
-    backgroundColor: colors.accueilHeader,
+    backgroundColor: colors.primary,
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
@@ -473,14 +473,14 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   echeanceTete: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  echeanceTitre: { flex: 1, fontSize: 16, fontWeight: '700', color: colors.accueilHeader },
+  echeanceTitre: { flex: 1, fontSize: 16, fontWeight: '700', color: colors.primary },
   echeanceDetail: { fontSize: 14, color: colors.text, marginTop: 6 },
   echeanceDate: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   boutonPrime: {
     marginTop: 12,
     minHeight: 48,
     borderRadius: 12,
-    backgroundColor: colors.accueilHeader,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 8,
   },
-  lienTexte: { flex: 1, color: colors.accueilHeader, fontSize: 14, fontWeight: '700' },
+  lienTexte: { flex: 1, color: colors.primary, fontSize: 14, fontWeight: '700' },
 
   bloc: { backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 14, ...bordure },
   vide: { color: colors.textMuted, fontSize: 14, paddingVertical: 16, textAlign: 'center' },
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
 
   aide: {
     marginTop: 22,
-    backgroundColor: colors.secondarySoft,
+    backgroundColor: colors.neutralSoft,
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   aideTextes: { flex: 1, minWidth: 0 },
-  aideTitre: { fontSize: 16, fontWeight: '700', color: colors.secondary },
+  aideTitre: { fontSize: 16, fontWeight: '700', color: colors.text },
   aideTexte: { fontSize: 13, color: colors.text, marginTop: 2 },
   aideBouton: {
     flexDirection: 'row',
@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: 16,
     borderRadius: 12,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.primary,
   },
   aideBoutonTexte: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });

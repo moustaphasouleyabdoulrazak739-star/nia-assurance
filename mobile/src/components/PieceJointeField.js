@@ -75,11 +75,11 @@ const styles = StyleSheet.create({
   source: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: colors.secondarySoft,
+    backgroundColor: colors.primarySoft,
     borderRadius: 10,
     paddingVertical: 9,
   },
   sourceDisabled: { opacity: 0.5 },
-  sourceText: { color: colors.secondary, fontSize: 13, fontWeight: '700' },
+  sourceText: { color: colors.primary, fontSize: 13, fontWeight: '700' },
   errorText: { color: colors.danger, fontSize: 12, marginTop: 4 },
 });

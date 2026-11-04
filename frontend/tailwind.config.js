@@ -14,20 +14,23 @@ export default {
         display: ['Syne', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
       colors: {
-        // Orange extrait du logo NIA (coquille superieure) — #DF5105
+        // Orange de marque NIA : #C44704 (600). Seul orange de l'interface :
+        // marque et actions. Contraste avec le texte blanc d'environ 4,9:1
+        // (niveau AA), contre 3,9:1 pour l'ancien #DF5105.
         primary: {
-          50: '#FEF5F1',
-          100: '#FCECE3',
-          200: '#F8D6C4',
-          300: '#F3B391',
-          400: '#F18850',
-          500: '#F3661B',
-          600: '#DF5105', // couleur exacte du logo
-          700: '#B54408',
-          800: '#89370B',
-          900: '#59270D',
+          50: '#FDF4EF',
+          100: '#FBE5D8',
+          200: '#F6C8AE',
+          300: '#EFA27A',
+          400: '#E5753F',
+          500: '#D65A14',
+          600: '#C44704',
+          700: '#A33B05',
+          800: '#7F2F08',
+          900: '#59240B',
         },
-        // Vert extrait du logo NIA (coquille inferieure) — #027901
+        // Vert du logo : reserve au sens « réussi » (statut actif ou validé,
+        // message de confirmation, indemnité), jamais pour une action.
         secondary: {
           50: '#F1F9F1',
           100: '#DEF2DE',

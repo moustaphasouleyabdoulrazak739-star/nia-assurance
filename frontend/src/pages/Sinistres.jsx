@@ -32,7 +32,7 @@ function SinistreTimeline({ statut }) {
           ? 'bg-neutral-100 text-neutral-400'
           : i === 2 && estRejete
             ? 'bg-red-500 text-white'
-            : 'bg-secondary-600 text-white';
+            : 'bg-primary-600 text-white';
         return (
           <div key={etape} className="flex flex-1 items-center last:flex-none">
             <div className="flex items-center gap-2">
@@ -44,7 +44,7 @@ function SinistreTimeline({ statut }) {
               </span>
             </div>
             {i < ETAPES_SINISTRE.length - 1 && (
-              <div className={`mx-2 h-0.5 flex-1 ${i < etapeActuelle ? 'bg-secondary-600' : 'bg-neutral-100'}`} />
+              <div className={`mx-2 h-0.5 flex-1 ${i < etapeActuelle ? 'bg-primary-600' : 'bg-neutral-100'}`} />
             )}
           </div>
         );
@@ -190,7 +190,7 @@ const Sinistres = () => {
   return (
     <DashboardLayout
       title={isAdmin ? 'Sinistres' : 'Mes sinistres'}
-      actions={<Button variant="secondary" onClick={() => setShowModal(true)}>Déclarer un sinistre</Button>}
+      actions={<Button onClick={() => setShowModal(true)}>Déclarer un sinistre</Button>}
     >
       {loading && (
         <div className="py-12 text-center text-neutral-400">Chargement...</div>
@@ -212,7 +212,7 @@ const Sinistres = () => {
         <Card padding="lg" className="text-center text-neutral-400">
           <IconInbox className="mx-auto mb-3 h-10 w-10 text-neutral-300" />
           <p className="mb-4">Aucun sinistre déclaré.</p>
-          <Button variant="secondary" onClick={() => setShowModal(true)}>
+          <Button onClick={() => setShowModal(true)}>
             Déclarer mon premier sinistre
           </Button>
         </Card>
@@ -245,7 +245,7 @@ const Sinistres = () => {
                   <p className="text-neutral-500 text-sm mt-2">{sinistre.description}</p>
                 )}
                 {sinistre.commentaire && (
-                  <p className="text-secondary-700 text-sm mt-2 italic">Note compagnie : {sinistre.commentaire}</p>
+                  <p className="text-neutral-600 text-sm mt-2 italic">Note compagnie : {sinistre.commentaire}</p>
                 )}
               </div>
               <div className="text-right">
@@ -265,7 +265,7 @@ const Sinistres = () => {
                   <button
                     onClick={() => handleDownloadDocument(sinistre)}
                     disabled={documentEnCoursId === sinistre.id}
-                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100 disabled:opacity-50"
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:border-primary-300 hover:text-primary-700 disabled:opacity-50"
                   >
                     <IconDownload className="h-3.5 w-3.5" />
                     {documentEnCoursId === sinistre.id ? 'Téléchargement...' : 'Télécharger le document'}
@@ -391,7 +391,7 @@ const Sinistres = () => {
                 >
                   Annuler
                 </Button>
-                <Button type="submit" variant="secondary" fullWidth loading={formLoading}>
+                <Button type="submit" fullWidth loading={formLoading}>
                   {formLoading ? 'Envoi...' : 'Déclarer'}
                 </Button>
               </div>

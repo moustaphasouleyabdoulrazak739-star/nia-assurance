@@ -105,7 +105,7 @@ export default function DemandesScreen({ navigation }) {
     <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       {loading && (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.secondary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       )}
 
@@ -128,8 +128,8 @@ export default function DemandesScreen({ navigation }) {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[colors.secondary]}
-              tintColor={colors.secondary}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
             />
           }
           ListEmptyComponent={
@@ -156,20 +156,20 @@ const styles = StyleSheet.create({
   error: { color: colors.danger, fontSize: 14, textAlign: 'center' },
   retryButton: {
     marginTop: 14,
-    backgroundColor: colors.secondarySoft,
+    backgroundColor: colors.primarySoft,
     borderRadius: 12,
     paddingHorizontal: 18,
     paddingVertical: 10,
   },
-  retryButtonText: { color: colors.secondary, fontSize: 13, fontWeight: '700' },
+  retryButtonText: { color: colors.primary, fontSize: 13, fontWeight: '700' },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', marginBottom: 16 },
   emptyButton: {
-    backgroundColor: colors.secondarySoft,
+    backgroundColor: colors.primarySoft,
     borderRadius: 12,
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
-  emptyButtonText: { color: colors.secondary, fontSize: 14, fontWeight: '700' },
+  emptyButtonText: { color: colors.primary, fontSize: 14, fontWeight: '700' },
   list: { padding: 16, paddingBottom: 32, flexGrow: 1 },
   card: {
     backgroundColor: colors.card,
@@ -192,11 +192,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderColor: colors.secondary,
+    borderColor: colors.primary,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
-  corrigerButtonText: { color: colors.secondary, fontSize: 13, fontWeight: '700' },
+  corrigerButtonText: { color: colors.primary, fontSize: 13, fontWeight: '700' },
   dejaRenvoyee: { marginTop: 10, fontSize: 12, color: colors.textMuted, fontStyle: 'italic' },
 });

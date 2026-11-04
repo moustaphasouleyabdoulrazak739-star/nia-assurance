@@ -3,12 +3,16 @@
 // navigation : ces couleurs sont appliquées explicitement dès l'écran de login.
 
 export const colors = {
-  primary: '#DF5105', // orange du logo (coquille supérieure)
-  primaryLight: '#F18850',
-  primaryDark: '#B54408',
-  primarySoft: '#FCECE3',
+  // Seul orange de l'app (marque, en-têtes, actions), mêmes valeurs que
+  // primary-600/400/700/100 de frontend/tailwind.config.js.
+  primary: '#C44704',
+  primaryLight: '#E5753F',
+  primaryDark: '#A33B05',
+  primarySoft: '#FBE5D8',
 
-  secondary: '#027901', // vert du logo (coquille inférieure)
+  // Vert du logo : réservé au sens « réussi » (badge Actif/Validé,
+  // confirmation, indemnité), jamais pour une action.
+  secondary: '#027901',
   secondaryLight: '#4BCF4A',
   secondarySoft: '#DEF2DE',
 
@@ -31,8 +35,5 @@ export const colors = {
   neutral: '#57534E', // neutral-600
   neutralSoft: '#F5F5F4', // neutral-100
 
-  // Accueil et barre d'onglets (maquette validée) : orange plus soutenu que
-  // `primary` pour garder un bon contraste avec le texte blanc de l'en-tête.
-  accueilHeader: '#C44704',
   tabInactive: '#5B524C',
 };

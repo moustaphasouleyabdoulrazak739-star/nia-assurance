@@ -2,6 +2,7 @@ import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet } from 'rea
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { StatusBar } from 'expo-status-bar';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuth } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
@@ -78,7 +79,7 @@ function AccueilPile() {
         name="Demandes"
         component={DemandesScreen}
         options={({ navigation }) => ({
-          ...entete('Mes demandes de contrat', colors.secondary),
+          ...entete('Mes demandes de contrat'),
           headerRight: () => (
             <BoutonAjouter label="Nouvelle demande" onPress={() => navigation.navigate('NouvelleDemande')} />
           ),
@@ -87,7 +88,7 @@ function AccueilPile() {
       <AccueilStack.Screen
         name="NouvelleDemande"
         component={NouvelleDemandeScreen}
-        options={entete('Demander un contrat', colors.secondary)}
+        options={entete('Demander un contrat')}
       />
     </AccueilStack.Navigator>
   );
@@ -108,7 +109,7 @@ function SinistresPile() {
         name="Sinistres"
         component={SinistresScreen}
         options={({ navigation }) => ({
-          ...entete('Mes sinistres', colors.secondary),
+          ...entete('Mes sinistres'),
           headerRight: () => (
             <BoutonAjouter label="Déclarer un sinistre" onPress={() => navigation.navigate('DeclarerSinistre')} />
           ),
@@ -117,7 +118,7 @@ function SinistresPile() {
       <SinistresStack.Screen
         name="DeclarerSinistre"
         component={DeclarerSinistreScreen}
-        options={entete('Déclarer un sinistre', colors.secondary)}
+        options={entete('Déclarer un sinistre')}
       />
     </SinistresStack.Navigator>
   );
@@ -179,7 +180,7 @@ function optionsOnglets({ route }) {
   const icone = ICONES_ONGLETS[route.name];
   return {
     headerShown: false,
-    tabBarActiveTintColor: colors.accueilHeader,
+    tabBarActiveTintColor: colors.primary,
     tabBarInactiveTintColor: colors.tabInactive,
     tabBarLabelStyle: styles.tabLabel,
     tabBarIcon: ({ focused, color, size }) => (
@@ -193,13 +194,17 @@ function optionsOnglets({ route }) {
 // zone sûre du bas (barre de gestes iOS, barre de navigation Android).
 function OngletsClient() {
   return (
-    <Tab.Navigator screenOptions={optionsOnglets}>
-      <Tab.Screen name="AccueilTab" component={AccueilPile} options={{ title: 'Accueil' }} />
-      <Tab.Screen name="ContratsTab" component={ContratsPile} options={{ title: 'Contrats' }} />
-      <Tab.Screen name="SinistresTab" component={SinistresPile} options={{ title: 'Sinistres' }} />
-      <Tab.Screen name="PaiementsTab" component={PaiementsPile} options={{ title: 'Paiements' }} />
-      <Tab.Screen name="ProfilTab" component={ProfilPile} options={{ title: 'Profil' }} />
-    </Tab.Navigator>
+    <>
+      {/* En-têtes orange : icônes de la barre d'état en clair. */}
+      <StatusBar style="light" />
+      <Tab.Navigator screenOptions={optionsOnglets}>
+        <Tab.Screen name="AccueilTab" component={AccueilPile} options={{ title: 'Accueil' }} />
+        <Tab.Screen name="ContratsTab" component={ContratsPile} options={{ title: 'Contrats' }} />
+        <Tab.Screen name="SinistresTab" component={SinistresPile} options={{ title: 'Sinistres' }} />
+        <Tab.Screen name="PaiementsTab" component={PaiementsPile} options={{ title: 'Paiements' }} />
+        <Tab.Screen name="ProfilTab" component={ProfilPile} options={{ title: 'Profil' }} />
+      </Tab.Navigator>
+    </>
   );
 }
 

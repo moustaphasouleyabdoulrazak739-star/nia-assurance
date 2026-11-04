@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pastilleActive: { backgroundColor: colors.secondary },
+  pastilleActive: { backgroundColor: colors.primary },
   pastilleRejetee: { backgroundColor: colors.danger },
   pastilleInactive: { backgroundColor: colors.neutralSoft },
   pastilleTexte: { fontSize: 10, fontWeight: '700' },
@@ -79,6 +79,6 @@ const styles = StyleSheet.create({
   libelleActif: { color: colors.text },
   libelleInactif: { color: colors.textLight },
   trait: { flex: 1, height: 2, marginHorizontal: 6, borderRadius: 1 },
-  traitActif: { backgroundColor: colors.secondary },
+  traitActif: { backgroundColor: colors.primary },
   traitInactif: { backgroundColor: colors.neutralSoft },
 });

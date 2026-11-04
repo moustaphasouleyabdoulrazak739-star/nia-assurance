@@ -260,7 +260,7 @@ export default function ProfilScreen({ navigation }) {
   if (loading) {
     return (
       <SafeAreaView style={[styles.safe, styles.centre]} edges={['bottom', 'left', 'right']}>
-        <ActivityIndicator size="large" color={colors.secondary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
@@ -304,8 +304,8 @@ export default function ProfilScreen({ navigation }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[colors.secondary]}
-            tintColor={colors.secondary}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
       >
@@ -487,12 +487,12 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.secondarySoft,
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
   },
-  avatarTexte: { fontSize: 20, fontWeight: '700', color: colors.secondary },
+  avatarTexte: { fontSize: 20, fontWeight: '700', color: colors.primary },
   enteteTextes: { flex: 1, minWidth: 0 },
   nom: { fontSize: 18, fontFamily: policesTitres.gras, color: colors.text },
   email: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
   succesTexte: { color: colors.secondary, fontSize: 13, fontWeight: '600' },
   boutonPrincipal: {
     minHeight: 48,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
@@ -546,14 +546,14 @@ const styles = StyleSheet.create({
   boutonSecondaire: {
     minHeight: 48,
     marginTop: 14,
-    backgroundColor: colors.secondarySoft,
+    backgroundColor: colors.primarySoft,
     borderRadius: 12,
     paddingHorizontal: 18,
     paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  boutonSecondaireTexte: { color: colors.secondary, fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  boutonSecondaireTexte: { color: colors.primary, fontSize: 14, fontWeight: '700', textAlign: 'center' },
   boutonDeconnexion: {
     minHeight: 48,
     marginTop: 14,

@@ -126,7 +126,7 @@ export default function PaiementDetailScreen({ route }) {
               activeOpacity={0.8}
             >
               {telechargementEnCours ? (
-                <ActivityIndicator color={colors.secondary} size="small" />
+                <ActivityIndicator color={colors.primary} size="small" />
               ) : (
                 <Text style={styles.downloadButtonText}>Télécharger le reçu</Text>
               )}
@@ -166,13 +166,13 @@ const styles = StyleSheet.create({
   ligneLabel: { fontSize: 12, color: colors.textMuted },
   ligneValeur: { fontSize: 15, color: colors.text, marginTop: 2 },
   downloadButton: {
-    backgroundColor: colors.secondarySoft,
+    backgroundColor: colors.primarySoft,
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',
   },
   downloadButtonDisabled: { opacity: 0.7 },
-  downloadButtonText: { color: colors.secondary, fontSize: 14, fontWeight: '700' },
+  downloadButtonText: { color: colors.primary, fontSize: 14, fontWeight: '700' },
   downloadError: { color: colors.danger, fontSize: 13, marginTop: 10, paddingHorizontal: 4 },
   info: {
     color: colors.textMuted,

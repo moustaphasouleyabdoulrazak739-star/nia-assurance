@@ -431,7 +431,7 @@ function VueCompagnie({ demandes, loading, error, filtre, setFiltre, onRefresh }
                         key={doc.id}
                         onClick={() => handleDownloadDocument(doc)}
                         disabled={documentEnCoursId === doc.id}
-                        className="flex w-full items-center gap-2 rounded-lg bg-secondary-50 px-3 py-2 text-sm font-medium text-secondary-700 hover:bg-secondary-100 disabled:opacity-50"
+                        className="flex w-full items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:border-primary-300 hover:text-primary-700 disabled:opacity-50"
                       >
                         <IconDownload className="h-4 w-4" />
                         {documentEnCoursId === doc.id ? 'Téléchargement...' : doc.type_document_display}

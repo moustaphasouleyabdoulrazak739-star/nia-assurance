@@ -280,7 +280,7 @@ export default function NouvelleDemandeScreen({ navigation, route }) {
                 activeOpacity={0.8}
               >
                 {envoiEnCours ? (
-                  <ActivityIndicator color={colors.secondary} />
+                  <ActivityIndicator color={colors.primary} />
                 ) : (
                   <Text style={styles.retryButtonText}>Réessayer</Text>
                 )}
@@ -341,10 +341,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 16,
   },
-  retryButtonText: { color: colors.secondary, fontSize: 13, fontWeight: '700' },
+  retryButtonText: { color: colors.primary, fontSize: 13, fontWeight: '700' },
   submit: {
     marginTop: 24,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
