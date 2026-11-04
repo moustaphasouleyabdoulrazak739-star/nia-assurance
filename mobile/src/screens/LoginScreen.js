@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../theme/colors';
+import { policesTitres } from '../theme/typographie';
 
 // Message distinct pour un 429 (throttling backend, cf. users/views.py) :
 // ne doit jamais se confondre avec "mot de passe incorrect", sous peine de
@@ -125,7 +126,7 @@ const styles = StyleSheet.create({
   logo: { width: 130, height: 100, alignSelf: 'center', marginBottom: 8 },
   title: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: policesTitres.gras,
     color: colors.text,
     textAlign: 'center',
   },

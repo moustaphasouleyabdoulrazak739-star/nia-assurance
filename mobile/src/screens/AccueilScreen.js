@@ -23,6 +23,7 @@ import { fetchSinistres } from '../api/sinistres';
 import { fetchDemandes } from '../api/demandes';
 import { TELEPHONE_NIA } from '../config/contact';
 import { colors } from '../theme/colors';
+import { policesTitres } from '../theme/typographie';
 import { formaterDate } from '../utils/format';
 import { messageErreurChargement } from '../utils/reseau';
 import {
@@ -445,7 +446,7 @@ const styles = StyleSheet.create({
   logo: { width: 46, height: 46 },
   enteteTextes: { flex: 1, minWidth: 0 },
   bonjour: { color: '#fff', fontSize: 15, opacity: 0.9 },
-  nom: { color: '#fff', fontSize: 22, fontWeight: '700', flexShrink: 1 },
+  nom: { color: '#fff', fontSize: 22, fontFamily: policesTitres.gras, flexShrink: 1 },
   sousTitre: { color: '#fff', fontSize: 13, opacity: 0.9, marginTop: 12 },
 
   cartes: { flexDirection: 'row', gap: 8, marginTop: -40 },
@@ -508,7 +509,7 @@ const styles = StyleSheet.create({
   },
   enAttenteTexte: { flex: 1, color: colors.warning, fontSize: 14, fontWeight: '600' },
 
-  sectionTitre: { fontSize: 17, fontWeight: '700', color: colors.text, marginTop: 22, marginBottom: 10 },
+  sectionTitre: { fontSize: 16, fontWeight: '700', color: colors.text, marginTop: 22, marginBottom: 10 },
   grille: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
   action: {
     width: '48.5%',

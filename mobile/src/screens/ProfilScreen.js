@@ -15,6 +15,7 @@ import DateField from '../components/DateField';
 import SelectField from '../components/SelectField';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../theme/colors';
+import { policesTitres } from '../theme/typographie';
 import { chargerProfil, deconnecterServeur, enregistrerProfil } from '../api/profil';
 import { estErreurReseau, messageErreurChargement } from '../utils/reseau';
 import { formaterDate } from '../utils/format';
@@ -493,7 +494,7 @@ const styles = StyleSheet.create({
   },
   avatarTexte: { fontSize: 20, fontWeight: '700', color: colors.secondary },
   enteteTextes: { flex: 1, minWidth: 0 },
-  nom: { fontSize: 18, fontWeight: '700', color: colors.text },
+  nom: { fontSize: 18, fontFamily: policesTitres.gras, color: colors.text },
   email: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   membre: { fontSize: 12, color: colors.textLight, marginTop: 2 },
   bandeauIncomplet: { backgroundColor: colors.warningSoft, borderRadius: 12, padding: 12, marginBottom: 16 },
@@ -507,7 +508,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  titreSection: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 8 },
+  titreSection: { fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 8 },
   ligneLecture: { marginTop: 8 },
   valeurLecture: { fontSize: 15, color: colors.textMuted },
   champ: { marginTop: 12 },

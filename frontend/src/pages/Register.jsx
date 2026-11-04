@@ -114,7 +114,7 @@ export default function Register() {
               className="h-16 w-16 object-contain"
             />
           </div>
-          <h1 className="text-2xl font-bold text-neutral-800">Nia Assurance</h1>
+          <h1 className="font-display text-2xl font-bold text-neutral-800">Nia Assurance</h1>
           <div className="mt-1.5 flex items-center justify-center gap-1.5 text-sm text-neutral-500">
             <IconCheckCircle className="h-4 w-4 text-secondary-600" />
             Créer votre compte

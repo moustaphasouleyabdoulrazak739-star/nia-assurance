@@ -6,6 +6,13 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        // Texte courant, montants, numéros, formulaires, boutons, badges.
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', '"Noto Sans"', 'sans-serif'],
+        // Titres de page et de connexion seulement : jamais sous 18 px ni
+        // pour des chiffres.
+        display: ['Syne', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+      },
       colors: {
         // Orange extrait du logo NIA (coquille superieure) — #DF5105
         primary: {

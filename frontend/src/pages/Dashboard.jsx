@@ -164,7 +164,7 @@ export default function Dashboard() {
           <div className="relative overflow-hidden rounded-2xl bg-primary-600 p-6 mb-6 text-white">
             <BackgroundPattern className="text-white/[0.08]" />
             <div className="relative">
-              <h2 className="text-xl font-bold mb-1">
+              <h2 className="font-display text-xl font-bold mb-1">
                 Bienvenue, {user?.prenom} 👋
               </h2>
               <p className="text-white/85 text-sm">
@@ -192,7 +192,7 @@ export default function Dashboard() {
 
           {/* Actions rapides */}
           <Card>
-            <h3 className="font-semibold text-neutral-800 mb-4">Actions rapides</h3>
+            <h3 className="font-bold text-neutral-800 mb-4">Actions rapides</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {quickActions.map(({ label, icon: Icon, to }) => (
                 <Card
@@ -216,7 +216,7 @@ export default function Dashboard() {
 
           {/* Dernière activité */}
           <Card className="mt-6">
-            <h3 className="font-semibold text-neutral-800 mb-2">Dernière activité</h3>
+            <h3 className="font-bold text-neutral-800 mb-2">Dernière activité</h3>
             <div className="space-y-1">
               <ActiviteRow
                 icon={IconAlertTriangle}

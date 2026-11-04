@@ -241,7 +241,7 @@ const Profil = () => {
 
             {/* Photo de profil */}
             <Card>
-              <h3 className="text-lg font-bold text-neutral-700 mb-4">Photo de profil</h3>
+              <h3 className="text-base font-bold text-neutral-800 mb-4">Photo de profil</h3>
               <div className="flex items-center gap-6">
                 <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-primary-100 bg-primary-50">
                   {photoPreview ? (
@@ -273,7 +273,7 @@ const Profil = () => {
 
             {/* Informations personnelles */}
             <Card>
-              <h3 className="text-lg font-bold text-neutral-700 mb-4">Informations personnelles</h3>
+              <h3 className="text-base font-bold text-neutral-800 mb-4">Informations personnelles</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                 <Input id="prenom" label="Prénom" value={user?.prenom || ''} readOnly className="bg-neutral-50 text-neutral-400" />
@@ -374,7 +374,7 @@ const Profil = () => {
 
           {/* Changer le mot de passe */}
           <Card as="form" onSubmit={handlePasswordSubmit}>
-            <h3 className="text-lg font-bold text-neutral-700 mb-1">Mot de passe</h3>
+            <h3 className="text-base font-bold text-neutral-800 mb-1">Mot de passe</h3>
             <p className="text-sm text-neutral-500 mb-4">
               Choisissez un mot de passe d'au moins 8 caractères.
             </p>

@@ -49,7 +49,7 @@ function ChartCard({ title, hint, vide, children }) {
   return (
     <Card className="flex flex-col">
       <div className="mb-4">
-        <h3 className="font-semibold text-neutral-800">{title}</h3>
+        <h3 className="font-bold text-neutral-800">{title}</h3>
         {hint && <p className="mt-0.5 text-xs text-neutral-400">{hint}</p>}
       </div>
       {vide ? (

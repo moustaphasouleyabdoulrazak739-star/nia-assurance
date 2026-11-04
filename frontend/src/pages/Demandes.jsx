@@ -144,7 +144,7 @@ function VueClient({ demandes, loading, error, onRefresh }) {
       subtitle="Envoyez une demande avec vos documents, la compagnie la traite ensuite"
     >
       <Card ref={formRef} className="mb-6">
-        <h3 className="font-semibold text-neutral-800 mb-1">
+        <h3 className="font-bold text-neutral-800 mb-1">
           {resoumettreId ? 'Corriger et renvoyer la demande' : 'Nouvelle demande'}
         </h3>
         <p className="text-sm text-neutral-500 mb-4">
@@ -204,7 +204,7 @@ function VueClient({ demandes, loading, error, onRefresh }) {
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-neutral-800 mb-4">Historique de mes demandes</h3>
+        <h3 className="font-bold text-neutral-800 mb-4">Historique de mes demandes</h3>
 
         {loading && <div className="py-8 text-center text-neutral-400">Chargement...</div>}
         {error && <p className="text-sm text-red-600">{error}</p>}

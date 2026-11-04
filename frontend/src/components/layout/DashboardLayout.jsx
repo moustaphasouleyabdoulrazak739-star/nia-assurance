@@ -55,7 +55,7 @@ export default function DashboardLayout({ title, subtitle, actions, children }) 
             {(title || actions) && (
               <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  {title && <h1 className="text-2xl font-bold text-neutral-800">{title}</h1>}
+                  {title && <h1 className="font-display text-2xl font-bold text-neutral-800">{title}</h1>}
                   {subtitle && <p className="mt-1 text-neutral-500">{subtitle}</p>}
                 </div>
                 {actions && <div className="flex flex-shrink-0 items-center gap-3">{actions}</div>}

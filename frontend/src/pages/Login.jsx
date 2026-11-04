@@ -65,7 +65,7 @@ const Login = () => {
         </div>
 
         <div className="relative z-10 text-white">
-          <h1 className="mb-3 text-3xl font-bold leading-snug drop-shadow-sm">
+          <h1 className="mb-3 font-display text-3xl font-bold leading-snug drop-shadow-sm">
             Votre partenaire de confiance, chaque jour.
           </h1>
           <p className="mb-10 max-w-sm text-base text-white/90 drop-shadow-sm">
@@ -108,7 +108,7 @@ const Login = () => {
             <span className="text-xl font-bold text-neutral-800">NIA ASSURANCE</span>
           </div>
 
-          <h2 className="text-3xl font-bold text-neutral-800 mb-2">Connexion</h2>
+          <h2 className="font-display text-3xl font-bold text-neutral-800 mb-2">Connexion</h2>
           <p className="text-neutral-500 mb-10">Bienvenue ! Connectez-vous à votre espace</p>
 
           {error && (

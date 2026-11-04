@@ -17,6 +17,7 @@ import NouvelleDemandeScreen from '../screens/NouvelleDemandeScreen';
 import ProfilScreen from '../screens/ProfilScreen';
 import ChangerMotDePasseScreen from '../screens/ChangerMotDePasseScreen';
 import { colors } from '../theme/colors';
+import { policesTitres } from '../theme/typographie';
 
 const RootStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -48,7 +49,7 @@ function entete(title, couleur = colors.primary) {
     title,
     headerStyle: { backgroundColor: couleur },
     headerTintColor: '#fff',
-    headerTitleStyle: { fontWeight: '700' },
+    headerTitleStyle: { fontFamily: policesTitres.gras, fontSize: 18 },
   };
 }
 
