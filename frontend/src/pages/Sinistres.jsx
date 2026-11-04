@@ -119,7 +119,7 @@ const Sinistres = () => {
     setFormSuccess('');
     try {
       await api.post('/sinistres/create/', form);
-      setFormSuccess('Sinistre déclaré avec succès !');
+      setFormSuccess('Sinistre déclaré.');
       setForm({
         contrat: '',
         type_sinistre: '',
@@ -190,7 +190,6 @@ const Sinistres = () => {
   return (
     <DashboardLayout
       title={isAdmin ? 'Sinistres' : 'Mes sinistres'}
-      subtitle={isAdmin ? 'Liste de tous les sinistres' : 'Vos déclarations de sinistres'}
       actions={<Button variant="secondary" onClick={() => setShowModal(true)}>Déclarer un sinistre</Button>}
     >
       {loading && (

@@ -227,7 +227,7 @@ export default function ProfilScreen({ navigation }) {
     setErreurs(champsErreur);
     const echec = generaux.length > 0 || Object.keys(champsErreur).length > 0;
     if (!echec) {
-      setSucces('Profil mis à jour avec succès.');
+      setSucces('Modifications enregistrées.');
       return;
     }
     const messages = [...new Set(generaux)];

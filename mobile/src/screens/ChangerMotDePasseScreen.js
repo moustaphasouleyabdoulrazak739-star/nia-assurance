@@ -57,9 +57,9 @@ export default function ChangerMotDePasseScreen({ navigation }) {
     setEnvoi(true);
     setErreurGenerale('');
     try {
-      const resultat = await changerMotDePasse(form.old_password, form.new_password);
+      await changerMotDePasse(form.old_password, form.new_password);
       setForm(VIDE);
-      Alert.alert('Mot de passe modifié', resultat?.message || 'Votre mot de passe a été modifié avec succès.', [
+      Alert.alert('Mot de passe modifié', 'Utilisez-le à votre prochaine connexion.', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (err) {

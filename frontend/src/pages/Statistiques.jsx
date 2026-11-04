@@ -115,7 +115,6 @@ const Statistiques = () => {
   return (
     <DashboardLayout
       title="Statistiques"
-      subtitle="Pilotage de l'activité — espace compagnie"
     >
       {loading && (
         <div className="py-12 text-center text-neutral-400">Chargement...</div>

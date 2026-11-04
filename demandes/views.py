@@ -83,7 +83,7 @@ class DemandeCreateView(generics.CreateAPIView):
         demande = serializer.save()
         return Response({
             'demande': DemandeContratSerializer(demande, context={'request': request}).data,
-            'message': 'Demande envoyée avec succès'
+            'message': 'Demande envoyée.'
         }, status=status.HTTP_201_CREATED)
 
 
@@ -112,7 +112,7 @@ class DemandeResoumettreView(generics.CreateAPIView):
 
             if ancienne.statut != 'REJETEE':
                 return Response({
-                    'error': 'Seule une demande rejetée peut être resoumise.'
+                    'error': 'Seule une demande rejetée peut être corrigée.'
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             if ancienne.resoumissions.exists():
@@ -125,7 +125,7 @@ class DemandeResoumettreView(generics.CreateAPIView):
             demande = serializer.save(demande_precedente=ancienne)
         return Response({
             'demande': DemandeContratSerializer(demande, context={'request': request}).data,
-            'message': 'Demande resoumise avec succès'
+            'message': 'Demande corrigée et renvoyée.'
         }, status=status.HTTP_201_CREATED)
 
 
@@ -174,7 +174,7 @@ class DemandeValiderView(APIView):
         return Response({
             'demande': DemandeContratSerializer(demande, context={'request': request}).data,
             'contrat': ContratSerializer(contrat).data,
-            'message': 'Demande validée, contrat créé avec succès'
+            'message': 'Demande validée, contrat créé.'
         }, status=status.HTTP_200_OK)
 
 

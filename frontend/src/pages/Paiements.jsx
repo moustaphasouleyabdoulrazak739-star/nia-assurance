@@ -110,7 +110,7 @@ const Paiements = () => {
     setErreursChamps({});
     try {
       await api.post('/paiements/create/', form);
-      setFormSuccess('Paiement effectué avec succès !');
+      setFormSuccess('Paiement enregistré, en attente de validation.');
       setForm({ contrat: '', montant: '', methode: '', reference: '' });
       fetchPaiements();
       setTimeout(() => {
@@ -182,7 +182,6 @@ const Paiements = () => {
   return (
     <DashboardLayout
       title={isAdmin ? 'Paiements' : 'Mes paiements'}
-      subtitle={isAdmin ? 'Liste de tous les paiements' : 'Historique de vos paiements'}
       actions={<Button onClick={openModal}>Effectuer un paiement</Button>}
     >
       {loading && (

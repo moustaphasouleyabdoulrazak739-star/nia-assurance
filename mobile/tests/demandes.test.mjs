@@ -139,7 +139,7 @@ test('extraireErreursDemande : erreurs de vue (profil incomplet, demande non rej
   const profil = extraireErreursDemande({ response: { status: 400, data: { error: 'Profil client introuvable.' } } });
   assert.deepEqual(profil, { champs: {}, general: 'Profil client introuvable.' });
   const nonRejetee = extraireErreursDemande({
-    response: { status: 400, data: { error: 'Seule une demande rejetée peut être resoumise.' } },
+    response: { status: 400, data: { error: 'Seule une demande rejetée peut être corrigée.' } },
   });
   assert.match(nonRejetee.general, /rejetée/);
   const detail = extraireErreursDemande({ response: { status: 403, data: { detail: 'Refusé.' } } });

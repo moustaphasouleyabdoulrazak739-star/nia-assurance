@@ -117,7 +117,6 @@ export default function Dashboard() {
   return (
     <DashboardLayout
       title={user?.prenom ? `Bienvenue, ${user.prenom}` : "Accueil"}
-      subtitle={isAdmin ? "Vue d'ensemble de l'espace compagnie" : "Vue d'ensemble de votre espace"}
     >
       {/* Bandeau échéance */}
       {echeanceTexte && (

@@ -246,9 +246,6 @@ export default function AccueilScreen({ navigation }) {
               </Text>
             </View>
           </View>
-          <Text style={styles.sousTitre} numberOfLines={2}>
-            Votre espace client NIA Assurance
-          </Text>
         </View>
 
         <View style={[styles.cartes, styles.marges]}>
@@ -384,7 +381,7 @@ export default function AccueilScreen({ navigation }) {
           <View style={[styles.aide, styles.marges]}>
             <View style={styles.aideTextes}>
               <Text style={styles.aideTitre}>Besoin d&apos;aide ?</Text>
-              <Text style={styles.aideTexte}>Notre service client vous répond.</Text>
+              <Text style={styles.aideTexte}>Service client : {TELEPHONE_NIA}</Text>
             </View>
             <TouchableOpacity style={styles.aideBouton} onPress={appeler} activeOpacity={0.85} accessibilityRole="button">
               <Ionicons name="call-outline" size={18} color="#fff" />
@@ -440,7 +437,6 @@ const styles = StyleSheet.create({
   enteteTextes: { flex: 1, minWidth: 0 },
   bonjour: { color: '#fff', fontSize: 15, opacity: 0.9 },
   nom: { color: '#fff', fontSize: 22, fontFamily: policesTitres.gras, flexShrink: 1 },
-  sousTitre: { color: '#fff', fontSize: 13, opacity: 0.9, marginTop: 12 },
 
   cartes: { flexDirection: 'row', gap: 8, marginTop: 16 },
   carte: {

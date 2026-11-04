@@ -145,10 +145,9 @@ export default function NouvelleDemandeScreen({ navigation, route }) {
     setErreurGenerale('');
     setEnvoiIncertain(false);
     try {
-      const resultat = demandeRejetee
-        ? await resoumettreDemande(demandeRejetee.id, typeAssurance, fichiers)
-        : await creerDemande(typeAssurance, fichiers);
-      terminer(resultat?.message || 'Votre demande a bien été envoyée. La compagnie va la traiter.');
+      if (demandeRejetee) await resoumettreDemande(demandeRejetee.id, typeAssurance, fichiers);
+      else await creerDemande(typeAssurance, fichiers);
+      terminer('La compagnie vous répondra après examen de vos documents.');
     } catch (err) {
       if (estErreurReseau(err)) {
         setErreurGenerale(messageErreurEnvoi(err, ''));

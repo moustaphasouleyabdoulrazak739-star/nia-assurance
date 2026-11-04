@@ -30,7 +30,7 @@ class SinistreCreateView(generics.CreateAPIView):
         sinistre = serializer.save()
         return Response({
             'sinistre': SinistreSerializer(sinistre).data,
-            'message': 'Sinistre déclaré avec succès'
+            'message': 'Sinistre déclaré.'
         }, status=status.HTTP_201_CREATED)
 
 

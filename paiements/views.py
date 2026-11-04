@@ -43,7 +43,7 @@ class PaiementCreateView(generics.CreateAPIView):
         paiement = serializer.save()
         return Response({
             'paiement': PaiementSerializer(paiement).data,
-            'message': 'Paiement effectué avec succès'
+            'message': 'Paiement enregistré, en attente de validation.'
         }, status=status.HTTP_201_CREATED)
 
 

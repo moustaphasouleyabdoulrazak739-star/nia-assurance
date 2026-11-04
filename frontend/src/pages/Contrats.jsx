@@ -119,10 +119,10 @@ const Contrats = () => {
     try {
       if (editingId) {
         await api.patch(`/contrats/${editingId}/`, form);
-        setFormSuccess('Contrat modifié avec succès !');
+        setFormSuccess('Contrat modifié.');
       } else {
         await api.post('/contrats/create/', form);
-        setFormSuccess('Contrat créé avec succès !');
+        setFormSuccess('Contrat créé.');
       }
       fetchContrats();
       setTimeout(() => {
@@ -173,7 +173,6 @@ const Contrats = () => {
   return (
     <DashboardLayout
       title={isAdmin ? 'Contrats' : 'Mes contrats'}
-      subtitle={isAdmin ? 'Tous les contrats clients' : 'Vos contrats en cours'}
       actions={isAdmin && <Button onClick={openCreate}>Nouveau contrat</Button>}
     >
       <div className="flex flex-wrap items-center gap-2 mb-6">

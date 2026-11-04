@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
-import { IconShield, IconFileText, IconCreditCard, IconMail, IconLock } from '../components/ui/icons';
+import { IconMail, IconLock } from '../components/ui/icons';
 import { messageErreurConnexion } from '../utils/loginErrors';
 import heroImage from '../assets/login-hero.jpg';
 
@@ -30,12 +30,6 @@ const Login = () => {
     }
   };
 
-  const highlights = [
-    { icon: IconShield, text: 'Contrats et garanties toujours à portée de main' },
-    { icon: IconFileText, text: 'Déclarez un sinistre en quelques clics' },
-    { icon: IconCreditCard, text: 'Suivez vos paiements en toute transparence' },
-  ];
-
   return (
     <div className="min-h-screen flex bg-white">
 
@@ -60,30 +54,6 @@ const Login = () => {
           />
           <span className="text-xl font-bold tracking-wide text-white">NIA ASSURANCE</span>
         </div>
-
-        <div className="relative z-10 text-white">
-          <h1 className="mb-3 font-display text-3xl font-bold leading-snug drop-shadow-sm">
-            Votre partenaire de confiance, chaque jour.
-          </h1>
-          <p className="mb-10 max-w-sm text-base text-white/90 drop-shadow-sm">
-            Gérez vos contrats, vos sinistres et vos paiements depuis un espace
-            simple, sécurisé et disponible à tout moment.
-          </p>
-
-          <ul className="space-y-3">
-            {highlights.map(({ icon: Icon, text }) => (
-              <li
-                key={text}
-                className="flex items-center gap-3"
-              >
-                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/30">
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span className="text-sm text-white/95">{text}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
 
       {/* Panneau droit — formulaire, centré verticalement */}
@@ -96,8 +66,7 @@ const Login = () => {
             <span className="text-xl font-bold text-neutral-800">NIA ASSURANCE</span>
           </div>
 
-          <h2 className="font-display text-3xl font-bold text-neutral-800 mb-2">Connexion</h2>
-          <p className="text-neutral-500 mb-10">Bienvenue ! Connectez-vous à votre espace</p>
+          <h2 className="font-display text-3xl font-bold text-neutral-800 mb-10">Connexion</h2>
 
           {error && (
             <Card padding="sm" className="mb-4 border border-red-100 bg-red-50">

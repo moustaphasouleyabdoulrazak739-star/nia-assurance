@@ -150,7 +150,7 @@ const Profil = () => {
         api.patch('/auth/profile/', { telephone: form.telephone }),
       ]);
       updateUser(profileRes.data);
-      setSuccess('Profil mis à jour avec succès !');
+      setSuccess('Modifications enregistrées.');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError(extraireMessageErreur(err, 'Erreur lors de la mise à jour du profil.'));
@@ -177,7 +177,7 @@ const Profil = () => {
         old_password: pwForm.old_password,
         new_password: pwForm.new_password,
       });
-      setPwSuccess('Mot de passe modifié avec succès !');
+      setPwSuccess('Mot de passe modifié.');
       setPwForm({ old_password: '', new_password: '', new_password2: '' });
       setTimeout(() => setPwSuccess(''), 3000);
     } catch (err) {
@@ -192,7 +192,7 @@ const Profil = () => {
     : null;
 
   return (
-    <DashboardLayout title="Mon profil" subtitle="Gérez vos informations personnelles">
+    <DashboardLayout title="Mon profil">
       {loading && (
         <div className="py-12 text-center text-neutral-400">Chargement...</div>
       )}

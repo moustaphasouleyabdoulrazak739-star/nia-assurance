@@ -52,7 +52,6 @@ const Journal = () => {
   return (
     <DashboardLayout
       title="Journal d'activité"
-      subtitle="Historique des actions effectuées par la compagnie"
     >
       {loading && (
         <div className="py-12 text-center text-neutral-400">Chargement...</div>

@@ -48,7 +48,7 @@ class RegisterView(generics.CreateAPIView):
             'user': UserSerializer(user).data,
             'refresh': str(refresh),
             'access': str(refresh.access_token),
-            'message': 'Compte créé avec succès'
+            'message': 'Compte créé.'
         }, status=status.HTTP_201_CREATED)
 
 
@@ -137,5 +137,5 @@ class ChangePasswordView(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
             user.set_password(serializer.validated_data['new_password'])
             user.save()
-            return Response({'message': 'Mot de passe modifié avec succès'})
+            return Response({'message': 'Mot de passe modifié.'})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

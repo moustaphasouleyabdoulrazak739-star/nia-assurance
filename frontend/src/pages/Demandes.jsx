@@ -127,7 +127,7 @@ function VueClient({ demandes, loading, error, onRefresh }) {
       const response = await api.post(url, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setFormSuccess(response.data.message || 'Demande envoyée avec succès');
+      setFormSuccess(response.data.message || 'Demande envoyée.');
       resetForm();
       onRefresh();
       setTimeout(() => setFormSuccess(''), 4000);
@@ -141,7 +141,6 @@ function VueClient({ demandes, loading, error, onRefresh }) {
   return (
     <DashboardLayout
       title="Demander un contrat"
-      subtitle="Envoyez une demande avec vos documents, la compagnie la traite ensuite"
     >
       <Card ref={formRef} className="mb-6">
         <h3 className="font-bold text-neutral-800 mb-1">
@@ -330,7 +329,7 @@ function VueCompagnie({ demandes, loading, error, filtre, setFiltre, onRefresh }
   };
 
   return (
-    <DashboardLayout title="Demandes de contrat" subtitle="Traitez les demandes envoyées par vos clients">
+    <DashboardLayout title="Demandes de contrat">
       <div className="flex gap-2 mb-6 flex-wrap">
         {FILTRES_ADMIN.map((f) => (
           <button
